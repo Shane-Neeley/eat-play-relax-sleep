@@ -15,6 +15,7 @@ The current local-model and Suno collaboration ranking lives in
 ./scripts/eprs doctor
 ./scripts/eprs doctor --workflow source-to-master --strict
 ./scripts/eprs doctor --workflow daw-handoff --strict
+./scripts/eprs performance # read-only active/orphaned visual-worker check
 make check test
 # During implementation, use the fast control-plane tier; run `make test`
 # before checkpoints because it includes the media-heavy FFmpeg round trips.
@@ -51,6 +52,11 @@ discovered, Git-ignored `.eprs-local/` directory. Start from
 `templates/toolchain-extension.json` and `templates/software-adapter.json`;
 local extensions are additive and cannot shadow shared providers or make a
 private tool mandatory.
+
+`eprs performance` is the read-only “is it actually stuck?” check. It reports
+only EPRS-owned Remotion/Chromium processes, separates active workers from
+orphaned browser roots, applies a configurable stale threshold, and can include
+recent song visual-render timings with `--song`. It never stops a process.
 
 ## Make a song
 

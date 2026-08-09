@@ -56,6 +56,11 @@ supplied files before any agent chooses a representation or experiment.
 - `eprs status`: read-only continuity layer for humans and agents; it inventories
   a song, validates referenced evidence, optionally verifies checksums, and
   exposes versioned `eprs.status/v1` JSON.
+- `eprs.performance/v1`: a read-only diagnostic over EPRS-owned visual render
+  processes and optional recent song render provenance. It distinguishes active
+  work from stale orphaned Chromium roots and reports elapsed time, CPU, memory,
+  concurrency, and render-to-media ratio without stopping processes or granting
+  operational authority.
 - `eprs.agent-context/v1`: a bounded, read-only handoff view over song status,
   due work, focused production-request/work/experiment evidence, creative
   briefs, recent request, production-plan, research, lyric variants, experiment,

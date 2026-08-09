@@ -40,6 +40,7 @@ from .production_map import write_production_map
 from .publication import prepare_publication_handoff, record_publication_receipt
 from .release import package_release
 from .research import create_research_record, load_research_record
+from .runtime import format_performance_report, performance_report
 from .request import (
     DEFAULT_RIGHTS_NOTE,
     capture_production_request,
@@ -216,6 +217,17 @@ def parser() -> argparse.ArgumentParser:
     status.add_argument("song")
     status.add_argument("--json", action="store_true", help="Emit the versioned machine-readable status")
     status.add_argument("--verify", action="store_true", help="Hash raw, input, and result evidence to detect drift")
+
+    performance = commands.add_parser(
+        "performance",
+        help="Inspect EPRS renderer workers and recent visual timing without changing state",
+    )
+    performance.add_argument("--song", help="Include recent visual-render timing for one song")
+    performance.add_argument(
+        "--stale-seconds", type=int, default=900,
+        help="Age at which an orphaned browser root needs attention (default: 900)",
+    )
+    performance.add_argument("--json", action="store_true", help="Emit the versioned machine-readable report")
 
     production_map = commands.add_parser(
         "map",
@@ -974,6 +986,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "status":
             report = song_status(args.song, verify=args.verify)
             print(json.dumps(report, indent=2) if args.json else format_song_status(report))
+        elif args.command == "performance":
+            report = performance_report(args.song, stale_seconds=args.stale_seconds)
+            print(json.dumps(report, indent=2) if args.json else format_performance_report(report))
         elif args.command == "map":
             print(json.dumps(write_production_map(
                 args.song,
