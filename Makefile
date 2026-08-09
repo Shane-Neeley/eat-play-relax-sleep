@@ -1,4 +1,4 @@
-.PHONY: doctor check test public-check demo studio visuals-install visuals-check visual-studio
+.PHONY: doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio
 
 doctor:
 	./scripts/eprs doctor
@@ -10,6 +10,16 @@ check:
 
 test:
 	PYTHONPATH=src python3 -m unittest discover -s tests -v
+	node --test tests-js/*.test.mjs
+
+# Quick control-plane feedback while iterating. Run the full media suite above
+# before a checkpoint or handoff.
+test-fast:
+	PYTHONPATH=src python3 -m unittest -v \
+		tests.test_adapters tests.test_beat tests.test_context tests.test_evidence \
+		tests.test_plan tests.test_plan_progress tests.test_planning \
+		tests.test_request tests.test_research tests.test_visuals \
+		tests.test_work tests.test_work_origin
 	node --test tests-js/*.test.mjs
 
 public-check:

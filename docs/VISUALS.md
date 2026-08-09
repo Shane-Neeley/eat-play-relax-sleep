@@ -36,6 +36,7 @@ make visuals-install
 scripts/eprs visual-render visuals/presets/garage-signal-bloom.json \
   --audio build/demos/porchlight-pocket.wav \
   --seconds 6 --quality draft \
+  --timeout-seconds 600 \
   --out build/visuals/garage-signal-preview.mp4
 
 make visual-studio
@@ -43,7 +44,16 @@ make visual-studio
 
 `make visuals-install` also renders a local ignored `demo.wav` so Remotion Studio opens usefully on a fresh clone. Replace that preview input through a render score before making creative decisions about a real song.
 
-Draft mode renders at half resolution for fast decisions. Full mode renders 1920×1080 H.264/yuv420p in BT.709, with AAC at 48 kHz and a half-frame-rate GOP. Each render receives a JSON sidecar containing hashes for the score, audio, and output.
+Draft mode renders at half resolution for fast decisions. Full mode renders
+1920×1080 H.264/yuv420p in BT.709, with AAC at 48 kHz and a half-frame-rate
+GOP. Each render receives a JSON sidecar containing hashes for the score, audio,
+and output plus elapsed time, concurrency, and the enforced render time budget.
+
+The renderer owns Remotion, Chromium, and FFmpeg in one private process group.
+Completion, timeout, or interruption stops that entire group so a canceled task
+does not leave background visual workers consuming the machine. The default
+budget is 1,800 seconds; use a lower `--timeout-seconds` for short previews and
+raise it deliberately for a long full-resolution film.
 
 For a real release, render full picture against the approved master, then move
 through the renderer-neutral boundary instead of treating a Remotion file as

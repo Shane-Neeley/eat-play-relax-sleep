@@ -16,6 +16,9 @@ The current local-model and Suno collaboration ranking lives in
 ./scripts/eprs doctor --workflow source-to-master --strict
 ./scripts/eprs doctor --workflow daw-handoff --strict
 make check test
+# During implementation, use the fast control-plane tier; run `make test`
+# before checkpoints because it includes the media-heavy FFmpeg round trips.
+make test-fast
 ./scripts/render_demos.sh
 open build/demos/porchlight-pocket.wav
 make studio             # then open http://localhost:8000
