@@ -96,6 +96,9 @@ context packets so a new agent can recover the user's starting intent.
 
 From there, use the appropriate bridge instead of one automatic pipeline:
 
+- after a `make-song` run, explicitly create a reversible first arrangement of
+  captured recordings with [`eprs source-sketch`](SOURCE_SKETCHES.md); capture
+  alone never authorizes or starts this processing;
 - queue the exact request for an agent to author a plan with
   `eprs work add --request <request-id>`; dispatch will include the request and
   every supplied input and require a `production-plan` result role on

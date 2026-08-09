@@ -4,15 +4,20 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
+import time
 
 from .system import sha256, slugify, utc_now
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VISUALS_ROOT = REPO_ROOT / "visuals"
+DEFAULT_RENDER_TIMEOUT_SECONDS = 1_800.0
+RENDER_CONCURRENCY = 4
 
 PALETTES = {
     "neon": ["#ff7657", "#62c6cf", "#f2bd63", "#efe6d8"],
@@ -95,8 +100,67 @@ def _duration(path: Path) -> float:
     return float(completed.stdout.strip())
 
 
+def _stop_process_group(process: subprocess.Popen, grace_seconds: float = 1.0) -> None:
+    """Stop a renderer and every Chromium/FFmpeg child in its private group."""
+    if os.name == "nt":
+        process.terminate()
+        try:
+            process.wait(timeout=grace_seconds)
+        except subprocess.TimeoutExpired:
+            process.kill()
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return
+    deadline = time.monotonic() + grace_seconds
+    while time.monotonic() < deadline:
+        try:
+            os.killpg(process.pid, 0)
+        except (ProcessLookupError, PermissionError):
+            return
+        time.sleep(0.05)
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
+def _run_renderer(command: list[str], timeout_seconds: float) -> subprocess.CompletedProcess:
+    """Run Remotion in an owned process group with a finite time budget."""
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+        raise ValueError("visual render timeout must be a positive finite number")
+    process = subprocess.Popen(
+        command,
+        cwd=VISUALS_ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=os.name != "nt",
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired as exc:
+        _stop_process_group(process)
+        stdout, stderr = process.communicate()
+        raise RuntimeError(
+            f"visual render exceeded its {timeout_seconds:g}-second time budget: "
+            f"{(stderr or stdout)[-3000:]}"
+        ) from exc
+    except BaseException:
+        _stop_process_group(process)
+        process.communicate()
+        raise
+    finally:
+        # Remotion can exit before its Chrome workers. The dedicated process
+        # group lets us reap those workers without touching other browsers.
+        _stop_process_group(process)
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+
+
 def render_visual(spec_path: str | Path, audio_path: str | Path, output: str | Path,
-                  seconds: float | None = None, quality: str = "draft") -> tuple[Path, Path]:
+                  seconds: float | None = None, quality: str = "draft",
+                  timeout_seconds: float = DEFAULT_RENDER_TIMEOUT_SECONDS) -> tuple[Path, Path]:
     if quality not in {"draft", "full"}:
         raise ValueError("visual quality must be draft or full")
     spec_file, audio_file = Path(spec_path).resolve(), Path(audio_path).resolve()
@@ -134,13 +198,16 @@ def render_visual(spec_path: str | Path, audio_path: str | Path, output: str | P
         f"--props={props_file}", "--codec=h264", "--pixel-format=yuv420p",
         "--color-space=bt709", "--audio-codec=aac", "--audio-bitrate=320k",
         "--sample-rate=48000", "--gop=15", "--x264-preset=medium",
-        f"--crf={'23' if quality == 'draft' else '17'}", "--concurrency=4",
+        f"--crf={'23' if quality == 'draft' else '17'}",
+        f"--concurrency={RENDER_CONCURRENCY}",
     ]
     if quality == "draft":
         command.append("--scale=0.5")
     else:
         command.append("--image-format=png")
-    completed = subprocess.run(command, cwd=VISUALS_ROOT, capture_output=True, text=True)
+    started_at = time.monotonic()
+    completed = _run_renderer(command, timeout_seconds)
+    elapsed_seconds = round(time.monotonic() - started_at, 3)
     if completed.returncode:
         raise RuntimeError(completed.stderr[-5000:] or completed.stdout[-5000:])
     provenance = destination.with_suffix(destination.suffix + ".json")
@@ -151,5 +218,10 @@ def render_visual(spec_path: str | Path, audio_path: str | Path, output: str | P
         "audio": audio_file.name, "audio_sha256": audio_hash,
         "duration_seconds": duration, "duration_frames": duration_frames, "fps": fps,
         "quality": quality, "renderer": "Remotion 4.0.504 + custom EPRS SVG engine",
+        "performance": {
+            "elapsed_seconds": elapsed_seconds,
+            "concurrency": RENDER_CONCURRENCY,
+            "timeout_seconds": timeout_seconds,
+        },
     }, indent=2) + "\n")
     return destination, provenance

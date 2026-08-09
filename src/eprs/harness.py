@@ -209,7 +209,8 @@ def _now_markdown(song: Path, manifest: dict) -> str:
         and manifest["inputs"]["recordings"]
         else ""
     )
-    return f"""# Current song run
+    return f"""<!-- eprs.now/v1 -->
+# Current song run
 
 This file is the shallow entry point for the latest agent-led run. The generated sketch is intentionally not a release or a listening approval.
 {source_warning}

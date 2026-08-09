@@ -1693,6 +1693,70 @@ def _mix_summaries(
     return summaries, errors
 
 
+def _source_sketch_summaries(
+    song: Path,
+    budget: dict[str, int],
+    limit: int = 8,
+) -> tuple[list[dict], list[str]]:
+    """Summarize source-aware continuations without embedding source media."""
+    from .mix import verify_mix_provenance
+    from .source_sketch import verify_source_sketch
+
+    summaries: list[dict] = []
+    errors: list[str] = []
+    root = song / "notes" / "source-sketches"
+    if not root.is_dir():
+        return summaries, errors
+    manifests = sorted(
+        root.glob("*/*/source-sketch.json"),
+        key=lambda path: path.stat().st_mtime_ns,
+        reverse=True,
+    )[:limit]
+    for path in manifests:
+        try:
+            _, record = verify_source_sketch(song, path)
+            mix_path = song / record["paths"]["mix"]
+            _, _, mix_record = verify_mix_provenance(song, mix_path)
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            errors.append(f"{path.relative_to(song)}: {exc}")
+            continue
+        intent, intent_truncated = _clip_text(record.get("intent"), budget, 4096)
+        sources = []
+        source_records = record.get("sources", [])
+        for value in source_records[:12] if isinstance(source_records, list) else []:
+            if not isinstance(value, dict):
+                continue
+            player_intent, player_intent_truncated = _clip_text(
+                value.get("player_intent"), budget, 2048
+            )
+            sources.append({
+                "id": value.get("id"),
+                "role": value.get("role"),
+                "classification": value.get("classification"),
+                "path": value.get("path"),
+                "player_intent": player_intent,
+                "player_intent_truncated": player_intent_truncated,
+                "placement": value.get("placement"),
+            })
+        review = mix_record.get("review", {})
+        summaries.append({
+            "path": str(path.relative_to(song)),
+            "id": record.get("id"),
+            "created_at": record.get("created_at"),
+            "status": record.get("status"),
+            "intent": intent,
+            "intent_truncated": intent_truncated,
+            "randomness": record.get("randomness"),
+            "mix": record.get("paths", {}).get("mix"),
+            "visual_preview": record.get("paths", {}).get("visual_preview"),
+            "review_decision": review.get("decision") if isinstance(review, dict) else None,
+            "sources": sources,
+            "sources_omitted": max(0, len(source_records) - len(sources))
+            if isinstance(source_records, list) else 0,
+        })
+    return summaries, errors
+
+
 def _interchange_summaries(
     song: Path,
     budget: dict[str, int],
@@ -2147,6 +2211,12 @@ def build_agent_context(
     attention.extend(f"Invalid recent stem: {error}" for error in stem_errors)
     recent_mixes, mix_errors = _mix_summaries(song_path, budget)
     attention.extend(f"Invalid recent mix: {error}" for error in mix_errors)
+    recent_source_sketches, source_sketch_errors = _source_sketch_summaries(
+        song_path, budget
+    )
+    attention.extend(
+        f"Invalid recent source sketch: {error}" for error in source_sketch_errors
+    )
     recent_interchange, interchange_errors = _interchange_summaries(song_path, budget)
     attention.extend(
         f"Invalid recent DAW interchange: {error}" for error in interchange_errors
@@ -2281,6 +2351,7 @@ def build_agent_context(
         "recent_lyrics": recent_lyrics,
         "recent_stems": recent_stems,
         "recent_mixes": recent_mixes,
+        "recent_source_sketches": recent_source_sketches,
         "recent_daw_interchange": recent_interchange,
         "recent_publications": recent_publications,
         "toolchain": {
@@ -2447,6 +2518,10 @@ def render_agent_context_markdown(packet: dict) -> str:
         "## Recent working mixes",
         "",
         _json_block(packet["recent_mixes"]),
+        "",
+        "## Recent source-aware sketches",
+        "",
+        _json_block(packet["recent_source_sketches"]),
         "",
         "## DAW-neutral interchange packages",
         "",

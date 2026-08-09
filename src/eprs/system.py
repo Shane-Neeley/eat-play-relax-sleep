@@ -2377,6 +2377,33 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         attention.append(f"Invalid publication history {error['path']}: {error['error']}")
     publication_counts = publication_report["counts"]
 
+    from .mix import verify_mix_provenance
+    from .source_sketch import verify_source_sketch
+    source_sketch_counts = {
+        "total": 0, "invalid": 0, "pending": 0,
+        "keep": 0, "change": 0, "stop": 0,
+    }
+    for source_sketch_path in sorted(
+        (song_path / "notes" / "source-sketches").glob("*/*/source-sketch.json")
+    ):
+        try:
+            _, source_sketch_record = verify_source_sketch(song_path, source_sketch_path)
+            _, _, source_mix = verify_mix_provenance(
+                song_path, source_sketch_record["paths"]["mix"]
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            source_sketch_counts["invalid"] += 1
+            attention.append(
+                f"Invalid source sketch {source_sketch_path.relative_to(song_path)}: {exc}"
+            )
+            continue
+        source_sketch_counts["total"] += 1
+        decision = source_mix.get("review", {}).get("decision")
+        if decision in {"keep", "change", "stop"}:
+            source_sketch_counts[decision] += 1
+        else:
+            source_sketch_counts["pending"] += 1
+
     from .frontdoor import verify_current_media
     current_media = {"available": False, "status": None, "audio": None, "video": None}
     if (song_path / "_CURRENT.json").is_file():
@@ -2413,6 +2440,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         "comparison_take_decisions": comparison_take_decisions,
         "work_items": work_counts,
         "experiments": experiment_counts,
+        "source_sketches": source_sketch_counts,
         "stems": len(stem_files),
         "comp_stems": stem_kinds["comp"],
         "processed_stems": stem_kinds["processed"],
@@ -2511,6 +2539,15 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         next_actions.append("Render, listen to, and finish the planned experiment(s).")
     elif experiment_counts["total"] == 0 and not session_counts["total"] and (briefs or raw_recordings or code):
         next_actions.append("Freeze one narrow musical hypothesis with `eprs experiment`.")
+    if request_counts["recordings"] and source_sketch_counts["total"] == 0:
+        next_actions.append(
+            "Make one explicit source-aware diagnostic with `eprs source-sketch <song> "
+            "--intent \"Describe who invites, answers, and leaves space\"`; capture alone never processes recordings."
+        )
+    if source_sketch_counts["pending"]:
+        next_actions.append(
+            "Listen through each source-aware sketch and record keep/change/stop with `eprs mix-review`."
+        )
     if kept_experiments and not inventory["masters"]:
         next_actions.append("Develop the kept experiment into an arrangement or mix; preserve the experiment evidence.")
     if inventory["stems_pending_review"]:
@@ -2639,7 +2676,9 @@ def format_song_status(status: dict) -> str:
             f"{inventory['recording_sessions']['total']} recording session(s), "
             f"{inventory['recording_clearances']['approved']} approved recording clearance(s), "
             f"{inventory['research_records']['total']} research record(s)"
-            f", {inventory['lyric_developments']['total']} lyric development(s)"
+            f", {inventory['lyric_developments']['total']} lyric development(s), "
+            f"{inventory['source_sketches']['total']} source-aware sketch(es) "
+            f"({inventory['source_sketches']['pending']} pending review)"
         ),
         (
             "Experiments: "

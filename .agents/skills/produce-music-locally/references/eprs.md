@@ -58,6 +58,8 @@ technical audition, and queues request-bound planning work.
    the smallest useful audible or inspectable result. A render may be recorded
    as pending review; only a real end-to-end listen earns keep/change/stop.
 4. Use source-specific paths instead of generic generation:
+   - recordings captured by `make-song`: `source-sketch` → `mix-review` before
+     replacing, tuning, quantizing, or otherwise interpreting the performance;
    - performed rhythm: `rhythm` → authored `groove` → listen;
    - several takes: `compare` or `comp` before processing;
    - arrangement: editable source → stems → `mix` → complete listen;

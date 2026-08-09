@@ -1,9 +1,18 @@
 import json
+import os
+import re
+import sys
 import tempfile
 from pathlib import Path
 import unittest
 
-from eprs.visuals import PALETTES, compile_prompt, validate_spec, write_prompt_score
+from eprs.visuals import (
+    PALETTES,
+    _run_renderer,
+    compile_prompt,
+    validate_spec,
+    write_prompt_score,
+)
 
 
 class VisualPromptTests(unittest.TestCase):
@@ -35,6 +44,24 @@ class VisualPromptTests(unittest.TestCase):
         candidate["world"] = "generic-ai-video"
         with self.assertRaisesRegex(ValueError, "visual world"):
             validate_spec(candidate)
+
+    @unittest.skipIf(os.name == "nt", "process-group assertion is POSIX-specific")
+    def test_renderer_timeout_reaps_its_child_process_group(self):
+        command = [
+            sys.executable,
+            "-c",
+            (
+                "import subprocess,sys,time; "
+                "child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(60)']); "
+                "print(f'child={child.pid}', flush=True); time.sleep(60)"
+            ),
+        ]
+        with self.assertRaisesRegex(RuntimeError, "time budget") as raised:
+            _run_renderer(command, timeout_seconds=0.2)
+        match = re.search(r"child=(\d+)", str(raised.exception))
+        self.assertIsNotNone(match)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(int(match.group(1)), 0)
 
 
 if __name__ == "__main__":

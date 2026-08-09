@@ -15,6 +15,7 @@ creative brief
       │
 source recordings (immutable + checksummed)
       │
+      ├── explicit source sketch ── editable mix score ── float diagnostic mix ── listening decision
       ├── rhythm observation ── authored drummer brief + grid interpretation ── reviewed audition
       │
       └── selected takes ── explicit comp ── explicit processing ── reviewed stems ── mix
@@ -68,6 +69,14 @@ supplied files before any agent chooses a representation or experiment.
   raw intake and freezes other evidence under one atomic request directory.
   JSON `request add` and direct prompt-and-files `request capture` share the
   same validator and record contract.
+- `eprs.source-sketch/v1`: an explicit continuation from one exact agent-led
+  run and captured request. It classifies supplied recordings only to choose
+  seeded entrances, conservative no-boost gain, and narrow pan; writes an
+  editable `eprs.mix/v1` score and float diagnostic mix; preserves every source
+  checksum; optionally renders a source-synced visual; and updates the shallow
+  listening handoff and Graphviz production map. It never tunes, quantizes,
+  denoises, normalizes, compresses, limits, time-stretches, approves, or
+  publishes the performance.
 - `eprs.production-plan/v1` and `/v2`: immutable, request-checksum-bound dependency
   graph with a north star, assumptions, open questions, request-input use,
   smallest actions, output/evidence conditions, listening questions, and

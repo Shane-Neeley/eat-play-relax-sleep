@@ -49,6 +49,7 @@ from .request import (
 from .selection import select_audio
 from .rhythm import observe_rhythm
 from .session import create_recording_session, load_recording_session
+from .source_sketch import create_source_sketch
 from .system import (
     analyze,
     create_experiment,
@@ -198,6 +199,18 @@ def parser() -> argparse.ArgumentParser:
     make_song.add_argument("--rights-note", default=DEFAULT_RIGHTS_NOTE)
     make_song.add_argument("--no-visual", action="store_true", help="Skip the optional local visual preview")
     make_song.add_argument("--visual-seconds", type=float, default=8.0, help="Length of the optional visual preview")
+
+    source_sketch = commands.add_parser(
+        "source-sketch",
+        help="Make a fresh reversible arrangement from recordings captured by make-song",
+    )
+    source_sketch.add_argument("song")
+    source_sketch.add_argument("--run", help="Run id or song-relative run.json; defaults to latest")
+    source_sketch.add_argument("--intent", required=True, help="Player-facing relationship this pass should test")
+    source_sketch.add_argument("--seed", type=int, help="Explicit seed for exact diagnostic replay")
+    source_sketch.add_argument("--no-bed", action="store_true", help="Arrange supplied recordings without the synthetic starter underneath")
+    source_sketch.add_argument("--no-visual", action="store_true", help="Skip the optional source-synced visual preview")
+    source_sketch.add_argument("--visual-seconds", type=float, default=8.0, help="Length of the optional source-synced visual preview")
 
     status = commands.add_parser("status", help="Summarize a song workspace and its next safe actions")
     status.add_argument("song")
@@ -888,6 +901,10 @@ def parser() -> argparse.ArgumentParser:
     visual_render.add_argument("--out", required=True)
     visual_render.add_argument("--seconds", type=float)
     visual_render.add_argument("--quality", choices=("draft", "full"), default="draft")
+    visual_render.add_argument(
+        "--timeout-seconds", type=float, default=1_800.0,
+        help="Stop the render and its browser workers after this time (default: 1800)",
+    )
     return root
 
 
@@ -943,6 +960,17 @@ def main(argv: list[str] | None = None) -> int:
                 visual_seconds=args.visual_seconds,
             )
             print(json.dumps({"song": str(run_path.parents[3]), "run": str(run_path), **manifest}, indent=2))
+        elif args.command == "source-sketch":
+            manifest_path, record = create_source_sketch(
+                args.song,
+                args.intent,
+                run=args.run,
+                seed=args.seed,
+                include_bed=not args.no_bed,
+                render_visual_preview=not args.no_visual,
+                visual_seconds=args.visual_seconds,
+            )
+            print(json.dumps({"source_sketch": str(manifest_path), **record}, indent=2))
         elif args.command == "status":
             report = song_status(args.song, verify=args.verify)
             print(json.dumps(report, indent=2) if args.json else format_song_status(report))
@@ -1420,7 +1448,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "visual-prompt":
             print(write_prompt_score(args.prompt, args.title, args.seed, args.out))
         elif args.command == "visual-render":
-            video, provenance = render_visual(args.spec, args.audio, args.out, args.seconds, args.quality)
+            video, provenance = render_visual(
+                args.spec, args.audio, args.out, args.seconds, args.quality,
+                timeout_seconds=args.timeout_seconds,
+            )
             print(json.dumps({"video": str(video), "provenance": str(provenance)}, indent=2))
         return 0
     except (FileNotFoundError, FileExistsError, RuntimeError, ValueError) as exc:

@@ -51,6 +51,45 @@ def _load_run(song: Path, value: str | Path | None) -> tuple[Path, dict]:
     return run_path, run
 
 
+def _latest_source_sketch(song: Path, run_path: Path) -> tuple[Path, dict] | None:
+    """Return the newest valid source-sketch continuation for this exact run."""
+    relative_run = str(run_path.relative_to(song))
+    latest = load_song_manifest(song).get("latest_source_sketch")
+    latest_path = latest.get("path") if isinstance(latest, dict) else None
+    if isinstance(latest_path, str):
+        path = _inside(song, latest_path, "latest source sketch")
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            record = {}
+        bound_run = record.get("run")
+        if (
+            record.get("schema") == "eprs.source-sketch/v1"
+            and isinstance(bound_run, dict)
+            and bound_run.get("path") == relative_run
+            and bound_run.get("sha256") == sha256(run_path)
+        ):
+            return path, record
+    candidates: list[tuple[str, Path, dict]] = []
+    for path in (song / "notes" / "source-sketches").glob("*/*/source-sketch.json"):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        run = record.get("run")
+        if (
+            record.get("schema") == "eprs.source-sketch/v1"
+            and isinstance(run, dict)
+            and run.get("path") == relative_run
+            and run.get("sha256") == sha256(run_path)
+        ):
+            candidates.append((str(record.get("created_at", "")), path, record))
+    if not candidates:
+        return None
+    _, path, record = sorted(candidates, key=lambda item: (item[0], str(item[1])))[-1]
+    return path, record
+
+
 def _q(value: object) -> str:
     """Return a DOT-safe quoted scalar."""
     return json.dumps(str(value), ensure_ascii=False)
@@ -105,6 +144,7 @@ def production_map_dot(song: str | Path, run: str | Path | None = None) -> tuple
     request = {}
     if isinstance(request_path, str):
         _, request = load_production_request(song_path, request_path)
+    source_sketch = _latest_source_sketch(song_path, run_path)
 
     title = _short(record.get("title", song_path.name), 80)
     prompt = _short(record.get("prompt", "creative prompt"), 100)
@@ -133,12 +173,15 @@ def production_map_dot(song: str | Path, run: str | Path | None = None) -> tuple
         _node("listen", "LISTEN NOW\\n_LISTEN.wav", "handoff"),
     ]
 
+    input_nodes: list[str] = []
     provided = request.get("provided", {}) if isinstance(request, dict) else {}
     if isinstance(provided, dict):
         for index, item in enumerate(provided.values(), start=1):
             if not isinstance(item, dict):
                 continue
             node_id = f"input_{index}"
+            if item.get("handling") == "immutable-recording":
+                input_nodes.append(node_id)
             handling = item.get("handling", "supplied input")
             location = item.get("path", "path unavailable")
             label = f"{_short(item.get('role', 'supplied input'), 48).upper()}\\n{handling}\\n{_short(location, 64)}"
@@ -169,21 +212,48 @@ def production_map_dot(song: str | Path, run: str | Path | None = None) -> tuple
     ])
     if isinstance(paths.get("visual_preview"), str):
         lines.extend([
-            _node("video", f"VISUAL PREVIEW\\n{paths['visual_preview']}", "visual"),
-            _node("watch", "WATCH NOW\\n_WATCH.mp4", "handoff"),
+            _node("video", f"ORIGINAL VISUAL PREVIEW\\n{paths['visual_preview']}", "visual"),
             _edge("audio", "video", "reacts to"),
             _edge("visual_score", "video", "drives"),
-            _edge("video", "watch", "points to"),
             _edge("video", "run", "checksummed"),
         ])
+        if source_sketch is None:
+            lines.extend([
+                _node("watch", "WATCH NOW\\n_WATCH.mp4", "handoff"),
+                _edge("video", "watch", "points to"),
+            ])
+    if source_sketch is not None:
+        sketch_path, sketch = source_sketch
+        sketch_paths = sketch.get("paths", {}) if isinstance(sketch.get("paths"), dict) else {}
+        lines.extend([
+            _node("source_score", f"SOURCE-AWARE MIX SCORE\\n{sketch_paths.get('mix_score', 'unavailable')}\\nseed {sketch.get('randomness', {}).get('seed', 'unknown')}", "editable"),
+            _node("source_mix", f"SOURCE-AWARE MIX\\n{sketch_paths.get('mix', 'unavailable')}", "media"),
+            _node("source_sketch", f"SOURCE-SKETCH EVIDENCE\\n{sketch_path.relative_to(song_path)}", "evidence"),
+            _edge("request", "source_score", "bounds"),
+            _edge("audio", "source_score", "quiet bed"),
+            _edge("source_score", "source_mix", "renders"),
+            _edge("source_mix", "source_sketch", "checksummed"),
+            _edge("source_mix", "listen", "points to"),
+            _edge("run", "source_sketch", "continued by"),
+            _edge("source_sketch", "now", "summarized by"),
+        ])
+        lines.extend(_edge(node_id, "source_score", "arranged") for node_id in input_nodes)
+        if isinstance(sketch_paths.get("visual_preview"), str):
+            lines.extend([
+                _node("source_video", f"SOURCE-SYNCED VISUAL\\n{sketch_paths['visual_preview']}", "visual"),
+                _node("watch", "WATCH NOW\\n_WATCH.mp4", "handoff"),
+                _edge("source_mix", "source_video", "reacts to"),
+                _edge("source_video", "source_sketch", "checksummed"),
+                _edge("source_video", "watch", "points to"),
+            ])
     lines.extend([
         _edge("request", "run", "links"),
         _edge("agent_work", "run", "links"),
         _edge("experiment", "run", "links"),
         _edge("audio", "run", "checksummed"),
         _edge("rhythm", "run", "checksummed"),
-        _edge("run", "now", "summarized by"),
-        _edge("audio", "listen", "points to"),
+        *([] if source_sketch is not None else [_edge("run", "now", "summarized by")]),
+        *([] if source_sketch is not None else [_edge("audio", "listen", "points to")]),
         _edge("listen", "now", "review here"),
         "}",
         "",

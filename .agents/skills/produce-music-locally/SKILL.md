@@ -24,7 +24,11 @@ DAW sessions, or other sources when they fit the idea.
 4. Treat the generated starter as a diagnostic audition. If the user asked for
    a song, arrangement, mix, master, or video, continue through the relevant
    agent work and production gates; do not hand back the smoke test as the work.
-5. Read [references/eprs.md](references/eprs.md) for input routing, the agent
+5. When `make-song` captured recordings, use `eprs source-sketch` for an
+   explicit first source-aware audition before proposing replacement parts.
+   Listen and review it as a mix; never imply that intake itself processed or
+   approved the recordings.
+6. Read [references/eprs.md](references/eprs.md) for input routing, the agent
    continuation loop, randomness, and delivery commands.
 
 ## Keep the creative space open
