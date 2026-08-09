@@ -1,0 +1,13 @@
+{
+  "schema": "eprs.master/v1",
+  "title": "Signal Garden lossless master",
+  "intent": "Preserve the approved mix balance and dynamics while creating a safe lossless delivery source.",
+  "destination": "lossless archive and YouTube source",
+  "source": "mixes/<mix-title>/<approved-mix>.wav",
+  "gain_db": 0,
+  "true_peak_ceiling_dbfs": -1,
+  "output": {
+    "sample_rate": 48000,
+    "bit_depth": 24
+  }
+}

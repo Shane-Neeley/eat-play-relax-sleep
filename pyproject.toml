@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eat-play-relax-sleep"
+version = "0.1.0"
+description = "A local-first creative operating system for code, recordings, experiments, songs, and music videos."
+requires-python = ">=3.11"
+authors = [{name = "EPRS contributors"}]
+dependencies = []
+
+[project.scripts]
+eprs = "eprs.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/eprs" = ["config/toolchain.json"]
+"share/eprs/adapters" = ["config/adapters/*.json"]

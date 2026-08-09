@@ -1,0 +1,43 @@
+{
+  "schema": "eprs.recording-clearance/v1",
+  "title": "Porch-light private YouTube clearance",
+  "session": "notes/sessions/<session-directory>/session.json",
+  "intended_use": "Prepare a local FINAL package whose proposed YouTube visibility is private; this record does not authorize an upload.",
+  "visibility_limit": "private",
+  "takes": [
+    {
+      "id": "guitar-take-one",
+      "decision": "approved",
+      "confirmed_by": "Replace with the person or project role that actually confirmed recording-use rights",
+      "confirmed_at": "Replace with the confirmation date/time",
+      "permission_note": "Approved for this stated private YouTube use; no broader sharing or publication permission is inferred."
+    },
+    {
+      "id": "family-answer-one",
+      "decision": "unknown",
+      "confirmed_by": "",
+      "confirmed_at": "",
+      "permission_note": "Replace unknown only after every performer and any required guardian has confirmed the exact intended use."
+    }
+  ],
+  "participants": [
+    {
+      "id": "guitar-player",
+      "decision": "approved",
+      "confirmed_by": "Replace with the person or project role that confirmed performer consent",
+      "confirmed_at": "Replace with the confirmation date/time",
+      "permission_note": "The performer approved this stated use and understands that upload remains a separate action.",
+      "credit_decision": "named",
+      "credit": "Replace with exact approved credit wording"
+    },
+    {
+      "id": "family-group",
+      "decision": "unknown",
+      "confirmed_by": "",
+      "confirmed_at": "",
+      "permission_note": "Consent for the stated use and any required guardian confirmation are not yet recorded.",
+      "credit_decision": "collective",
+      "credit": "Replace with exact collective credit wording"
+    }
+  ]
+}

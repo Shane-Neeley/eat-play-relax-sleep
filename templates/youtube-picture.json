@@ -1,0 +1,10 @@
+{
+  "schema": "eprs.youtube/v2",
+  "title": "Signal Garden",
+  "intent": "Preserve the reviewed picture stream and pair it only with the approved lossless master for final picture-and-sync review.",
+  "master": "masters/<master-title>/<approved-master>.wav",
+  "visual": {
+    "kind": "picture-candidate",
+    "path": "video/pictures/<picture-title>/<reviewed-picture>.mp4"
+  }
+}

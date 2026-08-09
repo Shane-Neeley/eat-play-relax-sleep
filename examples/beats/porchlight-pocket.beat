@@ -1,0 +1,14 @@
+# Straight 16ths with a slightly late-feeling pocket. X=accent, x=hit, g=ghost, .=rest.
+title "Porchlight Pocket"
+tempo 94
+meter 4/4
+resolution 16
+bars 8
+swing 0.54
+seed 1977
+
+track kick  | X... ..x. .... x... | X... .... ..x. x... | ; gain=0.78 humanize_ms=5
+track snare | .... X... .... X... | .... X.g. .... X... | ; gain=0.58 humanize_ms=8
+track hat   | x.x. x.x. x.x. x.x. | x.x. x.xo x.x. xxx. | ; gain=0.22 pan=0.18 humanize_ms=4
+track clap  | .... x... .... x... | .... x... .... x... | ; gain=0.18 pan=-0.22 humanize_ms=10
+notes bass  | C2 . . . C2 . G1 . Bb1 . . . G1 . . . | ; voice=bass gain=0.34 length=1.5 pan=-0.08

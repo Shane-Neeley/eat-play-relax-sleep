@@ -1,0 +1,76 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "audacity-editor",
+  "label": "Audacity recording and editing adapter",
+  "summary": "Use Audacity for person-operated recording, waveform editing, and audition while exchanging lossless files through EPRS and keeping scripting opt-in.",
+  "provider": "audacity",
+  "capabilities": [
+    "interactive_audio_editing"
+  ],
+  "handoffs": [
+    {
+      "id": "record-to-eprs",
+      "label": "Record a performance and preserve it in EPRS",
+      "intent": "Capture guitar, family voices, chimes, spoken beat ideas, room sound, or another performance without processing the only copy.",
+      "capabilities": [
+        "interactive_audio_editing"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A named performer or source, microphone/setup note, intended role, and consent context",
+        "An explicit project sample rate and available recording bit depth"
+      ],
+      "outputs": [
+        "A lossless WAV, AIFF, or FLAC export of each preserved take",
+        "A recording-session record linking take, setup, performer, consent, rights, and notes"
+      ],
+      "steps": [
+        "Set the intended device, channels, and project sample rate before recording and make a short level test.",
+        "Record without automatic normalization, noise reduction, compression, tuning, or tempo correction.",
+        "Export each irreplaceable take losslessly, ingest it through EPRS, and retain the native Audacity project when future edits may matter."
+      ],
+      "verification": [
+        "Open or probe the exported take and confirm duration, channels, sample rate, bit depth, and absence of truncation or clipping.",
+        "Confirm the exported checksum remains unchanged after raw intake and that every participant/setup relationship is recorded."
+      ]
+    },
+    {
+      "id": "interchange-roundtrip",
+      "label": "Continue an EPRS arrangement in Audacity",
+      "intent": "Import common-start lossless stems, make explicitly documented edits, and return one lossless bounce for ordinary review.",
+      "capabilities": [
+        "interactive_audio_editing"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A verified EPRS DAW-neutral interchange package",
+        "Its import instructions, common time-zero origin, and declared stereo stem balances"
+      ],
+      "outputs": [
+        "A lossless WAV or FLAC bounce beginning at the declared common origin",
+        "An eprs.daw-return/v1 declaration of tool/version, operator, edits, settings, unknowns, rights, and added sources"
+      ],
+      "steps": [
+        "Import every stem at time zero and do not add automatic normalization, warping, fades, polarity changes, or pan.",
+        "Make only the intended audible changes and preserve the editable Audacity project separately.",
+        "Export one lossless return without overwriting the interchange package, then capture it with eprs interchange return."
+      ],
+      "verification": [
+        "Confirm the bounce start, duration, channel layout, sample rate, and lossless encoding.",
+        "Record a complete mix-review listen before any returned bounce can reach mastering."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Every original recording export and the native Audacity project when it contains unique editable work",
+      "Human timing, tuning, room sound, breath, dynamics, noise, and silence unless a declared edit intentionally changes them"
+    ],
+    "avoid": [
+      "Overwriting raw takes, flattening the only editable session, or enabling macros and mod-script-pipe without explicit user choice",
+      "Automatic effects, resampling, dither, normalization, tempo matching, or destructive waveform edits that are absent from the handoff record"
+    ]
+  }
+}

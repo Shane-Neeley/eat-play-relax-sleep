@@ -1,0 +1,31 @@
+{
+  "schema": "eprs.youtube-assets/v1",
+  "title": "Signal Garden publishing assets",
+  "intent": "Prepare a legible thumbnail, complete authored captions, useful chapters, and explicit accessibility context for the approved listening video.",
+  "approved_video": "video/youtube/<video-title>/<approved-video>.mp4",
+  "accessibility_note": "Describe the important visuals and confirm that the caption cues cover every lyric, spoken word, and meaningful non-speech sound.",
+  "thumbnail": {
+    "path": "visuals/<approved-thumbnail>.png",
+    "alt_text": "Replace with a concise, literal description of the approved thumbnail.",
+    "review_question": "Is the image truthful to the music, legible at small sizes, and free of accidental private material?"
+  },
+  "captions": [
+    {
+      "language": "en",
+      "label": "English",
+      "completeness_note": "Replace after checking every lyric, spoken phrase, and meaningful sound against the approved video.",
+      "cues": [
+        {
+          "start_seconds": 0,
+          "end_seconds": 8.5,
+          "text": "[Room tone and guitar]"
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {"start_seconds": 0, "title": "Opening"},
+    {"start_seconds": 30, "title": "Family voices enter"},
+    {"start_seconds": 60, "title": "Closing chimes"}
+  ]
+}

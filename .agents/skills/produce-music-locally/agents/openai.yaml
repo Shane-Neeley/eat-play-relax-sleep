@@ -1,0 +1,4 @@
+interface:
+  display_name: "Produce Music with EPRS"
+  short_description: "Agent-led local music production with EPRS"
+  default_prompt: "Use $produce-music-locally and EPRS to turn my direction and source material into an inspectable song or music-video workflow."

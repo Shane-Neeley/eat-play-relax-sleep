@@ -1,0 +1,15 @@
+title "Family Room Space"
+tempo 82
+meter 4/4
+resolution 16
+bars 12
+swing 0.585
+seed 20260809
+
+track kick  | X... .... .... ..g. | X... .... .x.. .... | ; gain=0.62 humanize_ms=11
+track snare | .... .... X... .... | .... .... X... ...g | ; gain=0.36 humanize_ms=14
+track clap  | .... .... x... .... | .... .... .... .... | ; gain=0.11 pan=0.25 humanize_ms=18
+track hat   | x... ..g. .... .... | x... .... x... ..g. | ; gain=0.12 pan=-0.22 humanize_ms=10
+track tom   | .... .... .... .... | .... .... .... .g.. | ; gain=0.15 pan=0.12 humanize_ms=16
+notes bass  | D2 . . . . . . . A1 . . . C2 . . . . | D2 . . . . . F2 . A1 . . . G1 . . . . | ; voice=bass gain=0.25 length=3.4 pan=-0.08
+notes glow  | D3+A3 . . . . . . . C3+G3 . . . . . . . | . . . . F3+A3 . . . E3+G3 . . . A2+D3 . . . | ; voice=lead gain=0.09 length=4.8 pan=0.20

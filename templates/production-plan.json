@@ -1,0 +1,134 @@
+{
+  "schema": "eprs.production-plan/v2",
+  "title": "Porch-light path from prompt to listening film",
+  "request": "notes/requests/<captured-request-id>/request.json",
+  "north_star": "Let the guitar invitation and real family response carry the song; agents should expose choices, preserve uncertainty, and make only the smallest justified transformation.",
+  "assumptions": [
+    "No external browsing, processing, public sharing, upload, or publication authority is inferred from this plan.",
+    "The supplied recordings and writing remain private until their exact intended uses are approved."
+  ],
+  "open_questions": [
+    "Who participated in each recording and what visibility and credit wording will they approve?",
+    "Which original musical relationship deserves the first audible experiment?"
+  ],
+  "steps": [
+    {
+      "id": "document-session",
+      "kind": "recording context",
+      "intent": "Bind the supplied performances to their people, capture setups, room, consent context, and rights notes before editing.",
+      "depends_on": [],
+      "uses": ["guitar-take-one", "family-answer", "spoken-pocket"],
+      "required_capabilities": ["recording_session_intake"],
+      "required_result_roles": ["recording-session-record"],
+      "smallest_action": "Create one recording-session spec that references the exact supplied takes without processing or duplicating them.",
+      "outputs": ["Verified recording-session record"],
+      "done_when": [
+        "Every take has a role, participant relationship, setup, note, and honest rights context",
+        "No participant name or permission is guessed"
+      ],
+      "listening_question": "What human timing, breath, room, or roughness must every later step preserve?",
+      "gates": ["performer-consent", "source-rights"]
+    },
+    {
+      "id": "research-relationships",
+      "kind": "attributed research",
+      "intent": "Study call-and-response and room relationships as abstract ideas without copying another work.",
+      "depends_on": [],
+      "uses": ["lyric-fragments"],
+      "required_capabilities": ["research_records"],
+      "required_result_roles": ["research-record", "experiment-ideas"],
+      "smallest_action": "Queue one bounded research pass, then normalize its sources, observations, interpretations, uncertainty, and copying boundaries.",
+      "outputs": ["Attributed research record", "One or two original experiment ideas"],
+      "done_when": [
+        "Every observation and interpretation cites its sources",
+        "Every finding states a musical consequence and copying boundary"
+      ],
+      "listening_question": "Which relationship can be tested using only this project's own performances and material?",
+      "gates": ["user-direction"]
+    },
+    {
+      "id": "observe-pocket",
+      "kind": "rhythm observation",
+      "intent": "Translate the spoken boom-clap into player-facing timing evidence without assigning a grid or drum roles.",
+      "depends_on": ["document-session"],
+      "uses": ["spoken-pocket"],
+      "required_capabilities": ["media_analysis", "rhythm_observation"],
+      "required_result_roles": ["rhythm-observation-record"],
+      "smallest_action": "Observe one complete phrase and describe attacks, spacing, pulse ambiguity, and performed push or relaxation.",
+      "outputs": ["Rhythm observation record"],
+      "done_when": ["The report distinguishes measured events from interpretation and names what must remain human"],
+      "listening_question": "Where does the spoken phrase gather, wait, or answer?",
+      "gates": ["listening-decision"]
+    },
+    {
+      "id": "first-audible-question",
+      "kind": "musical experiment",
+      "intent": "Hear one original call-and-response relationship before committing to an arrangement.",
+      "depends_on": ["document-session", "research-relationships", "observe-pocket"],
+      "uses": ["guitar-take-one", "family-answer", "lyric-fragments"],
+      "required_capabilities": ["song_workspace"],
+      "required_result_roles": ["experiment-record", "rendered-listening-result", "experiment-review"],
+      "smallest_action": "Freeze only the sources needed for one short A/B or one narrow listening hypothesis.",
+      "outputs": ["Planned experiment", "Rendered listening result", "Keep/change/stop decision"],
+      "done_when": ["A complete listen records what the experiment revealed and the next smallest question"],
+      "listening_question": "Does the answer feel invited and communal without the agents crowding or correcting it?",
+      "gates": ["performer-consent", "source-rights", "listening-decision"]
+    },
+    {
+      "id": "arrange-and-mix",
+      "kind": "arrangement and mix",
+      "intent": "Develop only kept evidence into a reversible arrangement with conservative headroom.",
+      "depends_on": ["first-audible-question"],
+      "uses": [],
+      "required_capabilities": ["mix_rendering"],
+      "required_result_roles": ["mix-score", "float-working-mix", "mix-review"],
+      "smallest_action": "Write one declarative mix score using selected or explicitly processed sources and render a float working mix.",
+      "outputs": ["Mix score", "Float working mix", "Complete-listen mix review"],
+      "done_when": ["Every source role and transformation has a musical reason", "The kept mix has deliberate balance, edges, decay, and headroom"],
+      "listening_question": "Are the invitation, answer, breath, and room still the center of the complete song?",
+      "gates": ["listening-decision", "technical-verification"]
+    },
+    {
+      "id": "master-and-film",
+      "kind": "lossless master and listening film",
+      "intent": "Prepare a stable lossless master and reviewed YouTube-format listening film without publishing either.",
+      "depends_on": ["arrange-and-mix"],
+      "uses": [],
+      "required_capabilities": ["lossless_mastering", "youtube_preparation"],
+      "required_result_roles": ["approved-lossless-master", "reviewed-youtube-video"],
+      "smallest_action": "Master the exact kept mix, approve it after a complete listen, render one title-card film, and watch picture and sync end to end.",
+      "outputs": ["Approved lossless master", "Reviewed YouTube-format video"],
+      "done_when": ["Master and video checks pass", "Creative listen and picture/sync reviews are recorded"],
+      "listening_question": "Did delivery preparation preserve the approved balance, dynamics, and ending?",
+      "gates": ["listening-decision", "technical-verification"]
+    },
+    {
+      "id": "clear-and-package",
+      "kind": "rights and local release",
+      "intent": "Create a local handoff only after exact take, participant, credit, and proposed visibility decisions are verified.",
+      "depends_on": ["master-and-film"],
+      "uses": [],
+      "required_capabilities": ["recording_clearance", "release_packaging"],
+      "required_result_roles": ["recording-clearance-evidence", "verified-final-package"],
+      "smallest_action": "Record clearance for the traced raw takes and package approved media and metadata into FINAL without uploading.",
+      "outputs": ["Recording-clearance evidence", "Verified local FINAL package"],
+      "done_when": ["Every traced raw take and participant is covered for the proposed visibility", "Package publication state remains false"],
+      "listening_question": "Does the final local handoff represent the approved people, performances, credits, and song?",
+      "gates": ["performer-consent", "source-rights", "technical-verification"]
+    },
+    {
+      "id": "decide-upload",
+      "kind": "external decision",
+      "intent": "Separate a future explicit upload/publication decision from all local production work.",
+      "depends_on": ["clear-and-package"],
+      "uses": [],
+      "required_capabilities": [],
+      "required_result_roles": ["user-upload-decision"],
+      "smallest_action": "Present the verified package, visibility, credits, and unresolved caveats to the user; do not upload.",
+      "outputs": ["Explicit user go/no-go decision for a separately authorized action"],
+      "done_when": ["The user explicitly chooses whether any upload or publication action should occur"],
+      "listening_question": "Is this the exact approved version and context the user intends to share?",
+      "gates": ["upload-authorization", "publication-authorization"]
+    }
+  ]
+}

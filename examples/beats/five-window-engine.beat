@@ -1,0 +1,15 @@
+# A 5/4 loop felt as 3+2. The snare anchors beats 3 and 5 while the kick walks around it.
+title "Five Window Engine"
+tempo 112
+meter 5/4
+resolution 16
+bars 6
+swing 0.5
+seed 504
+
+track kick   | X... ..x. X... .... x... | ; gain=0.76
+track snare  | .... .... X... .... X... | ; gain=0.56 humanize_ms=3
+track hat    | x.x. x.x. x.x. x.x. x.x. | ; gain=0.20 pan=0.20
+track shaker | .x.x .x.x .x.x .x.x .x.x | ; gain=0.12 pan=-0.25 humanize_ms=7
+track tom    | .... .... .... x... ..g. | ; gain=0.24 pan=-0.12
+notes bass   | D2 . . D2 . . A1 . C2 . . . A1 . . . G1 . . . | ; voice=bass gain=0.30 length=1.2

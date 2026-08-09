@@ -1,0 +1,15 @@
+{
+  "schema": "eprs.visual/v1",
+  "title": "Sleep Circuit",
+  "subtitle": "72 BPM · SIGNAL 808",
+  "prompt": "A sparse constellation assembled from circuit noise. Deep navy, phosphor green, cold blue, one amber witness. Notes pull distant nodes together; silence lets them drift apart.",
+  "world": "constellation",
+  "seed": 808,
+  "palette": ["#8be9c7", "#68a8ff", "#f2a65a", "#e7edf8"],
+  "background": "#050812",
+  "motion": {"speed": 0.26, "feedback": 0.4, "rotation": 0.18, "turbulence": 0.32},
+  "reactivity": {"bass": 0.72, "mids": 0.88, "highs": 1.1},
+  "texture": {"grain": 0.12, "scanlines": 0.03, "bloom": 0.88},
+  "typography": {"show": true, "position": "center"},
+  "avoid": ["faces", "fast cuts", "dense starfield", "literal outer space"]
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "eprs.production-request/v1",
+  "title": "Porch-light family session",
+  "prompt": "Build from these performances, keeping the room, the guitar invitation, and the family response central.",
+  "intended_experience": "A guitar phrase opens a door and real people answer together; chimes widen the room without making it glossy.",
+  "preserve": [
+    "The breath before the family entrance",
+    "The guitar's uneven final gesture",
+    "Laughter, room sound, and timing that make the performance belong to these people"
+  ],
+  "avoid": [
+    "Automatic tuning or quantization",
+    "Generic replacement drums",
+    "Publishing names, faces, voices, or files without explicit approval"
+  ],
+  "questions": [
+    "Which guitar take leaves the family entrance most inviting?",
+    "Can one chime answer without closing the phrase?",
+    "How should the spoken boom-clap feel translate to a drummer?"
+  ],
+  "deliverables": [
+    "A small audition mix before any mastering",
+    "An approved YouTube listening film and local handoff package"
+  ],
+  "references": [
+    "Call and response as a relationship, not an arrangement to copy",
+    "The room as an instrument"
+  ],
+  "provided": [
+    {
+      "id": "guitar-take-one",
+      "role": "guitar invitation",
+      "kind": "performance",
+      "handling": "immutable-recording",
+      "path": "/replace/with/guitar-take-one.wav",
+      "note": "No click; keep the hesitation in the final gesture.",
+      "rights_note": "Record who performed and whether public use and credit wording are approved; until then, do not publish."
+    },
+    {
+      "id": "family-answer",
+      "role": "family voices",
+      "kind": "performance",
+      "handling": "immutable-recording",
+      "path": "/replace/with/family-voices.wav",
+      "note": "One room microphone; preserve breath, overlap, and laughter.",
+      "rights_note": "Private family recording; do not share or publish without explicit performer/guardian consent."
+    },
+    {
+      "id": "spoken-pocket",
+      "role": "boom-clap beat idea",
+      "kind": "rhythm idea",
+      "handling": "immutable-recording",
+      "path": "/replace/with/boom-clap.m4a",
+      "note": "Treat this like drummer language; do not assume a grid or drum mapping.",
+      "rights_note": "Private project recording; publication is not approved."
+    },
+    {
+      "id": "lyric-fragments",
+      "role": "lyric ideas",
+      "kind": "lyrics",
+      "handling": "frozen-evidence",
+      "path": "/replace/with/lyric-fragments.txt",
+      "note": "Keep variants; these are not approved final lyrics.",
+      "rights_note": "Original project writing; public wording is not approved."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "eprs.mix/v1",
+  "title": "First listening mix",
+  "intent": "Describe what should be foreground, what should answer, and what space must remain.",
+  "output": {
+    "sample_rate": 48000
+  },
+  "evidence": [
+    {
+      "id": "arrangement-listening-note",
+      "role": "research or listening decision",
+      "path": "notes/research/<research-record>/research.json",
+      "use": "Carry the documented family-breath landmark into placement and final decay."
+    }
+  ],
+  "tracks": [
+    {
+      "id": "guitar-loop",
+      "role": "foreground phrase",
+      "intent": "Keep the pick attack and performed push inside the loop.",
+      "path": "recordings/selected/guitar-loop/<selection>.wav",
+      "start_seconds": 0,
+      "source_start_seconds": 0,
+      "duration_seconds": 12.8,
+      "gain_db": -6,
+      "pan": -0.15,
+      "fade_in_ms": 0,
+      "fade_out_ms": 20
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "schema": "eprs.toolchain/v1",
+  "tools": [
+    {
+      "id": "python",
+      "label": "Python 3.11+",
+      "kind": "command-set",
+      "required": true,
+      "commands": [
+        {"name": "python3", "version_args": ["--version"]}
+      ],
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "recording_clearance", "research_records", "lyric_development", "agent_dispatch", "render_evidence_binding", "renderer_neutral_picture_capture", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"],
+      "install_hints": {
+        "Darwin": "Install Python 3.11 or newer from python.org or with pyenv.",
+        "Linux": "Install Python 3.11 or newer with your distribution package manager."
+      }
+    },
+    {
+      "id": "ffmpeg",
+      "label": "FFmpeg media toolkit",
+      "kind": "command-set",
+      "required": true,
+      "commands": [
+        {"name": "ffmpeg", "version_args": ["-version"]},
+        {"name": "ffprobe", "version_args": ["-version"]}
+      ],
+      "capabilities": [
+        "media_analysis",
+        "recording_session_intake",
+        "audio_selection",
+        "rhythm_observation",
+        "phase_observation",
+        "performance_comparison",
+        "performance_comping",
+        "stem_processing",
+        "mix_rendering",
+        "daw_interchange",
+        "daw_roundtrip",
+        "lossless_mastering",
+        "youtube_preparation",
+        "picture_stream_assembly",
+        "youtube_asset_packaging"
+      ],
+      "install_hints": {
+        "Darwin": "Install FFmpeg with `brew install ffmpeg` or another trusted package source.",
+        "Linux": "Install the ffmpeg package with your distribution package manager."
+      }
+    },
+    {
+      "id": "git",
+      "label": "Git",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "git", "version_args": ["--version"]}
+      ],
+      "capabilities": ["source_history"],
+      "install_hints": {
+        "Darwin": "Install the Xcode command-line tools or Git from a trusted package source.",
+        "Linux": "Install Git with your distribution package manager."
+      }
+    },
+    {
+      "id": "node",
+      "label": "Node.js",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "node", "version_args": ["--version"]}
+      ],
+      "capabilities": ["visual_development"],
+      "install_hints": {
+        "Darwin": "Install current Node.js LTS from nodejs.org or with a version manager.",
+        "Linux": "Install current Node.js LTS from nodejs.org or with a version manager."
+      }
+    },
+    {
+      "id": "graphviz",
+      "label": "Graphviz DOT renderer",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "dot", "version_args": ["-V"]}
+      ],
+      "capabilities": ["lineage_diagrams", "arrangement_maps"],
+      "install_hints": {
+        "Darwin": "Install Graphviz with `brew install graphviz` when lineage or arrangement maps are wanted.",
+        "Linux": "Install the graphviz package with your distribution package manager."
+      }
+    },
+    {
+      "id": "remotion",
+      "label": "Project Remotion renderer",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["visuals/node_modules/.bin/remotion"],
+      "capabilities": ["promptable_visuals"],
+      "install_hints": {
+        "default": "Run `make visuals-install` from the repository root."
+      }
+    },
+    {
+      "id": "ace_step",
+      "label": "ACE-Step 1.5 local music generator",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "acestep"}
+      ],
+      "capabilities": ["local_ai_music_generation", "reference_audio_generation", "generative_stems"],
+      "install_hints": {
+        "Darwin": "Use an isolated ACE-Step 1.5 environment only after checking hardware: accelerated macOS packages require Apple Silicon; Intel Macs should use an explicitly operated remote sidecar or accept slow CPU inference.",
+        "Linux": "Use the official isolated ACE-Step 1.5 environment after checking GPU, VRAM, disk, model license, and output-rights requirements."
+      }
+    },
+    {
+      "id": "audacity",
+      "label": "Audacity",
+      "kind": "application",
+      "required": false,
+      "platforms": ["Darwin"],
+      "paths": ["/Applications/Audacity 4.app", "/Applications/Audacity.app"],
+      "capabilities": ["interactive_audio_editing"],
+      "install_hints": {
+        "Darwin": "Install Audacity if hands-on recording or waveform editing is wanted."
+      }
+    },
+    {
+      "id": "sonic_pi",
+      "label": "Sonic Pi",
+      "kind": "application",
+      "required": false,
+      "platforms": ["Darwin"],
+      "paths": ["/Applications/Sonic Pi.app"],
+      "capabilities": ["live_coding", "local_osc"],
+      "install_hints": {
+        "Darwin": "Install Sonic Pi if live coding, MIDI, or local OSC performance is wanted."
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "daily-agent-work",
+      "label": "Daily agent work",
+      "description": "Claim due local work, prepare verified bounded context, and preserve result evidence without launching an agent.",
+      "capabilities": ["work_queue", "agent_dispatch", "agent_context"]
+    },
+    {
+      "id": "performed-groove-development",
+      "label": "Performed beat idea to reviewed groove",
+      "description": "Observe a spoken or played beat without assigning roles, author one explicit drummer-facing interpretation, and audition it as a review-gated BeatScript prototype.",
+      "capabilities": ["media_analysis", "rhythm_observation", "groove_interpretation", "beat_render"]
+    },
+    {
+      "id": "local-ai-collaboration",
+      "label": "Optional local generative-music collaboration",
+      "description": "Hand an owned prompt, lyrics, or reference recording to an explicitly operated local generator and return new audio plus exact model, seed, settings, rights, and listening evidence.",
+      "capabilities": ["local_ai_music_generation", "reference_audio_generation", "generative_stems"]
+    },
+    {
+      "id": "source-to-master",
+      "label": "Source recording to lossless master",
+      "description": "Preserve supplied performances, bind consequential decisions to exact evidence, develop reversibly, and create an approved lossless master.",
+      "capabilities": ["production_request_intake", "production_planning", "recording_session_intake", "audio_selection", "rhythm_observation", "groove_interpretation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "lossless_mastering"]
+    },
+    {
+      "id": "daw-handoff",
+      "label": "DAW-neutral arrangement handoff",
+      "description": "Export a verified working mix as common-start lossless float stems, then capture a declared lossless DAW return for review and mastering.",
+      "capabilities": ["mix_rendering", "daw_interchange", "daw_roundtrip", "media_analysis"]
+    },
+    {
+      "id": "visual-production",
+      "label": "Promptable visual production",
+      "description": "Develop and render local promptable visuals, then preserve renderer-neutral picture candidates for review.",
+      "capabilities": ["media_analysis", "visual_development", "promptable_visuals", "renderer_neutral_picture_capture", "picture_stream_assembly"]
+    },
+    {
+      "id": "youtube-release",
+      "label": "Local YouTube release preparation",
+      "description": "Prepare an approved master with either a title card or reviewed renderer-neutral picture, thumbnail/caption/chapter assets, a rights-aware FINAL package, and exact offline uploader inputs without uploading.",
+      "capabilities": ["lossless_mastering", "recording_clearance", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "publication_handoff"]
+    },
+    {
+      "id": "streaming-release",
+      "label": "Local Spotify and Apple Music handoff",
+      "description": "Prepare an approved lossless master, square artwork, credits, identifiers, and public-rights evidence for a separately authorized distributor submission.",
+      "capabilities": ["lossless_mastering", "recording_clearance", "distribution_packaging"]
+    },
+    {
+      "id": "full-local-production",
+      "label": "Full local production",
+      "description": "Run the complete local prompt-and-recordings-to-YouTube-handoff workflow, including recurring agent work and visuals.",
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "agent_dispatch", "recording_session_intake", "recording_clearance", "research_records", "lyric_development", "audio_selection", "rhythm_observation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "daw_interchange", "daw_roundtrip", "lossless_mastering", "media_analysis", "visual_development", "promptable_visuals", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"]
+    }
+  ]
+}

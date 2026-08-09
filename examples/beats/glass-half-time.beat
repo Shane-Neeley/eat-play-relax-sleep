@@ -1,0 +1,14 @@
+title "Glass Half Time"
+tempo 138
+meter 4/4
+resolution 16
+bars 12
+swing 0.50
+seed 731927
+
+track kick  | X... .... ..x. .... | X... .x.. .... x... | X... .... ..x. .... | X... .x.x .... x... | ; gain=0.82 humanize_ms=2
+track snare | .... .... X... .... | .... .... X... .... | .... .... X... .... | .... .... X... ..g. | ; gain=0.58 humanize_ms=4
+track hat   | x.xx x.xx xxxx x.xx | x.xx xxxx x.xx xxxx | x.xx x.xx xxxx x.xx | xxxx xxxx xxxx xxxx | ; gain=0.16 pan=0.27 humanize_ms=3
+track tom   | .... .... .... .g.. | .... ..x. .... .... | .... .... .... x... | ..x. .... .g.. x... | ; gain=0.23 pan=-0.18 humanize_ms=7
+notes bass  | C2 . . . . . G1 . Bb1 . . . G1 . . . | C2 . . Eb2 . . G1 . Bb1 . C2 . G1 . Bb1 . | ; voice=bass gain=0.38 length=1.1 pan=-0.06
+notes glow  | C4 . . . G3 . Bb3 . . . . . G3 . . . | . . Eb4 . D4 . . . Bb3 . . . G3 . . . | ; voice=lead gain=0.11 length=1.8 pan=0.22

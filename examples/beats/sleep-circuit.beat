@@ -1,0 +1,14 @@
+# Slow, swung, and sparse. Silence is part of the groove; the lead is a small constellation.
+title "Sleep Circuit"
+tempo 72
+meter 4/4
+resolution 16
+bars 8
+swing 0.62
+seed 808
+
+track kick  | X... .... .... ..x. | X... .... .g.. .... | ; gain=0.68
+track snare | .... .... X... .... | .... .... X... ..g. | ; gain=0.44 humanize_ms=12
+track hat   | x... ..g. x... .... | x... .... x... ..g. | ; gain=0.16 pan=0.26 humanize_ms=9
+notes bass | A1 . . . . . E2 . G2 . . . E2 . . . | ; voice=bass gain=0.26 length=3.2 pan=-0.12
+notes glow | A3+C4+E4 . . . . . . . G3+B3+D4 . . . E3+A3+C4 . . . | ; voice=lead gain=0.12 length=5 pan=0.22

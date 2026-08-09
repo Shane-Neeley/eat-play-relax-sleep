@@ -1,0 +1,17 @@
+{
+  "schema": "eprs.youtube/v1",
+  "title": "Signal Garden",
+  "intent": "A restrained listening card that leaves attention on the approved master.",
+  "master": "masters/<master-title>/<approved-master>.wav",
+  "visual": {
+    "kind": "title-card",
+    "background_color": "#15151a",
+    "text_color": "#ffffff",
+    "font_size": 72
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  }
+}

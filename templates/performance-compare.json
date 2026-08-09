@@ -1,0 +1,32 @@
+{
+  "schema": "eprs.performance-compare/v1",
+  "title": "Guitar answer takes",
+  "intent": "Hear whether the guitar should gather momentum or leave wider breaths for the family answer.",
+  "listening_questions": [
+    "Which attack shape leaves the family entrance open?",
+    "Does the phrase invite an answer or sound complete by itself?",
+    "Which differences are worth preserving as alternate arrangement choices?"
+  ],
+  "analysis": {
+    "sensitivity": 0.5,
+    "min_gap_ms": 150
+  },
+  "takes": [
+    {
+      "id": "guitar-take-one",
+      "role": "guitar answer",
+      "path": "recordings/raw/guitar/<take-one>.wav",
+      "start_seconds": 0,
+      "duration_seconds": 12,
+      "player_note": "Four gestures that grow toward the family entrance."
+    },
+    {
+      "id": "guitar-take-two",
+      "role": "guitar answer",
+      "path": "recordings/raw/guitar/<take-two>.wav",
+      "start_seconds": 0,
+      "duration_seconds": 12,
+      "player_note": "Three wider gestures with more room between them."
+    }
+  ]
+}

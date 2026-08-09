@@ -1,0 +1,128 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "ffmpeg-media",
+  "label": "FFmpeg media adapter",
+  "summary": "Use FFmpeg and FFprobe for inspectable analysis, reversible renders, interchange verification, and delivery encoding while leaving source recordings untouched.",
+  "provider": "ffmpeg",
+  "capabilities": [
+    "media_analysis",
+    "recording_session_intake",
+    "audio_selection",
+    "rhythm_observation",
+    "phase_observation",
+    "performance_comparison",
+    "performance_comping",
+    "stem_processing",
+    "mix_rendering",
+    "daw_interchange",
+    "daw_roundtrip",
+    "lossless_mastering",
+    "youtube_preparation",
+    "picture_stream_assembly",
+    "youtube_asset_packaging"
+  ],
+  "handoffs": [
+    {
+      "id": "inspect-media",
+      "label": "Inspect supplied media without changing it",
+      "intent": "Establish format, duration, streams, levels, and timing evidence before choosing a musical operation.",
+      "capabilities": [
+        "media_analysis",
+        "rhythm_observation",
+        "phase_observation",
+        "performance_comparison"
+      ],
+      "automation": "cli",
+      "requires_user_operation": false,
+      "inputs": [
+        "An immutable supplied recording or a new working render",
+        "A song-relative role and musical question"
+      ],
+      "outputs": [
+        "Read-only probe or analysis evidence",
+        "No replacement or modification of the inspected media"
+      ],
+      "steps": [
+        "Resolve the exact input and confirm whether it is an immutable raw take or a derived artifact.",
+        "Run the narrow EPRS analysis command that answers the stated musical question.",
+        "Keep measurements separate from listening decisions and creative approval."
+      ],
+      "verification": [
+        "Confirm the source checksum is unchanged.",
+        "Confirm analysis names the exact input and does not claim taste, consent, or approval."
+      ]
+    },
+    {
+      "id": "render-derived-audio",
+      "label": "Render a declared derived audio artifact",
+      "intent": "Create a new comp, stem, mix, interchange package, DAW return, or lossless master from an explicit versioned recipe.",
+      "capabilities": [
+        "audio_selection",
+        "performance_comping",
+        "stem_processing",
+        "mix_rendering",
+        "daw_interchange",
+        "daw_roundtrip",
+        "lossless_mastering"
+      ],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "Checksum-bound sources and a versioned EPRS recipe",
+        "Explicit sample-rate, bit-depth, timing, processing, and musical intent where relevant"
+      ],
+      "outputs": [
+        "A new derived file outside recordings/raw",
+        "A provenance sidecar and a separate listening-review gate"
+      ],
+      "steps": [
+        "Use the matching EPRS render command rather than assembling an undeclared FFmpeg command by hand.",
+        "Write to a new versioned destination and retain every source.",
+        "Listen to the complete result before recording keep, change, stop, or approval."
+      ],
+      "verification": [
+        "Verify checksums, source lineage, duration, sample rate, channels, and declared format.",
+        "Check for clipping, truncation, sync drift, and unintended silence without treating measurements as approval."
+      ]
+    },
+    {
+      "id": "assemble-youtube",
+      "label": "Assemble a local YouTube delivery file",
+      "intent": "Pair an approved lossless master with either a restrained title card or a reviewed renderer-neutral picture.",
+      "capabilities": [
+        "youtube_preparation",
+        "picture_stream_assembly",
+        "youtube_asset_packaging"
+      ],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "An approved checksum-verified lossless master",
+        "A title-card recipe or a kept H.264 yuv420p progressive BT.709 picture candidate"
+      ],
+      "outputs": [
+        "A fast-start YouTube MP4 with provenance",
+        "No upload, publication, or inferred visual-and-sync approval"
+      ],
+      "steps": [
+        "Run eprs youtube with the matching v1 or v2 recipe.",
+        "For v2, discard embedded guide audio and take audio only from the approved master.",
+        "Watch the complete assembled video before recording youtube-approve."
+      ],
+      "verification": [
+        "Verify delivery codec, color, duration, audio layout, fast-start metadata, and exact provenance.",
+        "For v2, require unchanged picture packet hashes and an audio packet match to the approved-master reference."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Immutable raw recordings, original videos, native sessions, and every approved lossless source",
+      "Working sample rate, bit depth, channel relationships, timing, dynamics, and deliberate silence unless the recipe explicitly changes them"
+    ],
+    "avoid": [
+      "In-place edits, hidden normalization, implicit resampling, undeclared lossy generations, or automatic creative approval",
+      "Treating a technically successful command as permission to publish or as proof that the music works"
+    ]
+  }
+}

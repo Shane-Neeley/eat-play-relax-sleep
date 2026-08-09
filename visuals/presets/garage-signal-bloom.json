@@ -1,0 +1,15 @@
+{
+  "schema": "eprs.visual/v1",
+  "title": "First Light",
+  "subtitle": "EAT · PLAY · RELAX · SLEEP",
+  "prompt": "A dark garage before sunrise becomes a warm analog signal portal. Neon orange machinery, cyan amplifier breath, tiny gold sparks. Bass opens the portal, mids flex a ribbon, high percussion wakes particles. Funky and tactile, patient rather than frantic. No faces, no stock footage, no literal equalizer bars.",
+  "world": "portal",
+  "seed": 310,
+  "palette": ["#ff7657", "#62c6cf", "#f2bd63", "#efe6d8"],
+  "background": "#090b10",
+  "motion": {"speed": 0.72, "feedback": 0.58, "rotation": 0.34, "turbulence": 0.42},
+  "reactivity": {"bass": 1.2, "mids": 0.78, "highs": 0.64},
+  "texture": {"grain": 0.18, "scanlines": 0.13, "bloom": 0.74},
+  "typography": {"show": true, "position": "center"},
+  "avoid": ["faces", "stock footage", "literal equalizer bars", "generic AI imagery", "constant motion"]
+}

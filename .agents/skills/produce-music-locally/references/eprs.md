@@ -1,0 +1,101 @@
+# EPRS agent workflow
+
+Use EPRS as an orchestration and evidence system, not as a limitation on musical
+methods. Run commands from the repository root through `./scripts/eprs`.
+
+## Route the input honestly
+
+| Input | Capture | First useful action |
+| --- | --- | --- |
+| WAV, guitar, singing, spoken beat, field recording | `make-song --recording ROLE=PATH` | Preserve raw bytes; listen or run `rhythm`, `select`, `compare`, or a source-aware experiment. |
+| Local video with wanted sound | `--recording ROLE=PATH` | Preserve the video; use `select` or the bundled lossless extraction helper for a derived audio copy. |
+| Picture, lyrics, MIDI, notes, score, downloaded research | `--evidence ROLE=PATH` | Inspect it with a fitting tool, then bind it to a narrow work item or experiment. |
+| YouTube/page URL | `--reference URL` | Treat it as a research lead. Browse only when currently authorized; retain attribution and do not assume sampling rights. |
+| English direction or beat words | `--prompt`, plus `--preserve`, `--avoid`, `--question` | Keep the exact words in the request; translate them into player language before code or grid coordinates. |
+
+## Start shallow
+
+For a new project:
+
+```bash
+./scripts/eprs make-song "TITLE" \
+  --prompt "MUSICAL DIRECTION" \
+  --recording "ROLE=/absolute/path/to/take.wav" \
+  --evidence "ROLE=/absolute/path/to/image-or-notes" \
+  --reference "SOURCE URL" \
+  --preserve "WHAT MUST SURVIVE" \
+  --avoid "WHAT MUST NOT HAPPEN"
+```
+
+Fresh runs use OS entropy. `SONG/NOW.md` points to the latest request, source,
+audition, visual score, and run manifest. An explicit `--seed` is for diagnostic
+replay; omit it for the next genuine variation.
+
+For an existing project:
+
+```bash
+sed -n '1,220p' SONG/NOW.md
+./scripts/eprs status SONG --verify
+```
+
+## Continue as an agent
+
+Do not confuse `make-song` with completion. It captures the brief, creates one
+technical audition, and queues request-bound planning work.
+
+1. Build a bounded handoff:
+
+   ```bash
+   ./scripts/eprs context SONG --request REQUEST --verify --format markdown
+   ./scripts/eprs dispatch next --song SONG --agent AGENT_NAME
+   ```
+
+2. For a full production, author an `eprs.production-plan/v2` against the exact
+   request. Return it as the work result, accept it with `plan accept-work`, and
+   queue one dependency-ready step at a time. Read `docs/PRODUCTION_PLANS.md`
+   and the versioned template before writing the plan.
+3. For a small direct request, freeze one hypothesis with `experiment` and make
+   the smallest useful audible or inspectable result. A render may be recorded
+   as pending review; only a real end-to-end listen earns keep/change/stop.
+4. Use source-specific paths instead of generic generation:
+   - performed rhythm: `rhythm` → authored `groove` → listen;
+   - several takes: `compare` or `comp` before processing;
+   - arrangement: editable source → stems → `mix` → complete listen;
+   - external DAW/editor: `interchange prepare` and verified return;
+   - picture: visual score or external renderer → `picture` review → YouTube;
+   - YouTube release: approved master/video plus rights/credits → `release`;
+   - Spotify/Apple handoff: approved master/artwork/public rights → `distribution`.
+5. Finish or release claimed work with exact result evidence. Never abandon an
+   in-progress claim silently.
+
+## Make randomness musical
+
+- Generate a fresh root seed by default and derive named child seeds for
+  composition, performance variation, sound design, and visuals.
+- Record every seed, engine version, source checksum, and important parameter.
+- Randomize choices that serve the brief: phrase answers, orchestration,
+  voicing, fills, spatial motion, texture, or visual layout.
+- Do not randomize performer consent, credits, source identity, review state, or
+  human timing under the euphemism of “humanization.”
+- Keep an explicit seed replayable for diagnosis. A fresh creative run should
+  request new entropy, so replayability does not turn the system into a fixed
+  vending machine.
+
+## Deliver without overclaiming
+
+- Keep editable/lossless sources. Analyze technical properties, then listen.
+- `FINAL/` is the shallow home for approved, checksum-verified handoffs.
+- `_LISTEN.*`, `_WATCH.*`, and `_CHANGE_ME.md` at song root are the human review
+  front door. After each meaningful revision, use `eprs expose` to repoint them
+  without copying or deleting the canonical media.
+- YouTube assembly, assets, release packaging, and publication authorization are
+  separate gates.
+- Spotify and Apple Music do not accept arbitrary direct uploads from this
+  local CLI. Prepare a distributor-ready master, artwork, metadata, credits,
+  identifiers, and rights notes locally; a distributor/account remains an
+  external service and separate authorization.
+- Use `templates/distribution.json` and `eprs distribution`; never invent an
+  ISRC/UPC or set `rights.confirmed` without a real human rights review.
+- Report the exact `_CHANGE_ME.md`, `_LISTEN.*`, `_WATCH.*`, `NOW.md`, run manifest, and `FINAL/` package
+  paths. State what still needs a human listen, rights decision, or platform
+  action.

@@ -1,0 +1,30 @@
+{
+  "schema": "eprs.release/v1",
+  "title": "Signal Garden",
+  "intent": "A complete local handoff of the approved family performance and restrained listening film.",
+  "approved_master": "masters/<master-title>/<approved-master>.wav",
+  "approved_video": "video/youtube/<video-title>/<approved-video>.mp4",
+  "youtube_assets": "video/youtube-assets/<asset-title>/<bundle-id>/bundle.json",
+  "clearances": [
+    "notes/clearances/<session-directory>/<approved-recording-clearance>.json"
+  ],
+  "credits": [
+    {
+      "name": "Family performers",
+      "role": "voices and room performance",
+      "note": "Replace this placeholder with the agreed public credit wording."
+    },
+    {
+      "name": "Guitar performer",
+      "role": "guitar",
+      "note": "Replace this placeholder with the agreed public credit wording."
+    }
+  ],
+  "rights_note": "Confirm that the performances, recording, visual, and public credit wording are cleared before any upload.",
+  "youtube": {
+    "title": "Signal Garden",
+    "description": "A family-room performance built from voices, guitar, and chimes.\n\nCredits: replace with approved public wording before upload.",
+    "tags": ["original music", "family performance"],
+    "visibility_intent": "private"
+  }
+}

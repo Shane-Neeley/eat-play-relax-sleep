@@ -1,0 +1,37 @@
+{
+  "schema": "eprs.picture/v1",
+  "title": "Signal Garden picture",
+  "intent": "Let the visual world respond to the performance while preserving room for faces, breath, and silence to remain imagined rather than illustrated.",
+  "source_video": "/absolute/or/cwd-relative/path/to/rendered-picture.mp4",
+  "approved_master": "masters/<master-title>/<approved-master>.wav",
+  "operator": "Name or role of the person or agent who rendered the picture",
+  "tool": {
+    "name": "Renderer, editor, DAW, or visual tool",
+    "version": "Exact version if known; otherwise write unknown",
+    "session_format": "Native project, score, timeline, or interchange format"
+  },
+  "timeline_origin": "master-time-zero",
+  "audio_policy": "replace-with-approved-master",
+  "changes": [
+    {
+      "id": "performance-space",
+      "type": "motion, framing, and visual arrangement",
+      "intent": "Describe what the picture makes newly visible or emotionally clear in the performance.",
+      "details": "Describe the visual events, their timing, and any meaningful first/last-frame behavior.",
+      "settings_or_unknown": "Record known prompts, seeds, render settings, plug-ins, effects, and automation; write unknown where unavailable."
+    }
+  ],
+  "unknowns": [
+    "List undisclosed renderer defaults, model state, plug-in state, color transforms, timing behavior, or other uncertainty."
+  ],
+  "evidence": [
+    {
+      "id": "editable-visual-source",
+      "role": "editable visual score, project, prompt, or timeline",
+      "path": "visuals/<visual-source>.json",
+      "note": "Explain how this source relates to the rendered picture.",
+      "rights_note": "State ownership, licenses, model/source material, and any unresolved reuse boundary."
+    }
+  ],
+  "rights_note": "State ownership and permission for every visual source; do not infer publication permission from possession of the render."
+}

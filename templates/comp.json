@@ -1,0 +1,45 @@
+{
+  "schema": "eprs.comp/v1",
+  "title": "Family answer comp",
+  "role": "family voices",
+  "intent": "Begin with the intimate answer, let the middle feel communal, then preserve a real breath before the released ending.",
+  "segments": [
+    {
+      "id": "intimate-open",
+      "path": "recordings/raw/family-voices/<take-one>.wav",
+      "start_seconds": 4.2,
+      "duration_seconds": 2.8,
+      "intent": "Keep the close first word and the breath that prepares it."
+    },
+    {
+      "id": "shared-middle",
+      "path": "recordings/raw/family-voices/<take-two>.wav",
+      "start_seconds": 8.1,
+      "duration_seconds": 3.4,
+      "intent": "Use the take where the voices overlap naturally rather than sounding isolated."
+    },
+    {
+      "id": "laughing-end",
+      "path": "recordings/raw/family-voices/<take-one>.wav",
+      "start_seconds": 12.7,
+      "duration_seconds": 2.2,
+      "intent": "Preserve the released ending and hint of laughter."
+    }
+  ],
+  "transitions": [
+    {
+      "from": "intimate-open",
+      "to": "shared-middle",
+      "type": "crossfade",
+      "duration_seconds": 0.04,
+      "intent": "Let the shared room hide the edit without changing internal timing."
+    },
+    {
+      "from": "shared-middle",
+      "to": "laughing-end",
+      "type": "silence",
+      "duration_seconds": 0.18,
+      "intent": "Keep a real breath before the last phrase."
+    }
+  ]
+}

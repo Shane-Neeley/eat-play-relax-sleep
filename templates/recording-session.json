@@ -1,0 +1,71 @@
+{
+  "schema": "eprs.recording-session/v1",
+  "title": "Porch-light family recording day",
+  "intent": "Preserve the guitar invitation, the real family response, the spoken pocket, and enough room sound to remember how they belonged together.",
+  "captured_at": "Replace with the local date/time or an honest description such as '2026-08-03 afternoon'",
+  "location_note": "Private home room; do not disclose a precise address.",
+  "tempo_or_time_reference": "No click; guitar gives the invitation and the group enters by breath.",
+  "tuning_or_reference": "Guitar tuning and pitch reference were not documented; preserve the performance as captured.",
+  "room_note": "Record at least 10 seconds before and after each take; keep laughter and final decay available.",
+  "participants": [
+    {
+      "id": "guitar-player",
+      "role": "guitar invitation",
+      "credit": "Credit wording not yet approved",
+      "consent_note": "Private recording approved for local song development only; confirm sharing, public use, and credit separately."
+    },
+    {
+      "id": "family-group",
+      "role": "family vocal response",
+      "credit": "Collective or individual credit wording not yet approved",
+      "consent_note": "Do not share or publish voices or names until every performer and any required guardian has explicitly approved the intended use."
+    }
+  ],
+  "setups": [
+    {
+      "id": "guitar-mic",
+      "source": "guitar amplifier",
+      "capture_chain": "Replace with microphone or recorder and interface; write 'unknown' rather than guessing",
+      "input": "Input or channel label if known",
+      "placement": "Distance, angle, and speaker position if known",
+      "monitoring": "No processing printed; monitoring details unknown"
+    },
+    {
+      "id": "room-mic",
+      "source": "family voices and room",
+      "capture_chain": "Replace with room microphone/recorder and interface",
+      "input": "Input or channel label if known",
+      "placement": "Describe where the microphone sat relative to the group",
+      "monitoring": "No corrective processing printed"
+    }
+  ],
+  "takes": [
+    {
+      "id": "guitar-take-one",
+      "role": "guitar invitation",
+      "path": "/replace/with/guitar-take-one.wav",
+      "participant_ids": ["guitar-player"],
+      "setup_ids": ["guitar-mic"],
+      "note": "No click; preserve the hesitation in the last gesture and the silence after it.",
+      "rights_note": "Private project performance; public use and credit wording are not approved."
+    },
+    {
+      "id": "family-answer-one",
+      "role": "family vocal response",
+      "path": "/replace/with/family-answer-one.wav",
+      "participant_ids": ["family-group"],
+      "setup_ids": ["room-mic"],
+      "note": "Preserve breaths, overlap, laughter, and the complete final decay.",
+      "rights_note": "Private family recording; do not share or publish without explicit performer and any required guardian consent."
+    },
+    {
+      "id": "room-tone",
+      "role": "room sound",
+      "path": "/replace/with/room-tone.wav",
+      "participant_ids": [],
+      "setup_ids": ["room-mic"],
+      "note": "Uninterrupted room before or after the performances.",
+      "rights_note": "Private location recording; public use is not approved."
+    }
+  ]
+}

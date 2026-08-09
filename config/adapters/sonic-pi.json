@@ -1,0 +1,77 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "sonic-pi-live-code",
+  "label": "Sonic Pi live-code adapter",
+  "summary": "Use Sonic Pi for audible code, performance, synthesis, sampling, MIDI, or local OSC while preserving portable source audio and explicit timing intent.",
+  "provider": "sonic_pi",
+  "capabilities": [
+    "live_coding",
+    "local_osc"
+  ],
+  "handoffs": [
+    {
+      "id": "develop-live-code",
+      "label": "Develop a playable live-code experiment",
+      "intent": "Turn a bounded musical hypothesis into a small playable Sonic Pi source without treating the live system as the project database.",
+      "capabilities": [
+        "live_coding"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A player-facing musical idea and the smallest hypothesis to audition",
+        "Song-relative or deliberately portable lossless samples when recordings are used"
+      ],
+      "outputs": [
+        "A commented Ruby source file with musical intent and declared randomness or timing assumptions",
+        "An optional lossless audition recording stored as a new experiment artifact"
+      ],
+      "steps": [
+        "Describe feel, phrasing, dynamics, and performer relationships before encoding timing coordinates.",
+        "Use explicit seeds when repeatability matters and keep sample references portable or documented.",
+        "Record the smallest useful audition, inspect it, and retain alternatives only when they answer materially different questions."
+      ],
+      "verification": [
+        "Confirm the source parses in the intended Sonic Pi version and referenced samples exist.",
+        "Listen to the complete experiment and record what the prototype preserves, changes, and leaves unresolved."
+      ]
+    },
+    {
+      "id": "drive-local-visuals",
+      "label": "Drive local visual cues from a performance",
+      "intent": "Send declared local OSC cues to an explicitly configured visual session without creating remote-control authority.",
+      "capabilities": [
+        "local_osc"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A local-only OSC address/port chosen by the operator",
+        "A versioned mapping from musical events to visual cues"
+      ],
+      "outputs": [
+        "A preserved cue mapping and editable live-code source",
+        "An optional renderer-neutral picture capture reviewed separately from the performance"
+      ],
+      "steps": [
+        "Confirm both applications are intentionally configured for local OSC before sending anything.",
+        "Keep cue names musical and stable while application-specific addresses stay in the adapter source.",
+        "Capture any resulting finished film through eprs picture rather than treating the live session as reproducible evidence."
+      ],
+      "verification": [
+        "Confirm OSC remains local, expected cues arrive, and no unrequested control surface is enabled.",
+        "Verify the finished picture begins at master time zero and record a complete picture review."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Original recordings outside live buffers, commented musical intent, declared seeds, and any unique playable source",
+      "The distinction between performed timing and an authored grid or live-code interpretation"
+    ],
+    "avoid": [
+      "Embedding irreplaceable audio only inside a live session, silently copying an artist's surface style, or inventing a fixed tempo where none was intended",
+      "Opening network control beyond the declared local OSC relationship or implying that a live render is approved"
+    ]
+  }
+}

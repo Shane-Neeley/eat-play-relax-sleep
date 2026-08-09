@@ -1,0 +1,12 @@
+{
+  "schema": "eprs.experiment/v2",
+  "status": "planned",
+  "hypothesis": "",
+  "seed": 1,
+  "inputs": {},
+  "parameters": {},
+  "results": [],
+  "listening_notes": [],
+  "decision": null,
+  "next_experiment": null
+}

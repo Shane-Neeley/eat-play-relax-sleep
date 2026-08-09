@@ -1,0 +1,11 @@
+{
+  "schema": "eprs.youtube-publication-receipt/v1",
+  "handoff": "notes/publications/<release-id>/handoff.json",
+  "platform_id": "replace-with-youtube-video-id",
+  "canonical_url": "https://www.youtube.com/watch?v=replace-with-youtube-video-id",
+  "visibility": "private",
+  "uploaded_at": "2026-08-03T12:00:00-07:00",
+  "published_at": null,
+  "performed_by": "Name the person or authorized uploader that performed the external action",
+  "authorization_note": "Quote or summarize the explicit current-user authorization relied on for this exact upload and visibility. This local receipt does not independently prove authorization."
+}

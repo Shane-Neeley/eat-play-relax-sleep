@@ -1,0 +1,74 @@
+{
+  "schema": "eprs.research/v1",
+  "title": "Call-and-response relationships",
+  "question": "What relationships could help a family answer feel communal while leaving the guitar invitation open?",
+  "musical_purpose": "Inform one original, sparse experiment for guitar, family voices, room, and chime.",
+  "researched_at": "Replace with the honest research date or date range",
+  "work": {
+    "item": "<completed-work-id>",
+    "run": 1
+  },
+  "sources": [
+    {
+      "id": "performance-reference",
+      "kind": "youtube",
+      "title": "Replace with the exact video title",
+      "creator": "Replace with the credited creator or channel",
+      "locator": "https://www.youtube.com/watch?v=<video-id>",
+      "published_at": "Replace with the published date if confirmed",
+      "accessed_at": "Replace with the access date",
+      "rights_note": "Private reference analysis only; no audio, lyrics, melody, rhythm, harmony, visual, or arrangement is licensed for copying.",
+      "note": "Describe why this source is relevant without treating it as a template."
+    },
+    {
+      "id": "firsthand-notes",
+      "kind": "local-file",
+      "title": "Firsthand room or listening notes",
+      "creator": "Project participant or agent",
+      "locator": "Private project evidence",
+      "published_at": "",
+      "accessed_at": "Replace with the capture or access date",
+      "rights_note": "Private project evidence; do not share or publish.",
+      "note": "This file will be copied and checksummed; it remains evidence, not authority.",
+      "evidence_path": "/replace/with/local-evidence.txt"
+    }
+  ],
+  "findings": [
+    {
+      "id": "shared-entry",
+      "kind": "observation",
+      "statement": "State only what can be directly heard, seen, or read in the cited source.",
+      "source_ids": ["performance-reference"],
+      "confidence": "direct",
+      "musical_consequence": "Describe an original relationship worth testing in this song.",
+      "copying_boundary": "Name the notes, words, rhythm, harmony, arrangement, sound, or visuals that must not be reproduced."
+    },
+    {
+      "id": "possible-openness",
+      "kind": "interpretation",
+      "statement": "State the proposed meaning or causal reading as interpretation, not fact.",
+      "source_ids": ["performance-reference", "firsthand-notes"],
+      "confidence": "tentative",
+      "musical_consequence": "Translate the interpretation into one small original choice.",
+      "copying_boundary": "Keep only the abstract relationship; invent all song-specific material from the project's own performances."
+    },
+    {
+      "id": "chime-space",
+      "kind": "open-question",
+      "statement": "Could one late chime extend the released breath, or would silence feel more generous?",
+      "source_ids": [],
+      "confidence": "unknown",
+      "musical_consequence": "Compare one chime with silence after the same family response.",
+      "copying_boundary": "Place the chime from this performance's breath and decay, not from a reference timestamp or arrangement."
+    }
+  ],
+  "experiments": [
+    {
+      "id": "one-chime-or-silence",
+      "finding_ids": ["possible-openness", "chime-space"],
+      "hypothesis": "One late chime can extend the family breath without closing the guitar invitation.",
+      "smallest_test": "Render two otherwise identical short versions: silence versus one original chime after the response.",
+      "listening_question": "Does the chime preserve the invitation, or does silence leave more human space?"
+    }
+  ]
+}

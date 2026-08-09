@@ -1,0 +1,15 @@
+{
+  "schema": "eprs.visual/v1",
+  "title": "Magnetic Weather",
+  "subtitle": "A CODE + ROOM STUDY",
+  "prompt": "Long magnetic tape ribbons flow through a black room. Burgundy, acid peach, bruised violet, and chalk. Motion feels viscous and imperfect. Midrange bends the tape and transients briefly sharpen it.",
+  "world": "ribbons",
+  "seed": 92,
+  "palette": ["#ff8066", "#7f5af0", "#d7ff72", "#f3eadc"],
+  "background": "#09070c",
+  "motion": {"speed": 0.48, "feedback": 0.7, "rotation": -0.12, "turbulence": 0.72},
+  "reactivity": {"bass": 0.8, "mids": 1.25, "highs": 0.72},
+  "texture": {"grain": 0.28, "scanlines": 0.04, "bloom": 0.48},
+  "typography": {"show": true, "position": "lower-left"},
+  "avoid": ["faces", "symmetry", "equalizer bars", "perfect gradients"]
+}

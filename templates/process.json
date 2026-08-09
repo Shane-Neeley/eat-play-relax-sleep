@@ -1,0 +1,35 @@
+{
+  "schema": "eprs.process/v1",
+  "title": "family answer clarity",
+  "role": "family voices",
+  "intent": "Keep the shared-room feeling while making the answering phrase easier to hear beside guitar.",
+  "source": "recordings/selected/family-voices/example.wav",
+  "evidence": [
+    {
+      "id": "family-microphone-relationship",
+      "role": "two-microphone phase observation",
+      "path": "notes/phase/family-close-and-family-room-<observation>.json",
+      "use": "Preserve the observed room relationship; do not infer permission to align or invert either microphone."
+    }
+  ],
+  "operations": [
+    {
+      "type": "highpass",
+      "intent": "Remove only the floor movement below the voices; keep chest and room warmth.",
+      "frequency_hz": 55,
+      "poles": 2
+    },
+    {
+      "type": "eq",
+      "intent": "Ease a small boxy buildup without making the family sound polished or isolated.",
+      "frequency_hz": 280,
+      "gain_db": -1.5,
+      "q": 0.8
+    },
+    {
+      "type": "gain",
+      "intent": "Leave conservative headroom for the guitar, chimes, and later arrangement choices.",
+      "db": -3
+    }
+  ]
+}

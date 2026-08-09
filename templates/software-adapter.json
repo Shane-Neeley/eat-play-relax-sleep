@@ -1,0 +1,42 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "new-tool-handoff",
+  "label": "New tool handoff",
+  "summary": "Explain the musical work this adapter helps with and how it returns portable evidence to EPRS.",
+  "provider": "matching-toolchain-provider-id",
+  "capabilities": [
+    "capability_declared_by_the_provider"
+  ],
+  "handoffs": [
+    {
+      "id": "source-to-eprs",
+      "label": "Bring one declared result back to EPRS",
+      "intent": "State the musical purpose of crossing this tool boundary.",
+      "capabilities": [
+        "capability_declared_by_the_provider"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "Name every source, format, timing origin, permission boundary, and required prior review."
+      ],
+      "outputs": [
+        "Name the new portable artifact and the EPRS provenance or review record that receives it."
+      ],
+      "steps": [
+        "Describe only explicit, reversible actions; identify any step that a person must operate or hear."
+      ],
+      "verification": [
+        "State how to verify source preservation, format, timing, media integrity, and the separate subjective review gate."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "List irreplaceable sources, editable sessions, timing relationships, musical qualities, settings, and evidence that must survive."
+    ],
+    "avoid": [
+      "List destructive defaults, hidden processing, unsafe control features, false authority, and application-specific state that must not become project truth."
+    ]
+  }
+}

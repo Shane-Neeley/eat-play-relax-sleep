@@ -1,0 +1,36 @@
+{
+  "schema": "eprs.daw-return/v1",
+  "title": "First external DAW return",
+  "intent": "Describe what the external pass should make newly audible or emotionally clear.",
+  "operator": "Name or role of the person or agent who made the pass",
+  "rights_note": "State ownership and performer permission for the returned mix and every added source; uncertainty remains explicit.",
+  "timeline_origin": "package-time-zero",
+  "tool": {
+    "name": "DAW or audio editor name",
+    "version": "Exact version if known; otherwise write unknown",
+    "session_format": "Native session format or interchange-only"
+  },
+  "interchange_package": "interchange/<mix-title>-<package-id>",
+  "returned_mix": "/absolute/or/cwd-relative/path/to/lossless-return.wav",
+  "changes": [
+    {
+      "id": "family-voice-space",
+      "type": "balance and ambience",
+      "intent": "Let the family response feel close without covering the guitar attack.",
+      "details": "Describe the audible decision and where it occurs.",
+      "settings_or_unknown": "List relevant settings, automation, plug-ins, and routing; write unknown where unavailable."
+    }
+  ],
+  "unknowns": [
+    "List any undisclosed plug-in state, routing, resampling, automation, or other uncertainty."
+  ],
+  "added_sources": [
+    {
+      "id": "release-chime",
+      "role": "performed release marker",
+      "path": "recordings/raw/chimes/<recording>.wav",
+      "note": "Explain where and why this source was added.",
+      "rights_note": "State performer and publication permission, or state what is unresolved."
+    }
+  ]
+}

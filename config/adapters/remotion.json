@@ -1,0 +1,49 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "remotion-picture",
+  "label": "Remotion picture adapter",
+  "summary": "Use the project Remotion renderer for promptable, audio-reactive films, then cross the renderer-neutral picture review boundary before YouTube assembly.",
+  "provider": "remotion",
+  "capabilities": [
+    "promptable_visuals"
+  ],
+  "handoffs": [
+    {
+      "id": "score-to-picture",
+      "label": "Render a promptable film and capture it for review",
+      "intent": "Develop an editable visual score against an approved master while keeping the rendered film portable beyond Remotion.",
+      "capabilities": [
+        "promptable_visuals"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "An approved lossless master and a versioned visual score or preset",
+        "Declared visual intent, source rights, tool/version, operator, render settings, and unknowns"
+      ],
+      "outputs": [
+        "An H.264 yuv420p progressive BT.709 render with even dimensions beginning at master time zero",
+        "An eprs.picture-candidate/v1 copy plus editable score evidence and a separate complete-picture review"
+      ],
+      "steps": [
+        "Preview the visual score locally and refine only against the stated musical relationship.",
+        "Render a film matching the approved master duration; embedded audio is guide-only.",
+        "Capture the film with eprs picture add, declare changes and unknowns, then watch every frame before recording keep, change, or stop."
+      ],
+      "verification": [
+        "Confirm duration within frame tolerance, H.264/yuv420p/progressive BT.709 properties, even dimensions, and preserved source checksum.",
+        "Confirm the editable visual score is frozen as evidence and no capture, render, or technical check implies creative or publication approval."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The approved lossless master, editable visual score, prompt/seed/settings evidence, original render, and renderer-neutral captured copy",
+      "Musical space for faces, breath, silence, dynamics, and ambiguity rather than automatically illustrating every event"
+    ],
+    "avoid": [
+      "Unlicensed footage, silent insertion of faces or model output, opaque renderer defaults presented as known state, or trusting embedded guide audio",
+      "Overwriting prior renders, using FINAL as scratch space, or treating technical success as picture, sync, upload, or publication approval"
+    ]
+  }
+}

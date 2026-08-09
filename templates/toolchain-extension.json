@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.toolchain-extension/v1",
+  "tools": [
+    {
+      "id": "local-audio-tool",
+      "label": "Locally installed audio tool",
+      "kind": "application",
+      "required": false,
+      "paths": [
+        "/absolute/path/to/the/local/application-or-binary"
+      ],
+      "capabilities": [
+        "interactive_audio_editing"
+      ],
+      "install_hints": {
+        "default": "Install or configure this tool explicitly; EPRS never performs installation."
+      }
+    }
+  ],
+  "workflows": []
+}

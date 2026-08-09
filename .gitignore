@@ -9,6 +9,38 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+visuals/node_modules/
+visuals/public/media/
+.remotion/
+*.wav
+*.aiff
+*.aif
+*.flac
+*.mp3
+*.m4a
+*.mp4
+*.mov
+*.mkv
+*.aup3
+!tests/fixtures/**
+
+# Local creative workspaces. Curated, rights-cleared examples belong in examples/.
+songs/*
+!songs/README.md
+
+# Machine- and editor-local state
+.DS_Store
+.idea/
+.vscode/
+.codex/
+.eprs-local/
+
+# This public repo ships only its self-contained music workflow. Other local
+# agent skills may coexist in the checkout without becoming repository scope.
+.agents/skills/*
+!.agents/skills/README.md
+!.agents/skills/produce-music-locally/
+!.agents/skills/produce-music-locally/**
 develop-eggs/
 dist/
 downloads/

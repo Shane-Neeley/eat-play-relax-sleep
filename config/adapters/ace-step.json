@@ -1,0 +1,82 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "ace-step-local-generator",
+  "label": "ACE-Step 1.5 local generation adapter",
+  "summary": "Use an explicitly operated ACE-Step 1.5 environment for optional text-, lyric-, or reference-audio generation, then bring every candidate back as unapproved song-local evidence with exact settings.",
+  "provider": "ace_step",
+  "capabilities": [
+    "local_ai_music_generation",
+    "reference_audio_generation",
+    "generative_stems"
+  ],
+  "handoffs": [
+    {
+      "id": "brief-to-candidates",
+      "label": "Generate bounded musical candidates",
+      "intent": "Explore one declared musical question with fresh variants without replacing owned performances or presenting model output as a finished song.",
+      "capabilities": [
+        "local_ai_music_generation",
+        "reference_audio_generation"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A captured production request and one player-facing hypothesis rather than only genre tags",
+        "Optional original lyrics or reference audio whose upload, processing, performer consent, and derivative-use rights are explicitly documented",
+        "A fresh seed for exploration or an exact recorded seed for diagnostic replay"
+      ],
+      "outputs": [
+        "New lossless or highest-quality available candidate audio outside recordings/raw and FINAL",
+        "A sidecar recording ACE-Step version, exact model ids, seed, prompts, negative prompts, duration, modes, source checksums, hardware/backend, and generation time",
+        "A separate listening decision that keeps, changes, alternates, or stops the candidate"
+      ],
+      "steps": [
+        "Inspect `eprs doctor --workflow local-ai-collaboration` and the official ACE-Step hardware guide before starting any environment or downloading models.",
+        "Start the local UI or REST sidecar explicitly; EPRS discovery never starts it, sends material to it, or makes it public.",
+        "Generate the smallest useful batch with fresh entropy, preserve each exact candidate and settings, and compare alternatives in both audition orders.",
+        "Freeze a useful candidate into an EPRS experiment or source-aware process and record what musical relationship it contributes."
+      ],
+      "verification": [
+        "Confirm the returned file opens, has the declared duration and channel/sample properties, is not clipped or truncated, and matches its recorded checksum.",
+        "Confirm all human/reference inputs remain unchanged and that model output, technical success, and an attractive first listen do not imply originality, rights clearance, mix approval, or release approval."
+      ]
+    },
+    {
+      "id": "candidate-to-stems",
+      "label": "Return editable generative stems",
+      "intent": "Use generation or extraction modes to obtain parts that can be arranged alongside owned recordings while keeping the original candidate and timing origin intact.",
+      "capabilities": [
+        "generative_stems"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "One checksummed candidate, an explicit role for each requested stem, and a declared common time-zero",
+        "The exact model/mode and a musical reason for separating, repainting, completing, or replacing a part"
+      ],
+      "outputs": [
+        "Common-start lossless stems with the untouched candidate retained as the parent",
+        "A reproducibility sidecar and an explicit note for bleed, artifacts, unknown phase relationships, or model-added content"
+      ],
+      "steps": [
+        "Export every stem from the same declared operation and retain silence so files share time zero.",
+        "Bring stems into an EPRS mix or interchange package without automatic normalization, warping, tuning, limiting, or source deletion.",
+        "Audition the stems together and against the parent candidate before making any keep decision."
+      ],
+      "verification": [
+        "Verify duration, alignment, file integrity, source checksum, and whether the stems reconstruct or intentionally differ from the parent.",
+        "Record audible bleed, artifacts, missing parts, and the separate musical review; do not infer clean isolation from named stem files."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Immutable human recordings, explicit consent and rights context, generated candidates, exact seeds/prompts/models/settings, and the editable source of every accepted decision",
+      "The distinction between human performance, researched influence, synthetic proposal, selected stem, approved mix, and cleared release"
+    ],
+    "avoid": [
+      "Silently installing models, starting services, uploading private family recordings, imitating a living artist by name, or using an unclear-rights reference as conditioning material",
+      "Overwriting candidates, hiding failed generations, treating a seed as a guarantee of cross-version reproducibility, or claiming that an open software license clears training-data or output rights"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "eprs.distribution/v1",
+  "title": "Song title",
+  "artist": "Primary artist",
+  "release_type": "single",
+  "approved_master": "masters/song/approved-song.wav",
+  "artwork": "visuals/song-artwork.png",
+  "genre": "Electronic",
+  "language": "en",
+  "explicit": "not-explicit",
+  "label": "Self-released",
+  "release_date": null,
+  "original_release_date": null,
+  "version": null,
+  "destinations": ["spotify", "apple-music"],
+  "credits": [
+    {"name": "Artist name", "role": "primary artist, writer, producer"}
+  ],
+  "rights": {
+    "confirmed": false,
+    "copyright": "© 2026 Artist name",
+    "phonographic_copyright": "℗ 2026 Artist name",
+    "note": "Replace this note after confirming composition, recording, sample, performer, and artwork rights."
+  },
+  "identifiers": {"isrc": null, "upc": null},
+  "lyrics": null,
+  "clearances": []
+}

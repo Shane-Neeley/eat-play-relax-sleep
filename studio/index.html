@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0f13" id="theme-color">
+  <title>Beat Lab · Eat Play Relax Sleep</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="header-top">
+        <p class="eyebrow">EAT · PLAY · RELAX · SLEEP</p>
+        <button id="mode-toggle" class="mode-toggle" type="button" aria-pressed="false"><span aria-hidden="true">✨</span> Kids studio</button>
+      </div>
+      <h1 id="studio-title">Beat Lab</h1>
+      <p class="lede" id="studio-lede">Hear code as touch, tension, and time. Click a step to cycle rest → hit → accent → ghost.</p>
+    </header>
+
+    <section id="soundboard" class="panel soundboard" aria-labelledby="soundboard-title" hidden>
+      <div class="section-head soundboard-head">
+        <div><p class="eyebrow">TAP A CREATURE</p><h2 id="soundboard-title">The silly sound shelf</h2></div>
+        <p id="kid-message" class="kid-message" aria-live="polite">Who is hiding in the studio?</p>
+      </div>
+      <div class="sound-pads">
+        <button class="sound-pad ghost-pad" type="button" data-sound="ghost"><span aria-hidden="true">👻</span><strong>Ghost</strong><small>friendly boo</small></button>
+        <button class="sound-pad" type="button" data-sound="owl"><span aria-hidden="true">🦉</span><strong>Owl</strong><small>hoo hoo</small></button>
+        <button class="sound-pad" type="button" data-sound="frog"><span aria-hidden="true">🐸</span><strong>Frog</strong><small>boing croak</small></button>
+        <button class="sound-pad" type="button" data-sound="cat"><span aria-hidden="true">🐈</span><strong>Cat</strong><small>space meow</small></button>
+        <button class="sound-pad" type="button" data-sound="robot"><span aria-hidden="true">🤖</span><strong>Robot</strong><small>beep bloop</small></button>
+        <button class="sound-pad" type="button" data-sound="dino"><span aria-hidden="true">🦖</span><strong>Dino</strong><small>tiny roar</small></button>
+        <button class="sound-pad" type="button" data-sound="magic"><span aria-hidden="true">🪄</span><strong>Magic</strong><small>sparkle zip</small></button>
+        <button class="sound-pad" type="button" data-sound="thunder"><span aria-hidden="true">⛈️</span><strong>Thunder</strong><small>soft rumble</small></button>
+      </div>
+    </section>
+
+    <section class="panel controls" aria-label="Transport and groove">
+      <button id="play" class="primary">Play loop</button>
+      <label><span class="control-name">Pattern</span><select id="presets" aria-label="Pattern"></select></label>
+      <label>Tempo <span id="tempo-value"></span><input id="tempo" type="range" min="50" max="160" value="94"></label>
+      <label>Swing <span id="swing-value"></span><input id="swing" type="range" min="0.5" max="0.7" step="0.01" value="0.54"></label>
+      <button id="mutate">One mutation</button>
+    </section>
+
+    <section class="panel sequencer" aria-labelledby="grid-title">
+      <div class="section-head"><h2 id="grid-title">One bar · sixteenth notes</h2><span id="count-guide">1 e &amp; a · 2 e &amp; a · 3 e &amp; a · 4 e &amp; a</span></div>
+      <div id="grid" class="grid"></div>
+      <div class="legend"><span><i class="normal"></i> tap</span><span><i class="accent"></i> big hit</span><span><i class="ghost"></i> ghost note</span></div>
+    </section>
+
+    <section class="code-panel">
+      <div><p class="eyebrow">PORTABLE SCORE</p><h2>The pattern is also text.</h2><p>Copy this into a <code>.beat</code> file, render it headlessly, mutate it with a seed, or hand it to an agent with a musical brief.</p><button id="copy">Copy BeatScript</button></div>
+      <textarea id="code" readonly aria-label="Generated BeatScript"></textarea>
+    </section>
+
+    <footer id="footer-copy">Use headphones at a comfortable level. Measurements can catch errors; your body decides whether the pocket works.</footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

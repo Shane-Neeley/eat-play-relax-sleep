@@ -1,0 +1,111 @@
+{
+  "schema": "eprs.groove/v1",
+  "title": "First spoken-pocket interpretation",
+  "intent": "Describe the bodily call-and-response the drummer should hear before reading the grid.",
+  "observation": "notes/rhythm/spoken-pocket/<observation>.json",
+  "player_brief": {
+    "meter_and_tempo": "4/4 around 120 BPM, if the observed attacks are heard as quarter-note landmarks.",
+    "subdivision_and_feel": "Straight eighth-note body with sixteenth-note space available; keep the openings open.",
+    "backbeat_or_answer": "Let the brighter spoken gesture answer on 2 and 4.",
+    "bass_drum_or_low_voice": "Let the rounder boom gesture ground 1 and 3.",
+    "timekeeping_voice": "Begin without a continuous timekeeping voice so the core exchange stays exposed.",
+    "dynamics": "Describe the relative weight, accents, ghosts, and phrase-level rise or release.",
+    "orchestration": "Describe the drummer-facing voices and why each belongs.",
+    "phrase_shape": "One-bar low call, bright answer, low call, bright answer, then breathe.",
+    "pocket": "Stay close to the performed spacing; do not manufacture feel with random timing.",
+    "listening_question": "Does this audition preserve what the spoken phrase asks a drummer to do?",
+    "preserve": [
+      "the alternating low and bright gestures",
+      "the performed space between attacks"
+    ],
+    "avoid": [
+      "claiming the grid is a transcription",
+      "adding subdivisions before the call-and-response works"
+    ]
+  },
+  "prototype": {
+    "tempo": 120,
+    "meter": {"numerator": 4, "denominator": 4},
+    "resolution": 16,
+    "bars": 1,
+    "swing": 0.5,
+    "seed": 19,
+    "anchor_event_id": 1,
+    "voices": [
+      {
+        "id": "low-call",
+        "kind": "kick",
+        "role": "round grounded call",
+        "player_instruction": "Play the boom as a short grounded call on 1 and 3.",
+        "pattern": "X.......x.......",
+        "gain": 0.42,
+        "pan": 0,
+        "offset_ms": 0,
+        "humanize_ms": 0
+      },
+      {
+        "id": "bright-answer",
+        "kind": "clap",
+        "role": "bright conversational answer",
+        "player_instruction": "Answer compactly on 2 and 4 and leave the surrounding air empty.",
+        "pattern": "....x.......x...",
+        "gain": 0.28,
+        "pan": 0.08,
+        "offset_ms": 0,
+        "humanize_ms": 0
+      }
+    ]
+  },
+  "event_interpretations": [
+    {
+      "event_id": 1,
+      "disposition": "pattern",
+      "voice": "low-call",
+      "bar": 1,
+      "step": 0,
+      "count": "1",
+      "interpretation": "Hear the first low gesture as the phrase downbeat.",
+      "timing_intent": "Anchor the proposed grid here without moving the source performance."
+    },
+    {
+      "event_id": 2,
+      "disposition": "pattern",
+      "voice": "bright-answer",
+      "bar": 1,
+      "step": 4,
+      "count": "2",
+      "interpretation": "Hear the bright gesture as the answer on beat 2.",
+      "timing_intent": "Preserve its measured relationship to the first boom as evidence."
+    },
+    {
+      "event_id": 3,
+      "disposition": "pattern",
+      "voice": "low-call",
+      "bar": 1,
+      "step": 8,
+      "count": "3",
+      "interpretation": "Repeat the grounded call on beat 3.",
+      "timing_intent": "Do not use humanize to imitate the original timing."
+    },
+    {
+      "event_id": 4,
+      "disposition": "pattern",
+      "voice": "bright-answer",
+      "bar": 1,
+      "step": 12,
+      "count": "4",
+      "interpretation": "Close the bar with the second bright answer.",
+      "timing_intent": "Leave the following space open."
+    }
+  ],
+  "alternatives": [
+    {
+      "name": "Half-time landmarks",
+      "description": "Hear each low-high pair across a slower two-beat span before choosing the pulse."
+    },
+    {
+      "name": "Free call and response",
+      "description": "Keep the attacks unmetered and let a drummer answer only after the phrase."
+    }
+  ]
+}

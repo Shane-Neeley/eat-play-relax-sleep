@@ -1,0 +1,54 @@
+{
+  "schema": "eprs.lyrics/v1",
+  "title": "Porch-light answer variants",
+  "intent": "Find words real people can answer together without making the room feel scripted.",
+  "language": "English",
+  "voice_note": "Plainspoken first-person plural; leave room for breath, overlap, and a singer's phrasing.",
+  "preserve": [
+    "The supplied porch-light image",
+    "Meaningful wording alternatives",
+    "An ending that can remain open after the last sung vowel"
+  ],
+  "avoid": [
+    "Forced rhyme or generic uplift",
+    "Copying words, imagery, rhyme, meter, or narrative from references",
+    "Silently choosing a final version before it is sung in context"
+  ],
+  "work": {
+    "item": "<completed-lyrics-work-id>",
+    "run": 1
+  },
+  "sources": [
+    {
+      "id": "seed-fragments",
+      "role": "original lyric fragments",
+      "path": "/replace/with/private-lyric-fragments.txt",
+      "note": "Keep the important images and variants; do not assume these are approved final words.",
+      "rights_note": "Original private project writing; public wording and sharing are not approved."
+    }
+  ],
+  "variants": [
+    {
+      "id": "open-door",
+      "role": "family refrain candidate",
+      "text": "Replace with an original lyric variant.",
+      "intent": "Describe the emotional and conversational job of this version.",
+      "source_ids": ["seed-fragments"],
+      "singability_note": "State what must be heard with real breath, pitch, timing, and group overlap before revising.",
+      "unresolved": [
+        "Name one meaning, word, vowel, stress, range, or phrasing question that remains open."
+      ]
+    },
+    {
+      "id": "room-answers",
+      "role": "family refrain alternate",
+      "text": "Replace with a genuinely different original alternative.",
+      "intent": "Preserve why this alternative deserves to remain available.",
+      "source_ids": ["seed-fragments"],
+      "singability_note": "Do not call a line singable from text alone; identify what a performer should try.",
+      "unresolved": [
+        "Name what this alternative reveals that the first one does not."
+      ]
+    }
+  ]
+}
