@@ -177,6 +177,7 @@ scripts/eprs doctor --workflow full-local-production --strict
 scripts/eprs adapter list --available --workflow full-local-production
 scripts/eprs adapter show audacity-editor --handoff record-to-eprs
 scripts/eprs status songs/<song-name>
+scripts/eprs map songs/<song-name>
 scripts/eprs request add songs/<song-name>/code/production-request.json --song songs/<song-name>
 scripts/eprs request show <request-id> --song songs/<song-name>
 scripts/eprs plan add songs/<song-name>/code/production-plan.json --song songs/<song-name>
