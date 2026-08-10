@@ -1,6 +1,7 @@
 from array import array
 import json
 import math
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -78,6 +79,13 @@ class SourceSketchTests(unittest.TestCase):
                 note="Use one complete reply, but keep both pulse readings open.",
             )
 
+            _, control = create_source_sketch(
+                song,
+                "Let the complete guitar recording invite a later answer.",
+                seed=313,
+                include_bed=False,
+                render_visual_preview=False,
+            )
             manifest_path, sketch = create_source_sketch(
                 song,
                 "Let one observed guitar sentence invite a later answer.",
@@ -92,8 +100,13 @@ class SourceSketchTests(unittest.TestCase):
             binding = sketch["musical_observations"][0]
             self.assertEqual(binding["result_id"], observation["result_id"])
             source = sketch["sources"][0]
+            control_source = control["sources"][0]
             selected = source["musical_observation"]["selected_phrase"]
             self.assertIn(selected, observation["phrase_observation"]["regions"])
+            self.assertIn(
+                selected["id"],
+                source["musical_observation"]["selection_pool"]["phrase_ids"],
+            )
             self.assertEqual(
                 source["placements"][0]["source_start_seconds"],
                 selected["start_seconds"],
@@ -102,6 +115,12 @@ class SourceSketchTests(unittest.TestCase):
                 source["placements"][0]["duration_seconds"],
                 selected["duration_seconds"],
             )
+            for key in ("start_seconds", "gain_db", "pan"):
+                self.assertEqual(
+                    source["placements"][0][key],
+                    control_source["placements"][0][key],
+                )
+            self.assertEqual(control_source["placements"][0]["source_start_seconds"], 0)
             self.assertFalse(
                 source["musical_observation"]["interpretation"]["tempo_selected"]
             )
@@ -115,6 +134,13 @@ class SourceSketchTests(unittest.TestCase):
                 "eprs.musical-observation/v1",
             )
             verify_source_sketch(song, manifest_path)
+            previous = Path.cwd()
+            try:
+                os.chdir(root)
+                relative_manifest = manifest_path.resolve().relative_to(root.resolve())
+                verify_source_sketch(Path("songs/observed-reply"), relative_manifest)
+            finally:
+                os.chdir(previous)
             context = build_agent_context(song, verify=True)
             self.assertEqual(
                 context["recent_source_sketches"][0]["sources"][0]

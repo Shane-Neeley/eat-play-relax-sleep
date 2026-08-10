@@ -324,6 +324,33 @@ def _prepare_source_inputs(song: Path, recordings: list[dict]) -> list[dict]:
     return prepared
 
 
+def _phrase_selection_pool(regions: list[dict]) -> tuple[list[dict], dict]:
+    """Prefer substantial regions while retaining short-idea fallback."""
+    if not regions:
+        raise ValueError("musical observation has no phrase region to arrange")
+    maximum_phrase_duration = max(item["duration_seconds"] for item in regions)
+    minimum_phrase_duration = round(
+        max(0.2, min(1.0, maximum_phrase_duration * 0.25)), 6
+    )
+    phrase_pool = [
+        item for item in regions
+        if item["duration_seconds"] >= minimum_phrase_duration
+    ]
+    fallback_used = not phrase_pool
+    if fallback_used:
+        phrase_pool = regions
+    return phrase_pool, {
+        "rule": (
+            "all measured regions because none reached the preferred duration"
+            if fallback_used else
+            "regions at least max(0.2 seconds, min(1 second, one quarter of the longest region))"
+        ),
+        "preferred_minimum_duration_seconds": minimum_phrase_duration,
+        "fallback_used": fallback_used,
+        "phrase_ids": [item["id"] for item in phrase_pool],
+    }
+
+
 def _bind_musical_observations(
     song: Path,
     prepared_sources: list[dict],
@@ -359,6 +386,7 @@ def _bind_musical_observations(
             raise ValueError(
                 f"musical observation has no phrase region to arrange: {path.relative_to(song)}"
             )
+        phrase_pool, selection_pool = _phrase_selection_pool(regions)
         binding = {
             "path": str(path.relative_to(song)),
             "sha256": sha256(path),
@@ -370,6 +398,8 @@ def _bind_musical_observations(
         source["_musical_observation"] = {
             "binding": binding,
             "phrases": regions,
+            "phrase_pool": phrase_pool,
+            "selection_pool": selection_pool,
             "pitch_candidates": report["pitch_observation"]["candidates"],
             "tempo_candidates": report["pulse_observation"]["tempo_candidates"],
         }
@@ -388,6 +418,7 @@ def _build_source_plan(
     include_bed: bool,
 ) -> tuple[list[dict], list[dict]]:
     rng = random.Random(seed ^ 0x53_4F_55_52_43_45)
+    phrase_rng = random.Random(seed ^ 0x50_48_52_41_53_45)
     caller_index = min(
         range(len(prepared_sources)),
         key=lambda index: ({
@@ -416,7 +447,9 @@ def _build_source_plan(
     for index, item in enumerate(prepared_sources, start=1):
         role = item["role"]
         observation = item.get("_musical_observation")
-        selected_phrase = rng.choice(observation["phrases"]) if observation else None
+        selected_phrase = (
+            phrase_rng.choice(observation["phrase_pool"]) if observation else None
+        )
         source_start_seconds = selected_phrase["start_seconds"] if selected_phrase else 0.0
         duration = (
             selected_phrase["duration_seconds"]
@@ -513,6 +546,7 @@ def _build_source_plan(
                 {
                     **observation["binding"],
                     "selected_phrase": selected_phrase,
+                    "selection_pool": observation["selection_pool"],
                     "pitch_candidates": observation["pitch_candidates"][:4],
                     "tempo_candidates": observation["tempo_candidates"],
                     "interpretation": {
@@ -622,7 +656,11 @@ def verify_source_sketch(
     song_path = Path(song).resolve()
     load_song_manifest(song_path)
     requested = Path(item)
-    path = requested.resolve() if requested.is_absolute() else (song_path / requested).resolve()
+    path = (
+        requested.resolve()
+        if requested.is_absolute() or requested.exists()
+        else (song_path / requested).resolve()
+    )
     if path.is_dir():
         path = path / "source-sketch.json"
     try:
@@ -690,6 +728,10 @@ def verify_source_sketch(
         selected = binding.get("selected_phrase")
         if selected not in observation["phrase_observation"]["regions"]:
             raise ValueError("source-sketch selected phrase is not in its observation")
+        regions = observation["phrase_observation"]["regions"]
+        phrase_pool, expected_pool = _phrase_selection_pool(regions)
+        if binding.get("selection_pool") != expected_pool or selected not in phrase_pool:
+            raise ValueError("source-sketch selected phrase is outside its declared pool")
         if (
             binding.get("pitch_candidates")
             != observation["pitch_observation"]["candidates"][:4]

@@ -41,6 +41,8 @@ keeps CPU and memory bounded even when the source is a long phone video. On the
 about 1.6 seconds for a fresh observation; a cache hit verifies provenance and
 does not run signal analysis. `eprs status` and `eprs context` read and verify
 the stored result rather than silently re-analyzing media.
+An additional 52.1-second PCM working recording completed in 2.74 seconds on
+the same machine, including command startup and media decode.
 
 For a long rehearsal, choose the musical question first:
 
@@ -65,8 +67,10 @@ diagnostic arrangement deliberately:
   --intent "Use one complete observed family sentence, then leave room for the guitar to reply"
 ```
 
-The seed chooses one of that source's measured phrase regions, then the mix
-uses its exact source start and unwarped duration. The source-sketch record,
+The seed chooses from an inspectable pool of substantial measured regions,
+preferring at least 0.2 seconds and up to a one-second threshold based on the
+longest region; genuinely short ideas fall back to all regions. The mix then
+uses the chosen region's exact source start and unwarped duration. The source-sketch record,
 mix score, render evidence, and agent context all retain the observation and
 selected region checksums. Note-name and BPM candidates appear only as open
 listening leads; they do not change pitch, timing, key, chord, tempo, or meter.
