@@ -175,6 +175,246 @@ This repository is a creative production system, not a scratch directory. Work f
     `_CURRENT.json` at song root point to that exact canonical media. Never
     replace a non-link user file or treat a root pointer as release approval.
 
+## Music and remix theory for agents
+
+This is a practical listening framework, not a request to auto-correct every
+source. A remix can be technically synchronized and still feel wrong. Treat
+tempo, meter, groove, phrase, pitch, harmony, vocal diction, arrangement
+density, and phase as related but separate questions. State the audible idea
+first; use measurements to test it.
+
+### 1. Hear the three clocks
+
+Keep these clocks separate when inspecting a source:
+
+- **Transport time** is file time: sample zero, timestamps, edits, fades, and
+  delays. It is useful for provenance and reproducible placement, but sample
+  zero is not always the musical downbeat.
+- **Pulse time** is the felt beat: the regular or irregular spacing a player
+  would tap, count, or dance to. A BPM estimate can be half-time or double-time,
+  and an attack may be a beat, an offbeat, a subdivision, or a pickup.
+- **Phrase time** is the larger breath: bars, two- or four-bar ideas, verses,
+  choruses, turnarounds, cadences, held notes, and silence. A vocal or hook can
+  enter correctly on pulse time and still be wrong if it lands in the middle of
+  a phrase.
+
+Before matching two sources, write a small observation for each:
+
+```text
+tempo candidates: 96 / 192 BPM; confidence low
+meter candidate: 4/4; downbeat: likely after the pickup
+groove: straight 8ths, snare slightly behind the kick; source drifts in the last phrase
+phrase: 4-bar vocal sentences, breath before the answer, 8-bar chorus
+pitch: E major / C# minor candidates; mode and chord changes unresolved
+vocal landmarks: pickup, stressed syllable, held vowel, breath, cadence
+```
+
+The wording matters. `eprs rhythm` and `eprs observe` preserve candidates and
+ambiguity; they do not prove a BPM, key, meter, downbeat, or edit point. Use
+several landmarks and a complete listen before selecting one interpretation.
+
+### 2. Match beats without erasing the groove
+
+Think from large to small: downbeat, beat, subdivision, then microtiming. In
+4/4, the common player count is `1 e & a 2 e & a 3 e & a 4 e & a`; in another
+meter or a swung feel, that count is only a translation aid. A kick on 1, a
+snare on 2 and 4, a bass anticipation before 3, and a late hi-hat are different
+musical relationships even if a grid places all of them in one bar.
+
+When building or matching drums:
+
+- Match the **role relationship** before copying every hit: downbeat support,
+  backbeat answer, low-end ostinato, timekeeping subdivision, pickup, setup,
+  ghost note, and release. Ask whether the source sits on top of the pulse,
+  behind it, or breathes around it.
+- Preserve swing, push, drag, gaps, velocity shape, and phrase asymmetry. A
+  performed attack that is consistently late may be the pocket, not an error.
+  `eprs rhythm` evidence can support a groove proposal; it cannot authorize
+  quantization.
+- Check the half-time/double-time reading before deciding that two BPMs
+  disagree. Confirm the reading against bass, snare, vocal stress, and phrase
+  length rather than trusting the most prominent transient.
+- Match the first **musical anchor**, not merely the first nonzero sample. A
+  pickup can begin before beat 1; a breath can be intentionally left outside
+  the bar; a room tail can need to continue after the edit.
+
+For a stable quarter-note BPM and a time signature `n/d`, the nominal bar
+length is:
+
+```text
+seconds per bar = n * (60 / BPM) * (4 / d)
+```
+
+That is a placement aid, not evidence that a human performance actually uses
+that grid. If the source drifts, has rubato, or was recorded without a click,
+measure phrase landmarks and describe the drift instead of averaging it away.
+
+Choose one of four timing strategies explicitly:
+
+1. **No stretch:** place complete phrases at compatible landmarks and let the
+   source retain its own clock. This often gives the most honest result for
+   free-time vocals, spoken ideas, and human groove.
+2. **Global stretch:** use one tempo ratio for a source with a stable pulse. Keep
+   pitch constant for vocals when the chosen tool permits it; declare the
+   algorithm, ratio, and audible risk. Render to a new file.
+3. **Local warp:** anchor a small number of phrase or transient landmarks when
+   the source drifts. Keep anchors sparse enough to preserve the performance;
+   inspect for warble, chopped consonants, transient smearing, and changed
+   pocket. Never hide this in an import default.
+4. **Re-compose:** use a complete phrase, answer, fill, or newly authored beat
+   instead of forcing two incompatible clocks together. A clean omission is
+   often more musical than a damaged stretch.
+
+The source material determines the time method. Percussion and drum loops need
+transient preservation; pitched monophonic material such as a vocal needs a
+pitch-aware method; a full stereo song needs a complex method and is the most
+artifact-prone. These are options to evaluate, not automatic EPRS behavior.
+EPRS currently keeps time-stretching, quantization, and correction opt-in and
+reversible.
+
+### 3. Align phrases, lyrics, and entrances
+
+Phrase boundaries are often more important than bar lines. Mark the opening
+pickup, first stressed word, breath, held vowel, final consonant, cadence, and
+decay of each vocal phrase. A phrase normally reads as a complete statement and
+is tied to breathing; preserve that shape when placing it over a new beat.
+
+For a vocal-over-beat remix:
+
+- Decide whether the vocal enters on the downbeat, an upbeat, a pickup before
+  1, or as an answer after the beat. Say this in player language before writing
+  seconds or samples.
+- Keep stressed syllables supported by a stable beat or chord when that is the
+  intended feel. Do not move consonants just to make a waveform line up if the
+  singer's articulation is part of the character.
+- Leave enough air for breaths, plosives, consonant tails, held vowels, and the
+  final cadence. A hard cut through a breath is a musical edit and must be
+  explained, not disguised as a timing fix.
+- Avoid stacking two lead vocals over the same syllable window unless the
+  desired sound is an intentional duet, unison, call-and-response, or clash.
+  Otherwise choose one lead, move the answer into a gap, shorten the
+  accompaniment, or arrange a lower/background role.
+- Use complete phrases as the default unit for a first experiment. If an
+  excerpt, repetition, or loop is desired, record the exact source region,
+  occurrence count, and reason. Do not infer repetition from a prompt that only
+  says “make it catchy.”
+
+A useful arrangement map has one row per audible event or section:
+
+```text
+section | source | musical anchor | phrase length | lead | answer | density change | tail to preserve
+intro   | beat   | downbeat 1     | 4 bars        | beat  | none   | sparse         | room pickup
+verse   | vocal  | pickup to 1    | 4 bars        | vocal | bass   | medium         | breath before 2
+chorus  | both   | bar 1          | 8 bars        | vocal | hook   | full           | final held vowel
+```
+
+When two full songs are layered, map their forms first. Similar duration does
+not imply shared verse or chorus boundaries. A short vocal cameo can work over
+an instrumental gap, a repeated hook, or a call-and-response turn even when
+the two songs do not share a bar grid.
+
+### 4. Match harmony and vocal pitch by ear and evidence
+
+Separate **tonal center** from **key label**. A detector may offer a key or a
+relative-major/minor pair while the source is modal, changes key, or has too
+little sustained harmony to decide. Preserve candidates and confidence.
+
+For a vocal against a new accompaniment, test in this order:
+
+1. Does the phrase's tonal center feel stable over the new bass and chords?
+2. Which vocal notes land on chord tones, and which are passing, suspended, or
+   intentionally tense notes?
+3. Do the bass note and the vocal's stressed notes create an accidental clash?
+4. Does the tension resolve at the same phrase or cadence, or does the new bed
+   make the singer sound lost?
+
+Key compatibility is a starting hypothesis, not a “compatible/incompatible”
+boolean. Mode, chord progression, bass motion, melody range, register, and
+vibrato matter. A vocal can work over a different key if the accompaniment is
+thin or modal; two tracks with the same key label can still clash on a changed
+chord.
+
+When authoring a new backing part, prefer common tones and small, singable
+voice movement between chords. Let the bass establish function while upper
+voices avoid unnecessary leaps. If the two songs disagree harmonically, choose
+one source as the tonal anchor and make the other a deliberately exposed
+texture, rhythm answer, instrumental interlude, or controlled tension. Do not
+silently pitch-shift a vocal or full mix. Any transpose, formant treatment, or
+time/pitch combination needs an explicit recipe, a new checksum-bound render,
+and a level-matched listen against the unchanged source.
+
+### 5. Make space for the vocal before reaching for processing
+
+Vocal intelligibility is an arrangement problem first. Reduce competing density
+at the phrase, choose a less busy drum subdivision, move a countermelody into
+the vocal's rest, or lower the accompaniment during the lead. Only then choose
+level, panning, EQ, dynamics, or ducking.
+
+When two vocal-bearing masters overlap, expect masking: a louder track is not
+necessarily clearer, and broadband ducking is not a substitute for deciding
+who is speaking. Test one lead against an answer, a unison, a lower-register
+response, or an instrumental gap. If spectral unmasking is used, tie it to the
+vocal presence and declare what was changed; avoid a permanent blanket cut that
+removes energy when the vocal is absent.
+
+Do not judge a remix from meters alone. Level-match the original and edit, then
+listen for lyric intelligibility, consonant loss, bass-vocal collisions,
+masking during the chorus, and whether the arrangement still breathes between
+phrases.
+
+### 6. Check stereo and phase whenever sources overlap
+
+Two copies of the same source, a duplicated vocal, a multi-microphone capture,
+or a small timing offset can create comb filtering: some frequencies reinforce
+and others cancel. The result may sound hollow, thin, or washy in stereo and
+collapse much more severely in mono.
+
+Before choosing a delay, polarity inversion, alignment, widening, or pan:
+
+- audition the relationship in stereo and mono;
+- compare the unchanged sources and the proposed change at matched level;
+- use `eprs phase` for two-microphone evidence when the source is one
+  performance;
+- treat correlation and a mono-sum measurement as clues, not proof that the
+  musical choice is correct; and
+- keep the original tracks and make the alignment or polarity decision
+  explicit and reversible.
+
+Panning can create space between a vocal and a neighboring instrument, but it
+  cannot repair a lyric collision, a wrong phrase entrance, or a phase problem
+  hidden by stereo width. Recheck the center, the low end, and the vocal in
+  mono.
+
+### 7. Minimum remix decision record
+
+Before rendering a beat-and-vocal experiment, record enough theory to let the
+next agent challenge the interpretation:
+
+```text
+musical idea: who leads, who answers, and where the breath remains
+timing strategy: no stretch | global stretch | local warp | re-compose
+source anchors: downbeat, pickup, phrase/cadence landmarks
+tempo/meter: candidates, chosen reading, confidence, and half/double check
+groove: subdivision, swing, backbeat, accents, pocket, and what stays human
+vocal: phrase starts, stressed syllables, breaths, range, register, and lead role
+harmony: tonal-center candidates, bass movement, chord-tone tensions, resolution
+space: density change, level move, pan/EQ/dynamics intent, mono/phase concern
+experiment: one musical question, exact source regions, and what would count as keep/change/stop
+```
+
+The smallest useful remix is one that answers one audible question. It may
+prove that two sources lock, that they should alternate, that one needs a new
+drum bed, or that the mismatch is the interesting sound. Measurements can show
+drift, peak, correlation, and possible landmarks; only a complete listening
+decision establishes whether the musical relationship works.
+
+This synthesis was checked against the [Ableton reference on tempo, warping,
+warp markers, quantization, and material-specific warp modes](https://www.ableton.com/en/live-manual/11/audio-clips-tempo-and-warping/),
+[Berklee's overview of melodic phrases, breathing, and vocal writing](https://online.berklee.edu/takenote/conjunct-disjunct-melody-basic-definitions/),
+[Berklee's voice-leading principles](https://online.berklee.edu/takenote/voice-leading-paradigms-for-harmony-in-music-composition/),
+[Yamaha's phase and mono-compatibility explanation](https://hub.yamaha.com/proaudio/recording/what-is-phase/),
+and [iZotope's vocal-masking guidance](https://www.izotope.com/community/blog/how-to-mix-vocals-and-a-beat-with-unmask-in-nectar-3).
+
 ## Source-of-truth hierarchy
 
 - Intent: creative brief and performance notes.
