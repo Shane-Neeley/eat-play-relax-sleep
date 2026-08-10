@@ -1,0 +1,26 @@
+{
+  "schema": "eprs.agent-response/v1",
+  "dispatch": {
+    "packet_sha256": "replace-with-sha256-of-exact-dispatch-packet",
+    "work_item": "replace-from-response_contract.work_item",
+    "run_number": 1,
+    "agent": "replace-from-response_contract.agent"
+  },
+  "summary": "REPLACE: state what was actually done and what remains unresolved",
+  "decision": "needs-followup",
+  "actions": {
+    "network_accessed": false,
+    "raw_recordings_modified": false,
+    "remote_state_changed": false,
+    "uploaded_published_or_sent": false,
+    "local_audio_processed": false,
+    "listening_performed": false,
+    "commands_run": []
+  },
+  "results": [
+    {
+      "role": "replace-with-required-or-useful-role",
+      "path": "relative-to-this-response-or-absolute-result-path"
+    }
+  ]
+}

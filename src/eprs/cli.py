@@ -16,7 +16,12 @@ from .clearance import create_recording_clearance, load_recording_clearance
 from .comp import render_comp, review_comp
 from .delivery import approve_youtube_video, render_youtube
 from .distribution import package_distribution
-from .dispatch import dispatch_next_work
+from .dispatch import (
+    accept_agent_response,
+    dispatch_next_work,
+    initialize_agent_response,
+    write_dispatch_packet,
+)
 from .daw_return import capture_daw_return
 from .frontdoor import expose_current_media
 from .groove import create_groove_development, review_groove, verify_groove_development
@@ -282,6 +287,15 @@ def parser() -> argparse.ArgumentParser:
     dispatch_next.add_argument("--now", help="Evaluate due state at an explicit ISO 8601 time")
     dispatch_next.add_argument("--max-text-bytes", type=int, default=65_536)
     dispatch_next.add_argument(
+        "--allow-network-research",
+        action="store_true",
+        help="Explicitly permit read-only browsing for this claimed task; never permits remote mutation or publication",
+    )
+    dispatch_next.add_argument(
+        "--out",
+        help="Write a ready packet to a new JSON file; idle or released responses remain on stdout",
+    )
+    dispatch_next.add_argument(
         "--toolchain-extension",
         action="append",
         help="Add one private toolchain extension to dispatched context",
@@ -291,6 +305,19 @@ def parser() -> argparse.ArgumentParser:
         action="append",
         help="Add one private adapter-profile directory to dispatched context",
     )
+    dispatch_accept = dispatch_commands.add_parser(
+        "accept",
+        help="Validate an eprs.agent-response/v1 and freeze its packet, response, and results",
+    )
+    dispatch_accept.add_argument("response")
+    dispatch_accept.add_argument("--packet", required=True)
+    dispatch_accept.add_argument("--song", required=True)
+    dispatch_response_init = dispatch_commands.add_parser(
+        "response-init",
+        help="Create a new response skeleton bound to one exact ready packet",
+    )
+    dispatch_response_init.add_argument("--packet", required=True)
+    dispatch_response_init.add_argument("--out", required=True)
 
     check = commands.add_parser("check", help="Parse and validate a .beat file")
     check.add_argument("beat")
@@ -1022,15 +1049,24 @@ def main(argv: list[str] | None = None) -> int:
                 print(render_agent_context_markdown(packet), end="")
         elif args.command == "dispatch":
             if args.dispatch_command == "next":
-                print(json.dumps(dispatch_next_work(
+                bundle = dispatch_next_work(
                     args.song,
                     args.agent,
                     kind=args.kind,
                     now=args.now,
                     max_text_bytes=args.max_text_bytes,
+                    allow_network_research=args.allow_network_research,
                     toolchain_extensions=args.toolchain_extension,
                     adapter_profile_directories=args.profile_dir,
-                ), indent=2))
+                )
+                if args.out and bundle["status"] == "ready":
+                    print(write_dispatch_packet(bundle, args.out))
+                else:
+                    print(json.dumps(bundle, indent=2))
+            elif args.dispatch_command == "accept":
+                print(accept_agent_response(args.song, args.packet, args.response))
+            elif args.dispatch_command == "response-init":
+                print(initialize_agent_response(args.packet, args.out))
         elif args.command == "check":
             beat = load(args.beat)
             print(f"OK: {beat.title} — {beat.bars} bars, {len(beat.tracks)} tracks, {beat.duration:.2f}s")

@@ -53,6 +53,14 @@ technical audition, and queues request-bound planning work.
    ./scripts/eprs dispatch next --song SONG --agent AGENT_NAME
    ```
 
+   For an external file-based runner, use `dispatch next --out PACKET`, then
+   `dispatch response-init --packet PACKET --out RESPONSE`. Return the completed
+   response with `dispatch accept RESPONSE --packet PACKET --song SONG` so the
+   exact packet, action audit, and results are frozen together. Add
+   `--allow-network-research` only when the current caller explicitly authorizes
+   read-only browsing for that claimed research task; it never permits remote
+   changes or publication.
+
 2. For a full production, author an `eprs.production-plan/v2` against the exact
    request. Return it as the work result, accept it with `plan accept-work`, and
    queue one dependency-ready step at a time. Read `docs/PRODUCTION_PLANS.md`

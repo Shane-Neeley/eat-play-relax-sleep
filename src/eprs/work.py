@@ -877,6 +877,11 @@ def finish_work_item(
     summary: str,
     decision: str,
     results: list[tuple[str, str | Path]],
+    *,
+    expected_agent: str | None = None,
+    expected_run: int | None = None,
+    expected_work_sha256: str | None = None,
+    expected_result_sha256: dict[str, str] | None = None,
 ) -> Path:
     """Freeze run results, record an outcome, and requeue recurring work."""
     clean_summary = summary.strip()
@@ -890,10 +895,16 @@ def finish_work_item(
     song_path = Path(song)
     path = resolve_work_item(song_path, value)
     with _item_lock(path):
+        if expected_work_sha256 is not None and sha256(path) != expected_work_sha256:
+            raise ValueError("work item changed after its agent dispatch packet was created")
         _, item = load_work_item(song_path, path)
         current = item["runs"][-1]
         if item.get("status") != "in_progress" or current.get("status") != "in_progress":
             raise ValueError("work item must be started before it can be finished")
+        if expected_run is not None and current.get("number") != expected_run:
+            raise ValueError("work response run does not match the current claimed run")
+        if expected_agent is not None and current.get("agent") != expected_agent:
+            raise ValueError("work response agent does not own the current claimed run")
         if decision == "complete" and isinstance(item.get("result_contract"), dict):
             returned_roles = {slugify(role) for role, _ in validated_results}
             missing = set(item["result_contract"]["required_roles"]) - returned_roles
@@ -902,75 +913,107 @@ def finish_work_item(
                     "work finish decision complete is missing required result roles: "
                     f"{', '.join(sorted(missing))}"
                 )
-        completed = datetime.now(timezone.utc)
-        completed_at = _format_moment(completed)
-        run_dir = path.parent / "runs" / f"{current['number']:04d}"
-        run_dir.mkdir(parents=True, exist_ok=True)
-        result_records = {}
+        result_digests = {}
         for role, source in validated_results:
             role_id = slugify(role)
             digest = sha256(source)
-            destination = run_dir / f"{role_id}-{source.name}"
-            if destination.exists() and sha256(destination) != digest:
-                destination = run_dir / f"{role_id}-{digest[:10]}-{source.name}"
-            if not destination.exists():
+            if (
+                expected_result_sha256 is not None
+                and expected_result_sha256.get(role_id) != digest
+            ):
+                raise ValueError(
+                    f"work result changed after response validation: {role_id}"
+                )
+            result_digests[role_id] = digest
+        completed = datetime.now(timezone.utc)
+        completed_at = _format_moment(completed)
+        run_dir = path.parent / "runs" / f"{current['number']:04d}"
+        run_root_existed = run_dir.parent.exists()
+        temporary_run = run_dir.with_name(f".{run_dir.name}.partial")
+        if run_dir.exists():
+            raise FileExistsError(f"work result run already exists: {run_dir}")
+        if temporary_run.exists():
+            raise FileExistsError(f"incomplete work result run already exists: {temporary_run}")
+        temporary_run.mkdir(parents=True)
+        run_committed = False
+        try:
+            result_records = {}
+            for role, source in validated_results:
+                role_id = slugify(role)
+                digest = result_digests[role_id]
+                filename = f"{role_id}-{source.name}"
+                destination = temporary_run / filename
                 shutil.copy2(source, destination)
-            if sha256(destination) != digest:
-                raise RuntimeError(f"work result changed while it was being frozen: {source}")
-            result_records[role_id] = {
-                "role": role,
-                "path": str(destination.relative_to(path.parent)),
-                "original_name": source.name,
-                "sha256": digest,
-            }
-        current["status"] = "completed"
-        current["completed_at"] = completed_at
-        current["summary"] = clean_summary
-        current["decision"] = decision
-        current["results"] = result_records
-        claims = current.get("claims")
-        if claims is None and current.get("agent"):
-            claims = [{
-                "agent": current["agent"],
-                "claimed_at": current.get("started_at"),
-                "released_at": None,
-                "release_note": None,
-                "completed_at": completed_at,
-            }]
-            current["claims"] = claims
-        elif isinstance(claims, list):
-            open_claim = next(
-                (
-                    claim for claim in reversed(claims)
-                    if claim.get("agent") == current.get("agent")
-                    and claim.get("released_at") is None
-                    and claim.get("completed_at") is None
-                ),
-                None,
-            )
-            if open_claim is not None:
-                open_claim["completed_at"] = completed_at
-        cadence = item.get("schedule", {}).get("cadence", "once")
-        if decision == "stop" or (cadence == "once" and decision == "complete"):
-            item["status"] = "stopped" if decision == "stop" else "completed"
-            item["schedule"]["next_due_at"] = None
-        else:
-            next_due = completed_at
-            if decision == "complete" and cadence in {"daily", "weekly"}:
-                next_due = _next_due(current["due_at"], cadence, completed)
-            item["status"] = "queued"
-            item["schedule"]["next_due_at"] = next_due
-            item["runs"].append({
-                "number": current["number"] + 1,
-                "status": "queued",
-                "queued_at": completed_at,
-                "due_at": next_due,
-                "agent": None,
-                "claims": [],
-                "results": [],
-            })
-        item["updated_at"] = completed_at
-        _atomic_json(path, item)
+                if sha256(destination) != digest:
+                    raise RuntimeError(
+                        f"work result changed while it was being frozen: {source}"
+                    )
+                result_records[role_id] = {
+                    "role": role,
+                    "path": str((run_dir / filename).relative_to(path.parent)),
+                    "original_name": source.name,
+                    "sha256": digest,
+                }
+            temporary_run.rename(run_dir)
+            run_committed = True
+            current["status"] = "completed"
+            current["completed_at"] = completed_at
+            current["summary"] = clean_summary
+            current["decision"] = decision
+            current["results"] = result_records
+            claims = current.get("claims")
+            if claims is None and current.get("agent"):
+                claims = [{
+                    "agent": current["agent"],
+                    "claimed_at": current.get("started_at"),
+                    "released_at": None,
+                    "release_note": None,
+                    "completed_at": completed_at,
+                }]
+                current["claims"] = claims
+            elif isinstance(claims, list):
+                open_claim = next(
+                    (
+                        claim for claim in reversed(claims)
+                        if claim.get("agent") == current.get("agent")
+                        and claim.get("released_at") is None
+                        and claim.get("completed_at") is None
+                    ),
+                    None,
+                )
+                if open_claim is not None:
+                    open_claim["completed_at"] = completed_at
+            cadence = item.get("schedule", {}).get("cadence", "once")
+            if decision == "stop" or (cadence == "once" and decision == "complete"):
+                item["status"] = "stopped" if decision == "stop" else "completed"
+                item["schedule"]["next_due_at"] = None
+            else:
+                next_due = completed_at
+                if decision == "complete" and cadence in {"daily", "weekly"}:
+                    next_due = _next_due(current["due_at"], cadence, completed)
+                item["status"] = "queued"
+                item["schedule"]["next_due_at"] = next_due
+                item["runs"].append({
+                    "number": current["number"] + 1,
+                    "status": "queued",
+                    "queued_at": completed_at,
+                    "due_at": next_due,
+                    "agent": None,
+                    "claims": [],
+                    "results": [],
+                })
+            item["updated_at"] = completed_at
+            _atomic_json(path, item)
+        except Exception:
+            shutil.rmtree(temporary_run, ignore_errors=True)
+            if run_committed:
+                shutil.rmtree(run_dir, ignore_errors=True)
+            if not run_root_existed:
+                try:
+                    run_dir.parent.rmdir()
+                except OSError:
+                    pass
+            raise
     return path
 
 

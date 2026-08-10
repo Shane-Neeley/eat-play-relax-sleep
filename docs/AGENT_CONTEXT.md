@@ -148,7 +148,8 @@ An external agent runner should normally use the combined dispatch preparation:
 ./scripts/eprs dispatch next \
   --song songs/signal-garden \
   --agent daily-research-agent \
-  --kind "YouTube research"
+  --kind "YouTube research" \
+  --out /tmp/agent-dispatch.json
 ```
 
 The versioned `eprs.agent-dispatch/v1` response is `idle` when nothing matching
@@ -159,23 +160,27 @@ attempt and reason, then returns the run to the queue. A ready response embeds
 the `eprs.work-claim/v1`, verified `eprs.agent-context/v1`, explicit authority
 limits, and the finish-or-release response contract, including exact result
 roles required when the runner declares `complete`. It does not invoke an
-agent, browse, process media, write an output packet, or satisfy any gate.
+agent, browse, process media, or satisfy any gate. `--out` writes only a ready
+packet and refuses overwrite; idle and released states remain on stdout.
 
 The runner can then use this sequence:
 
-1. Call `eprs dispatch next`; exit cleanly on `idle`, and surface `released`
-   for inspection rather than launching an agent.
+1. Call `eprs dispatch next --out <new-packet>`; exit cleanly on `idle`, and
+   surface `released` for inspection rather than launching an agent.
 2. Read `authority`, the context guardrails, focused prompt/hypothesis, and player-facing
    intent before choosing tools.
-3. Act only within the current user’s authorization; the packet itself adds no
-   permission.
+3. Act only within the current user’s authorization. Read-only research remains
+   disabled unless the caller explicitly added `--allow-network-research`;
+   remote changes and publication cannot be enabled.
 4. Write new outputs to the song’s working folders.
-5. Record a work result or experiment listening decision through the normal
-   checksum-bound commands.
+5. Initialize `eprs.agent-response/v1` with `dispatch response-init`, declare
+   actions and role/path results honestly, then use `dispatch accept` to freeze
+   the exact packet, response, and outputs together. This does not record a
+   listening or other approval gate.
 6. Call `work release` with the same agent and a reason if execution cannot
    continue; there is no automatic claim timeout.
-7. Generate a fresh context packet for the next handoff instead of modifying an
-   old packet.
+7. Generate a fresh packet for the next handoff instead of modifying an old
+   packet. Never put secrets or raw environment output in `commands_run`.
 
 This interface deliberately does not launch arbitrary agent CLIs. Different
 local or hosted runners can consume the same JSON contract while authentication,

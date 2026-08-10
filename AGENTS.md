@@ -54,7 +54,13 @@ This repository is a creative production system, not a scratch directory. Work f
    grant permission to browse, publish, send, or change unrelated files.
    Automated runners should use `dispatch next` to combine atomic claiming with
    verified bounded context preparation. It releases preparation failures with
-   evidence but does not invoke an agent or broaden authority. If a ready agent
+   evidence but does not invoke an agent or broaden authority. For a file-based
+   runner, write a new packet with `dispatch next --out`, initialize its bound
+   response with `dispatch response-init`, and return it through `dispatch
+   accept`; this freezes both sides and refuses claim, checksum, action, or
+   required-role drift. Read-only browsing requires the caller's explicit
+   `--allow-network-research`; no packet may authorize raw-source writes, remote
+   mutation, sending, upload, or publication. If a ready agent
    cannot continue, the owner uses `work release` with a reason. Claims never
    expire or transfer silently.
    Inspect the work item's `result_contract` or dispatch finish contract before
@@ -196,6 +202,9 @@ scripts/eprs context songs/<song-name> --request <request-id> --purpose "Current
 scripts/eprs work list --song songs/<song-name> --due
 scripts/eprs work add --song songs/<song-name> --plan <plan-id> --plan-step <step-id>
 scripts/eprs dispatch next --song songs/<song-name> --agent <agent-name>
+scripts/eprs dispatch next --song songs/<song-name> --agent <agent-name> --out /tmp/agent-packet.json
+scripts/eprs dispatch response-init --packet /tmp/agent-packet.json --out /tmp/agent-response.json
+scripts/eprs dispatch accept /tmp/agent-response.json --packet /tmp/agent-packet.json --song songs/<song-name>
 scripts/eprs work claim-next --song songs/<song-name> --agent <agent-name>
 scripts/eprs work start <work-id> --song songs/<song-name> --agent <agent-name>
 scripts/eprs work release <work-id> --song songs/<song-name> --agent <agent-name> --note "Why this attempt stopped"

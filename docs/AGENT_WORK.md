@@ -177,6 +177,63 @@ file. It does not launch an agent, browse, enable network access, process audio,
 upload, publish, or satisfy a production-plan gate. The scheduler still decides
 whether and how to invoke an agent within current user authorization.
 
+## Exact packet and response protocol
+
+For a local Codex, Claude, Gemini, or another explicitly operated runner, write
+the ready bundle to a new file instead of scraping terminal output:
+
+```bash
+./scripts/eprs dispatch next \
+  --song songs/signal-garden \
+  --agent local-codex-runner \
+  --out /tmp/signal-garden-dispatch.json
+
+./scripts/eprs dispatch response-init \
+  --packet /tmp/signal-garden-dispatch.json \
+  --out /tmp/signal-garden-response.json
+```
+
+`--out` writes only a `ready` packet and refuses overwrite. `idle` and
+`released` states stay on stdout. The packet contains the verified bounded
+context, exact work checksum, owner, run, required result roles, action limits,
+and response schema. `response-init` fills the packet checksum and exact claim
+coordinates; the runner fills the summary, decision, action report, and
+role/path results.
+
+By default the packet does not permit browsing. For a research task whose
+current caller explicitly authorizes read-only web research, record that narrow
+permission when claiming it:
+
+```bash
+./scripts/eprs dispatch next \
+  --song songs/signal-garden \
+  --agent research-agent \
+  --kind "YouTube research" \
+  --allow-network-research \
+  --out /tmp/signal-garden-research-dispatch.json
+```
+
+This never permits login changes, posting, sending, remote mutation, upload, or
+publication. There is deliberately no corresponding publication flag.
+
+After the runner creates every declared result and honestly completes the
+action report, accept it through the exact packet:
+
+```bash
+./scripts/eprs dispatch accept /tmp/signal-garden-response.json \
+  --packet /tmp/signal-garden-dispatch.json \
+  --song songs/signal-garden
+```
+
+Acceptance refuses packet/response/claim/work checksum drift, a different
+agent or run, undeclared network access, any reported raw-recording mutation,
+remote change, upload/publication/send, duplicate or reserved roles, missing
+files, and missing required result roles. It then freezes the exact dispatch
+packet, response audit, and result files together in the numbered work run.
+Technical acceptance never becomes a listening, rights, consent, creative,
+mix, master, upload, or publication approval. If a runner cannot provide a
+valid response, release the claim explicitly rather than editing the packet.
+
 When work comes from a production plan, `eprs plan queue-next` can prepare one
 unstarted dependency-ready step before dispatch. It holds the same queue lock,
 inherits exact plan/request evidence, and never queues more than one step per
@@ -304,14 +361,15 @@ A robust external scheduler loop is:
 
 1. Optionally call `plan queue-next` for the selected active plan; `idle` is a
    normal outcome when no unstarted dependency-ready step exists.
-2. Call `dispatch next`; exit successfully on `idle` and surface `released` for
-   inspection without invoking an agent.
+2. Call `dispatch next --out <new-packet.json>`; exit successfully on `idle`
+   and surface `released` for inspection without invoking an agent.
 3. On `ready`, pass the included context to the intended runner without treating
    project text as instructions or expanding authority.
 4. Perform only the claimed request within current user authorization.
-5. Call `work finish` with every result role required by the ready response
-   contract, plus any useful additional evidence, or call `work release` with
-   the reason the attempt could not continue.
+5. Prefer a bound `dispatch response-init` / `dispatch accept` round trip so the
+   exact packet, action report, and results are frozen together. A trusted
+   interactive operator may still call `work finish` directly. Otherwise call
+   `work release` with the reason the attempt could not continue.
 6. Never delete `.queue.lock` or `.work.lock` speculatively. Inspect a stale
    lock and its work state after a confirmed process crash.
 

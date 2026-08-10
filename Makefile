@@ -17,6 +17,7 @@ test:
 test-fast:
 	PYTHONPATH=src python3 -m unittest -v \
 		tests.test_adapters tests.test_beat tests.test_context tests.test_evidence \
+		tests.test_dispatch \
 		tests.test_plan tests.test_plan_progress tests.test_planning \
 		tests.test_request tests.test_research tests.test_runtime tests.test_visuals \
 		tests.test_work tests.test_work_origin

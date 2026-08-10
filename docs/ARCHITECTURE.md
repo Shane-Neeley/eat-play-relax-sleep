@@ -154,7 +154,14 @@ supplied files before any agent chooses a representation or experiment.
   claim and checksum-verified bounded context. It returns idle, agent-ready, or
   explicitly released state; a failed preparation records its attempt instead
   of silently stranding ownership. It does not execute work, invoke an agent,
-  grant network/publication authority, or satisfy plan gates.
+  or satisfy plan gates. Network research remains false unless the caller
+  explicitly records narrow read-only permission; publication is never granted.
+- `eprs.agent-response/v1`: a packet-checksum-, work-checksum-, run-, and
+  owner-bound return from an external agent runner. The accept transaction
+  verifies its declared actions and required result roles, refuses authority or
+  evidence drift, and freezes the packet, response, and results in one work run.
+  Read-only research must be explicitly enabled on the packet; raw mutation,
+  remote changes, sending, upload, and publication remain forbidden.
 - `eprs.adapter-fit/v1`: a focused, non-ranking projection of declared
   plan-step capabilities onto current doctor results and all matching adapter
   handoffs. It separates software readiness from guide coverage and carries

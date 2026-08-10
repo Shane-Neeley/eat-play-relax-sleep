@@ -580,6 +580,27 @@ class WorkItemTests(unittest.TestCase):
             work_root = song / "notes" / "work"
             self.assertEqual(list(work_root.iterdir()), [])
 
+    def test_work_finish_copy_failure_leaves_claim_and_results_unchanged(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            song = new_song(root, "Atomic Work Result")
+            item_path = create_work_item(
+                song, "Return one result", "automation", "Write one local result."
+            )
+            item_id = json.loads(item_path.read_text())["id"]
+            start_work_item(song, item_id, "result-agent")
+            result = root / "result.md"
+            result.write_text("One complete result.\n")
+            before = sha256(item_path)
+            with patch("eprs.work.shutil.copy2", side_effect=OSError("simulated result copy failure")):
+                with self.assertRaisesRegex(OSError, "simulated result copy failure"):
+                    finish_work_item(
+                        song, item_id, "Completed locally.", "complete", [("result", result)]
+                    )
+            self.assertEqual(sha256(item_path), before)
+            self.assertEqual(load_work_item(song, item_id)[1]["status"], "in_progress")
+            self.assertFalse((item_path.parent / "runs").exists())
+
     def test_existing_claim_lock_prevents_concurrent_mutation(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

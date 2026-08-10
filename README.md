@@ -293,6 +293,14 @@ it normalizes supplied research and optionally freezes local evidence. See
 records](docs/RESEARCH_RECORDS.md). See [source-bound lyric
 development](docs/LYRICS.md) for variant preservation and review.
 
+File-based runners can use a checksum-bound return instead of hand-stitching
+queue state: `dispatch next --out packet.json`, `dispatch response-init
+--packet packet.json --out response.json`, then `dispatch accept response.json
+--packet packet.json --song ...`. Acceptance freezes the exact packet, declared
+action audit, and results and cannot bypass required roles. Read-only web
+research is off by default and requires `--allow-network-research`; remote
+changes and publication are never permitted by this protocol.
+
 ## Find the final output
 
 Open any song and review the top-sorted `_LISTEN.wav`, `_WATCH.mp4`, and

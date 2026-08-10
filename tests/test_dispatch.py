@@ -3,14 +3,187 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from eprs.dispatch import dispatch_next_work
+from eprs.cli import parser
+from eprs.dispatch import (
+    accept_agent_response,
+    dispatch_next_work,
+    initialize_agent_response,
+    write_dispatch_packet,
+)
 from eprs.plan import create_production_plan
-from eprs.system import new_song
+from eprs.system import new_song, sha256
 from eprs.work import create_work_item, load_work_item
 from tests.test_plan import make_request, v2_plan_score
 
 
 class AgentDispatchTests(unittest.TestCase):
+    def test_cli_exposes_packet_permission_response_and_accept_commands(self):
+        next_args = parser().parse_args([
+            "dispatch", "next", "--song", "songs/example", "--agent", "runner",
+            "--allow-network-research", "--out", "/tmp/packet.json",
+        ])
+        self.assertTrue(next_args.allow_network_research)
+        self.assertEqual(next_args.out, "/tmp/packet.json")
+        init_args = parser().parse_args([
+            "dispatch", "response-init", "--packet", "/tmp/packet.json",
+            "--out", "/tmp/response.json",
+        ])
+        self.assertEqual(init_args.dispatch_command, "response-init")
+        accept_args = parser().parse_args([
+            "dispatch", "accept", "/tmp/response.json", "--packet",
+            "/tmp/packet.json", "--song", "songs/example",
+        ])
+        self.assertEqual(accept_args.dispatch_command, "accept")
+
+    @staticmethod
+    def _response(packet: Path, bundle: dict, **action_overrides) -> dict:
+        actions = {
+            "network_accessed": False,
+            "raw_recordings_modified": False,
+            "remote_state_changed": False,
+            "uploaded_published_or_sent": False,
+            "local_audio_processed": False,
+            "listening_performed": False,
+            "commands_run": ["wrote one bounded local result"],
+        }
+        actions.update(action_overrides)
+        contract = bundle["response_contract"]
+        return {
+            "schema": "eprs.agent-response/v1",
+            "dispatch": {
+                "packet_sha256": sha256(packet),
+                "work_item": contract["work_item"],
+                "run_number": contract["run_number"],
+                "agent": contract["agent"],
+            },
+            "summary": "Prepared one bounded continuity observation.",
+            "decision": "complete",
+            "actions": actions,
+            "results": [{"role": "continuity-note", "path": "continuity.md"}],
+        }
+
+    def test_packet_response_roundtrip_freezes_both_sides_and_results(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            song = new_song(root / "songs", "Agent Protocol")
+            item_path = create_work_item(
+                song,
+                "Prepare one local observation",
+                "automation",
+                "Write one bounded note without browsing, processing audio, or publishing.",
+            )
+            item_id = json.loads(item_path.read_text())["id"]
+            bundle = dispatch_next_work(song, "protocol-agent")
+            packet = write_dispatch_packet(bundle, root / "dispatch.json")
+            result = root / "continuity.md"
+            result.write_text("The family answer needs one more breath.\n")
+            response = initialize_agent_response(packet, root / "response.json")
+            initialized = json.loads(response.read_text())
+            self.assertEqual(
+                initialized["dispatch"], self._response(packet, bundle)["dispatch"]
+            )
+            with self.assertRaisesRegex(ValueError, "placeholder"):
+                accept_agent_response(song, packet, response)
+            response.write_text(json.dumps(self._response(packet, bundle), indent=2))
+
+            accepted = accept_agent_response(song, packet, response)
+
+            self.assertEqual(accepted.resolve(), item_path.resolve())
+            _, item = load_work_item(song, item_id)
+            self.assertEqual(item["status"], "completed")
+            run = item["runs"][-1]
+            self.assertEqual(run["decision"], "complete")
+            self.assertEqual(
+                set(run["results"]),
+                {"agent-dispatch-packet", "agent-response", "continuity-note"},
+            )
+            self.assertIsNotNone(run["claims"][0]["completed_at"])
+            for record in run["results"].values():
+                frozen = item_path.parent / record["path"]
+                self.assertTrue(frozen.is_file())
+                self.assertEqual(record["sha256"], sha256(frozen))
+
+    def test_response_refuses_undeclared_or_drifted_execution_before_freezing(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            song = new_song(root / "songs", "Agent Protocol Refusal")
+            item_path = create_work_item(
+                song, "Local only", "research", "Use only local supplied evidence."
+            )
+            item_id = json.loads(item_path.read_text())["id"]
+            bundle = dispatch_next_work(song, "protocol-agent")
+            packet = write_dispatch_packet(bundle, root / "dispatch.json")
+            (root / "continuity.md").write_text("One local observation.\n")
+            response = root / "response.json"
+            response.write_text(json.dumps(self._response(
+                packet, bundle, network_accessed=True
+            )))
+
+            with self.assertRaisesRegex(ValueError, "network access"):
+                accept_agent_response(song, packet, response)
+            self.assertEqual(load_work_item(song, item_id)[1]["status"], "in_progress")
+            self.assertFalse((item_path.parent / "runs").exists())
+
+            allowed_bundle = dict(bundle)
+            allowed_bundle["authority"] = {
+                **bundle["authority"],
+                "permissions": {
+                    **bundle["authority"]["permissions"],
+                    "network_research": True,
+                },
+            }
+            allowed_packet = write_dispatch_packet(allowed_bundle, root / "network-dispatch.json")
+            allowed_response = self._response(
+                allowed_packet, allowed_bundle, raw_recordings_modified=True
+            )
+            response.write_text(json.dumps(allowed_response))
+            with self.assertRaisesRegex(ValueError, "immutable raw"):
+                accept_agent_response(song, allowed_packet, response)
+
+            changed = json.loads(item_path.read_text())
+            changed["prompt"] = "Changed after dispatch."
+            item_path.write_text(json.dumps(changed, indent=2) + "\n")
+            allowed_response["actions"]["raw_recordings_modified"] = False
+            response.write_text(json.dumps(allowed_response))
+            with self.assertRaisesRegex(ValueError, "changed after"):
+                accept_agent_response(song, allowed_packet, response)
+            self.assertFalse((item_path.parent / "runs").exists())
+
+    def test_dispatch_can_explicitly_permit_read_only_network_research(self):
+        with tempfile.TemporaryDirectory() as folder:
+            song = new_song(Path(folder), "Network Research Packet")
+            create_work_item(
+                song, "Research one reference", "research", "Read and attribute one source."
+            )
+            bundle = dispatch_next_work(
+                song, "research-agent", allow_network_research=True
+            )
+            self.assertTrue(bundle["authority"]["permissions"]["network_research"])
+            self.assertNotIn("network access or browsing", bundle["authority"]["does_not_authorize"])
+            self.assertIn("read-only network research", bundle["authority"]["statement"])
+
+    def test_agent_response_cannot_bypass_required_result_roles(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            song = new_song(root / "songs", "Required Agent Evidence")
+            item_path = create_work_item(
+                song,
+                "Return a plan",
+                "planning",
+                "Return the exact required plan evidence.",
+                required_result_roles=["production-plan"],
+            )
+            bundle = dispatch_next_work(song, "planning-agent")
+            packet = write_dispatch_packet(bundle, root / "dispatch.json")
+            (root / "continuity.md").write_text("Not a production plan.\n")
+            response = root / "response.json"
+            response.write_text(json.dumps(self._response(packet, bundle)))
+
+            with self.assertRaisesRegex(ValueError, "missing required result roles"):
+                accept_agent_response(song, packet, response)
+            self.assertEqual(load_work_item(song, item_path)[1]["status"], "in_progress")
+            self.assertFalse((item_path.parent / "runs").exists())
+
     def test_request_origin_dispatch_includes_exact_prompt_and_supplied_inputs(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
