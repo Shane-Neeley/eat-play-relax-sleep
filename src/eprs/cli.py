@@ -220,6 +220,10 @@ def parser() -> argparse.ArgumentParser:
         help="Explicit occurrence shape; repeats/excerpts are never inferred from prompt text",
     )
     source_sketch.add_argument("--no-bed", action="store_true", help="Arrange supplied recordings without the synthetic starter underneath")
+    source_sketch.add_argument(
+        "--observation", action="append", default=[],
+        help="Exact song-local eprs observe artifact to use for phrase boundaries; repeat as needed",
+    )
     source_sketch.add_argument("--no-visual", action="store_true", help="Skip the optional source-synced visual preview")
     source_sketch.add_argument("--visual-seconds", type=float, default=8.0, help="Length of the optional source-synced visual preview")
 
@@ -1025,6 +1029,7 @@ def main(argv: list[str] | None = None) -> int:
                 shape=args.shape,
                 render_visual_preview=not args.no_visual,
                 visual_seconds=args.visual_seconds,
+                observations=args.observation,
             )
             print(json.dumps({"source_sketch": str(manifest_path), **record}, indent=2))
         elif args.command == "status":

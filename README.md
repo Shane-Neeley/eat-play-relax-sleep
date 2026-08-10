@@ -447,6 +447,8 @@ key, chord, meter, grid, or correction target:
 The source remains unchanged. The command reports level-defined phrase regions,
 quiet gaps, capped monophonic periodicity evidence, and multiple optional pulse
 readings. See [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md).
+Pass its song-local JSON to `source-sketch --observation` when a diagnostic
+arrangement should use one measured phrase boundary explicitly.
 
 After listening, author one explicit drummer-facing interpretation and render
 the smallest synthetic audition without changing the performance:

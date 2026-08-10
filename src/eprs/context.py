@@ -1858,6 +1858,7 @@ def _source_sketch_summaries(
                 "player_intent_truncated": player_intent_truncated,
                 "placement": value.get("placement"),
                 "placements": value.get("placements", [value.get("placement")]),
+                "musical_observation": value.get("musical_observation"),
             })
         review = mix_record.get("review", {})
         summaries.append({

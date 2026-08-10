@@ -53,3 +53,22 @@ For a long rehearsal, choose the musical question first:
 
 This artifact is evidence for the next arrangement experiment, not a claim
 that a song is in tune, in time, harmonically understood, or ready to release.
+
+## Use one observation explicitly
+
+Nothing consumes an observation merely because it exists. Bind it to a fresh
+diagnostic arrangement deliberately:
+
+```bash
+./scripts/eprs source-sketch songs/signal-garden \
+  --observation notes/musical-observations/family-answer/<id>-musical.json \
+  --intent "Use one complete observed family sentence, then leave room for the guitar to reply"
+```
+
+The seed chooses one of that source's measured phrase regions, then the mix
+uses its exact source start and unwarped duration. The source-sketch record,
+mix score, render evidence, and agent context all retain the observation and
+selected region checksums. Note-name and BPM candidates appear only as open
+listening leads; they do not change pitch, timing, key, chord, tempo, or meter.
+Repeat `--observation` for different captured sources. A source may have only
+one observation per pass, and an observation for uncaptured audio is refused.

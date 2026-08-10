@@ -12,6 +12,7 @@ import secrets
 from .beat import load as load_beat
 from .frontdoor import expose_current_media
 from .mix import render_mix, verify_mix_provenance
+from .musical_observation import verify_musical_observation
 from .production_map import write_production_map
 from .request import load_production_request
 from .system import load_song_manifest, probe, sha256, slugify, utc_now
@@ -250,11 +251,21 @@ def _source_creative_fingerprint(
         "sources": [{
             "sha256": source.get("sha256"),
             "relationship_role": source.get("relationship_role"),
-            "placements": [{
-                key: placement.get(key) for key in (
-                    "start_seconds", "duration_seconds", "gain_db", "pan",
-                )
-            } for placement in source.get("placements", [source.get("placement")])
+            "placements": [
+                {
+                    **{
+                        key: placement.get(key) for key in (
+                            "start_seconds", "duration_seconds", "gain_db",
+                            "pan",
+                        )
+                    },
+                    **(
+                        {"source_start_seconds": placement.get("source_start_seconds")}
+                        if placement.get("source_start_seconds") not in {None, 0, 0.0}
+                        else {}
+                    ),
+                }
+                for placement in source.get("placements", [source.get("placement")])
             if isinstance(placement, dict)],
         } for source in source_plans],
     }
@@ -313,6 +324,59 @@ def _prepare_source_inputs(song: Path, recordings: list[dict]) -> list[dict]:
     return prepared
 
 
+def _bind_musical_observations(
+    song: Path,
+    prepared_sources: list[dict],
+    values: list[str | Path],
+) -> list[dict]:
+    """Bind each explicit observation to one already-hashed captured source."""
+    bindings: list[dict] = []
+    seen_paths: set[Path] = set()
+    for value in values:
+        path, report = verify_musical_observation(
+            song, value, verify_checksum=False
+        )
+        if path in seen_paths:
+            raise ValueError(f"duplicate source-sketch musical observation: {path}")
+        seen_paths.add(path)
+        source_digest = report["source"]["sha256"]
+        observed_source_path = report["source"]["path"]
+        matches = [
+            item for item in prepared_sources
+            if item["sha256"] == source_digest and item["path"] == observed_source_path
+        ]
+        if len(matches) != 1:
+            raise ValueError(
+                "source-sketch musical observation must describe exactly one captured recording"
+            )
+        source = matches[0]
+        if source.get("_musical_observation") is not None:
+            raise ValueError(
+                f"source sketch accepts only one musical observation per recording: {source['role']}"
+            )
+        regions = report["phrase_observation"]["regions"]
+        if not regions:
+            raise ValueError(
+                f"musical observation has no phrase region to arrange: {path.relative_to(song)}"
+            )
+        binding = {
+            "path": str(path.relative_to(song)),
+            "sha256": sha256(path),
+            "analysis_id": report["analysis_id"],
+            "result_id": report["result_id"],
+            "source_sha256": source_digest,
+            "role": report["role"],
+        }
+        source["_musical_observation"] = {
+            "binding": binding,
+            "phrases": regions,
+            "pitch_candidates": report["pitch_observation"]["candidates"],
+            "tempo_candidates": report["pulse_observation"]["tempo_candidates"],
+        }
+        bindings.append(binding)
+    return sorted(bindings, key=lambda item: (item["source_sha256"], item["path"]))
+
+
 def _build_source_plan(
     song: Path,
     prepared_sources: list[dict],
@@ -351,7 +415,13 @@ def _build_source_plan(
 
     for index, item in enumerate(prepared_sources, start=1):
         role = item["role"]
-        duration = item["duration_seconds"]
+        observation = item.get("_musical_observation")
+        selected_phrase = rng.choice(observation["phrases"]) if observation else None
+        source_start_seconds = selected_phrase["start_seconds"] if selected_phrase else 0.0
+        duration = (
+            selected_phrase["duration_seconds"]
+            if selected_phrase else item["duration_seconds"]
+        )
         group = item["classification"]
         relationship_role = (
             "call" if shape == "call-response" and index - 1 == caller_index
@@ -381,6 +451,27 @@ def _build_source_plan(
             stride_bars=stride_bars,
             relationship_role=relationship_role,
         )
+        if observation and selected_phrase:
+            pitch_names = [
+                item["nearest_note_name"]
+                for item in observation["pitch_candidates"][:4]
+            ]
+            pulse_values = [item["bpm"] for item in observation["tempo_candidates"]]
+            player_intent += (
+                f" This pass explicitly uses observed phrase {selected_phrase['id']} "
+                f"({selected_phrase['start_seconds']:g}s–{selected_phrase['end_seconds']:g}s) "
+                "as an unchanged boundary."
+            )
+            if pitch_names:
+                player_intent += (
+                    f" Hear {', '.join(pitch_names)} only as periodicity leads; no key or chord was inferred."
+                )
+            if pulse_values:
+                player_intent += (
+                    " Keep the pulse open among "
+                    + ", ".join(f"{value:g} BPM" for value in pulse_values)
+                    + "; no tempo or meter was selected."
+                )
         source_id = slugify(role) or f"recording-{index}"
         if any(source_plan.get("id") == source_id for source_plan in source_plans):
             source_id = f"{source_id}-{index}"
@@ -394,7 +485,7 @@ def _build_source_plan(
                 "intent": player_intent,
                 "path": source_path,
                 "start_seconds": placement["start_seconds"],
-                "source_start_seconds": 0,
+                "source_start_seconds": source_start_seconds,
                 "duration_seconds": placement["duration_seconds"],
                 "gain_db": gain,
                 "pan": pan,
@@ -404,6 +495,7 @@ def _build_source_plan(
             placement_records.append({
                 **placement,
                 "track_id": track_id,
+                "source_start_seconds": source_start_seconds,
                 "gain_db": gain,
                 "pan": pan,
             })
@@ -417,6 +509,21 @@ def _build_source_plan(
             "probe": item["probe"],
             "rights_note": item.get("rights_note"),
             "player_intent": player_intent,
+            "musical_observation": (
+                {
+                    **observation["binding"],
+                    "selected_phrase": selected_phrase,
+                    "pitch_candidates": observation["pitch_candidates"][:4],
+                    "tempo_candidates": observation["tempo_candidates"],
+                    "interpretation": {
+                        "key_selected": False,
+                        "chord_selected": False,
+                        "tempo_selected": False,
+                        "meter_selected": False,
+                    },
+                }
+                if observation else None
+            ),
             "placement": placement_records[0],
             "placements": placement_records,
         })
@@ -546,6 +653,60 @@ def verify_source_sketch(
         source_path = _inside(song_path, value or "", "recording")
         if not source_path.is_file() or source.get("sha256") != sha256(source_path):
             raise ValueError("source-sketch recording is missing or changed")
+    observation_records = record.get("musical_observations", [])
+    if not isinstance(observation_records, list):
+        raise ValueError("source-sketch musical observations are invalid")
+    observations_by_path: dict[str, dict] = {}
+    for binding in observation_records:
+        value = binding.get("path") if isinstance(binding, dict) else None
+        if not isinstance(value, str) or value in observations_by_path:
+            raise ValueError("source-sketch musical observation binding is invalid")
+        observation_path, observation = verify_musical_observation(song_path, value)
+        if any(binding.get(key) != expected for key, expected in {
+            "sha256": sha256(observation_path),
+            "analysis_id": observation.get("analysis_id"),
+            "result_id": observation.get("result_id"),
+            "source_sha256": observation.get("source", {}).get("sha256"),
+            "role": observation.get("role"),
+        }.items()):
+            raise ValueError("source-sketch musical observation binding has drifted")
+        observations_by_path[value] = observation
+    used_observation_paths: set[str] = set()
+    for source in sources:
+        binding = source.get("musical_observation")
+        if binding is None:
+            continue
+        value = binding.get("path") if isinstance(binding, dict) else None
+        observation = observations_by_path.get(value)
+        if observation is None or binding.get("source_sha256") != source.get("sha256"):
+            raise ValueError("source-sketch source observation binding is invalid")
+        top_binding = next(
+            item for item in observation_records if item.get("path") == value
+        )
+        if any(binding.get(key) != top_binding.get(key) for key in (
+            "path", "sha256", "analysis_id", "result_id", "source_sha256", "role"
+        )):
+            raise ValueError("source-sketch source observation identity has drifted")
+        selected = binding.get("selected_phrase")
+        if selected not in observation["phrase_observation"]["regions"]:
+            raise ValueError("source-sketch selected phrase is not in its observation")
+        if (
+            binding.get("pitch_candidates")
+            != observation["pitch_observation"]["candidates"][:4]
+            or binding.get("tempo_candidates")
+            != observation["pulse_observation"]["tempo_candidates"]
+        ):
+            raise ValueError("source-sketch observation candidates have drifted")
+        interpretation = binding.get("interpretation")
+        if not isinstance(interpretation, dict) or any(
+            interpretation.get(key) is not False for key in (
+                "key_selected", "chord_selected", "tempo_selected", "meter_selected"
+            )
+        ):
+            raise ValueError("source-sketch observation interpretation is invalid")
+        used_observation_paths.add(value)
+    if used_observation_paths != set(observations_by_path):
+        raise ValueError("source-sketch has an unused musical observation binding")
     arrangement = record.get("arrangement")
     shape = DEFAULT_SHAPE
     if arrangement is not None:
@@ -571,6 +732,14 @@ def verify_source_sketch(
         or score_binding.get("shape", DEFAULT_SHAPE) != shape
     ):
         raise ValueError("source-sketch arrangement does not match its mix score")
+    if score_binding.get("musical_observations", []) != observation_records:
+        raise ValueError("source-sketch observations do not match its mix score")
+    evidence_paths = {
+        item.get("path") for item in score_record.get("evidence", [])
+        if isinstance(item, dict)
+    }
+    if not set(observations_by_path).issubset(evidence_paths):
+        raise ValueError("source-sketch mix score is missing musical observation evidence")
     mix_tracks = score_record.get("tracks")
     if not isinstance(mix_tracks, list):
         raise ValueError("source-sketch mix-score tracks are invalid")
@@ -597,6 +766,7 @@ def verify_source_sketch(
                 track.get(key) != expected for key, expected in {
                     "path": source.get("path"),
                     "start_seconds": placement.get("start_seconds"),
+                    "source_start_seconds": placement.get("source_start_seconds", 0),
                     "duration_seconds": placement.get("duration_seconds"),
                     "gain_db": placement.get("gain_db"),
                     "pan": placement.get("pan"),
@@ -666,6 +836,7 @@ def create_source_sketch(
     shape: str = DEFAULT_SHAPE,
     render_visual_preview: bool = True,
     visual_seconds: float = 8.0,
+    observations: list[str | Path] | None = None,
 ) -> tuple[Path, dict]:
     """Render one fresh, source-aware diagnostic arrangement from a captured request."""
     clean_intent = intent.strip() if isinstance(intent, str) else ""
@@ -705,6 +876,9 @@ def create_source_sketch(
     bed_duration = _audio_duration(bed_path, "starter bed")[0] if include_bed else None
     bed_sha256 = sha256(bed_path) if include_bed else None
     prepared_sources = _prepare_source_inputs(song_path, recordings)
+    observation_bindings = _bind_musical_observations(
+        song_path, prepared_sources, list(observations or [])
+    )
     if seed_was_supplied:
         sketch_seed = int(seed)
         source_plans, tracks = _build_source_plan(
@@ -755,6 +929,7 @@ def create_source_sketch(
         "shape": shape,
         "seconds_per_bar": seconds_per_bar,
         "tracks": tracks,
+        "musical_observations": observation_bindings,
     }
     sketch_id = hashlib.sha256(
         json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()
@@ -771,13 +946,22 @@ def create_source_sketch(
             "role": "source-sketch intent and supplied recordings",
             "path": str(request_path.relative_to(song_path)),
             "use": "Bind every placement to the exact captured prompt, roles, preserve/avoid notes, references, and rights context.",
-        }],
+        }] + [
+            {
+                "id": f"musical-observation-{index}",
+                "role": f"arrangement-facing observation for {binding['role']}",
+                "path": binding["path"],
+                "use": "Bind the selected unchanged phrase boundary and retain pitch/pulse ambiguity without automatic correction.",
+            }
+            for index, binding in enumerate(observation_bindings, start=1)
+        ],
         "tracks": tracks,
         "source_sketch": {
             "seed": sketch_seed,
             "run": str(run_path.relative_to(song_path)),
             "shape": shape,
             "randomness": "role-aware occurrences plus conservative no-boost gain and pan variation",
+            "musical_observations": observation_bindings,
         },
     }
     _write_exact_json(score_path, mix_score, "source-sketch mix score")
@@ -865,6 +1049,7 @@ def create_source_sketch(
         },
         "run": {"path": plan["run_path"], "sha256": plan["run_sha256"]},
         "request": {"path": plan["request_path"], "sha256": plan["request_sha256"]},
+        "musical_observations": observation_bindings,
         "sources": source_plans,
         "paths": {
             "source_sketch": relative_manifest,

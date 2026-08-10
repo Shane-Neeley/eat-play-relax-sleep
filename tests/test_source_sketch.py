@@ -10,6 +10,7 @@ import wave
 from eprs.context import build_agent_context, render_agent_context_markdown
 from eprs.harness import create_song_run
 from eprs.mix import review_mix, verify_mix_provenance
+from eprs.musical_observation import observe_musical_performance
 from eprs.source_sketch import create_source_sketch, verify_source_sketch
 from eprs.system import sha256, song_status
 
@@ -27,7 +28,132 @@ def tone_wav(path: Path, frequency: float, seconds: float = 0.3) -> None:
         wav.writeframes(samples.tobytes())
 
 
+def separated_phrases_wav(path: Path, rate: int = 48_000) -> None:
+    samples = [0.0] * rate
+    for start_seconds, end_seconds, frequency in (
+        (0.15, 0.42, 220.0),
+        (0.66, 0.90, 330.0),
+    ):
+        first = round(start_seconds * rate)
+        last = round(end_seconds * rate)
+        for index in range(first, last):
+            elapsed = (index - first) / rate
+            remaining = (last - index) / rate
+            envelope = min(1.0, elapsed / 0.01, remaining / 0.03)
+            samples[index] = 0.3 * envelope * math.sin(2 * math.pi * frequency * elapsed)
+    pcm = array("h", (round(value * 32767) for value in samples))
+    with wave.open(str(path), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(rate)
+        wav.writeframes(pcm.tobytes())
+
+
 class SourceSketchTests(unittest.TestCase):
+    def test_explicit_observation_binds_and_places_one_unchanged_phrase(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            guitar = root / "guitar-phrases.wav"
+            separated_phrases_wav(guitar)
+            _, run = create_song_run(
+                "Observed Reply",
+                "A two-part guitar reply with silence that should remain meaningful.",
+                root=root / "songs",
+                seed=212,
+                recordings=[("guitar reply", guitar)],
+                render_visual_preview=False,
+            )
+            song = root / "songs" / "observed-reply"
+            request_path = song / run["paths"]["request"]
+            request = json.loads(request_path.read_text())
+            captured = next(
+                song / value["path"] for value in request["provided"].values()
+                if value.get("handling") == "immutable-recording"
+            )
+            source_digest = sha256(captured)
+            observation_path, observation = observe_musical_performance(
+                captured,
+                song,
+                "guitar reply",
+                note="Use one complete reply, but keep both pulse readings open.",
+            )
+
+            manifest_path, sketch = create_source_sketch(
+                song,
+                "Let one observed guitar sentence invite a later answer.",
+                seed=313,
+                include_bed=False,
+                observations=[observation_path],
+                render_visual_preview=False,
+            )
+
+            self.assertEqual(sha256(captured), source_digest)
+            self.assertEqual(len(sketch["musical_observations"]), 1)
+            binding = sketch["musical_observations"][0]
+            self.assertEqual(binding["result_id"], observation["result_id"])
+            source = sketch["sources"][0]
+            selected = source["musical_observation"]["selected_phrase"]
+            self.assertIn(selected, observation["phrase_observation"]["regions"])
+            self.assertEqual(
+                source["placements"][0]["source_start_seconds"],
+                selected["start_seconds"],
+            )
+            self.assertEqual(
+                source["placements"][0]["duration_seconds"],
+                selected["duration_seconds"],
+            )
+            self.assertFalse(
+                source["musical_observation"]["interpretation"]["tempo_selected"]
+            )
+            self.assertIn("no key or chord was inferred", source["player_intent"])
+            score = json.loads((song / sketch["paths"]["mix_score"]).read_text())
+            track = score["tracks"][0]
+            self.assertEqual(track["source_start_seconds"], selected["start_seconds"])
+            _, _, mix_record = verify_mix_provenance(song, song / sketch["paths"]["mix"])
+            self.assertEqual(
+                mix_record["recipe"]["evidence"][1]["declared_schema"],
+                "eprs.musical-observation/v1",
+            )
+            verify_source_sketch(song, manifest_path)
+            context = build_agent_context(song, verify=True)
+            self.assertEqual(
+                context["recent_source_sketches"][0]["sources"][0]
+                ["musical_observation"]["result_id"],
+                observation["result_id"],
+            )
+            tampered = json.loads(manifest_path.read_text())
+            tampered["sources"][0]["musical_observation"]["tempo_candidates"] = []
+            manifest_path.write_text(json.dumps(tampered, indent=2) + "\n")
+            with self.assertRaisesRegex(ValueError, "candidates have drifted"):
+                verify_source_sketch(song, manifest_path)
+
+    def test_source_sketch_refuses_observation_for_an_uncaptured_recording(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            captured = root / "captured.wav"
+            unrelated = root / "unrelated.wav"
+            tone_wav(captured, 220)
+            tone_wav(unrelated, 330)
+            _, _ = create_song_run(
+                "Wrong Evidence",
+                "Only the captured guitar belongs in this pass.",
+                root=root / "songs",
+                seed=11,
+                recordings=[("captured guitar", captured)],
+                render_visual_preview=False,
+            )
+            song = root / "songs" / "wrong-evidence"
+            observation_path, _ = observe_musical_performance(
+                unrelated, song, "unrelated voice"
+            )
+            with self.assertRaisesRegex(ValueError, "captured recording"):
+                create_source_sketch(
+                    song,
+                    "Use only exact evidence.",
+                    observations=[observation_path],
+                    render_visual_preview=False,
+                )
+
     def test_source_sketch_arranges_real_inputs_replays_and_surfaces_review(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

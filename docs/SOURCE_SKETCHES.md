@@ -28,6 +28,20 @@ breath, pitch, overlap, room sound, attack, decay, drift, and noise remain
 intact. Short fade-outs occur only when a one-pass source extends beyond the
 diagnostic bed or an explicitly requested conversational excerpt ends.
 
+When phrasing matters, create a bounded [musical observation](MUSICAL_OBSERVATIONS.md)
+and opt it into the pass:
+
+```bash
+./scripts/eprs source-sketch songs/signal-garden \
+  --observation notes/musical-observations/family-answer/<id>-musical.json \
+  --intent "Use one complete observed answer and preserve its breath-to-decay boundary"
+```
+
+This chooses one measured region as an unchanged excerpt. Exact observation,
+source, result, selected-region, mix-score, and render checksums remain linked.
+Pitch and pulse candidates are retained as arranger questions, never automatic
+key, chord, tempo, meter, tuning, quantization, or time-stretch controls.
+
 ## Explicit arrangement shapes
 
 Prompt text never silently turns into repetition or editing. Choose the
