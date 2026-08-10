@@ -192,6 +192,11 @@ supplied files before any agent chooses a representation or experiment.
   explicit interpretation limits plus a result ID binding those measurements.
   It remains separate from quantized notation; the verifier accepts legacy v1
   observations, while new groove development requires result-bound v2 evidence.
+- `eprs.musical-observation/v1`: one bounded, source-checksum-bound set of
+  level-defined phrase regions, quiet gaps, capped monophonic periodicity
+  candidates, and multiple optional pulse readings. It explicitly leaves key,
+  chord, tempo, meter, grid, tuning, and phrase meaning unresolved, and lets
+  status/context verify stored evidence without re-running analysis.
 - `eprs.groove/v1`: one explicit, observation-checksum-bound drummer-facing
   interpretation. It requires meter/tempo relationship, subdivision and feel,
   backbeat/answer, low voice, timekeeping, dynamics, orchestration, phrase,

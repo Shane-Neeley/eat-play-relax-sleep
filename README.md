@@ -434,6 +434,20 @@ spacing character, and tempo ambiguity. It does not claim a meter, downbeat,
 subdivision, or kick/snare mapping. See [performed rhythm
 observations](docs/RHYTHM.md).
 
+Give an arranger bounded phrase, pitch, and pulse evidence without choosing a
+key, chord, meter, grid, or correction target:
+
+```bash
+./scripts/eprs observe /path/to/family-answer.wav \
+  --song songs/signal-garden \
+  --role "family answer" \
+  --note "Hear whether the last note resolves or asks the guitar to reply"
+```
+
+The source remains unchanged. The command reports level-defined phrase regions,
+quiet gaps, capped monophonic periodicity evidence, and multiple optional pulse
+readings. See [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md).
+
 After listening, author one explicit drummer-facing interpretation and render
 the smallest synthetic audition without changing the performance:
 
@@ -729,7 +743,7 @@ Open `songs/<name>/README.md` first. For video, `video/README.md` identifies
 the source visual, reviewed picture candidates, delivery renders, and previews.
 ```
 
-Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
+Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
 
 ## Tool philosophy
 

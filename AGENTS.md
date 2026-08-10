@@ -84,6 +84,10 @@ This repository is a creative production system, not a scratch directory. Work f
 5. For a performed beat idea, run `scripts/eprs rhythm` and discuss its timing
    evidence before translating anything to a grid. Create the smallest audible
    or inspectable experiment that answers one hypothesis.
+   When an arrangement question depends on phrase boundaries, pitch evidence,
+   or free-time pulse ambiguity, run bounded `scripts/eprs observe` on an
+   explicit region. Treat its note names and level-defined regions as listening
+   leads, never as tuning, harmony, tempo, meter, or automatic edit commands.
    When a drummer-facing audition is useful, copy `templates/groove.json` and
    use `eprs groove add`. Explicitly map, mark as pickup, or omit every observed
    attack; state meter, pulse, subdivision, backbeat/answer, low voice,
@@ -216,6 +220,7 @@ scripts/eprs lyrics add songs/<song-name>/code/lyrics.json --song songs/<song-na
 scripts/eprs lyrics review <lyrics-id> --song songs/<song-name> --variant <variant-id> --decision alternate --listening-note "What this version contributes in context."
 scripts/eprs select /path/to/take.wav --song songs/<song-name> --role "guitar loop" --start 2.1 --duration 3.8 --repeat 4
 scripts/eprs rhythm /path/to/boom-clap.m4a --song songs/<song-name> --role "spoken pocket"
+scripts/eprs observe /path/to/performance.wav --song songs/<song-name> --role "family answer"
 scripts/eprs groove add songs/<song-name>/code/groove.json --song songs/<song-name>
 scripts/eprs groove review notes/grooves/<title>/<id> --song songs/<song-name> --decision keep --listening-note "What the complete prototype preserves from the performed idea."
 scripts/eprs phase recordings/raw/<close>.wav recordings/raw/<room>.wav --song songs/<song-name> --role-a "close microphone" --role-b "room microphone" --intent "Listen in stereo and mono" --duration 8

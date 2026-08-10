@@ -29,6 +29,7 @@
         "recording_session_intake",
         "audio_selection",
         "rhythm_observation",
+        "musical_observation",
         "phase_observation",
         "performance_comparison",
         "performance_comping",
@@ -149,7 +150,7 @@
       "id": "performed-groove-development",
       "label": "Performed beat idea to reviewed groove",
       "description": "Observe a spoken or played beat without assigning roles, author one explicit drummer-facing interpretation, and audition it as a review-gated BeatScript prototype.",
-      "capabilities": ["media_analysis", "rhythm_observation", "groove_interpretation", "beat_render"]
+      "capabilities": ["media_analysis", "rhythm_observation", "musical_observation", "groove_interpretation", "beat_render"]
     },
     {
       "id": "local-ai-collaboration",
@@ -161,7 +162,7 @@
       "id": "source-to-master",
       "label": "Source recording to lossless master",
       "description": "Preserve supplied performances, bind consequential decisions to exact evidence, develop reversibly, and create an approved lossless master.",
-      "capabilities": ["production_request_intake", "production_planning", "recording_session_intake", "audio_selection", "rhythm_observation", "groove_interpretation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "lossless_mastering"]
+      "capabilities": ["production_request_intake", "production_planning", "recording_session_intake", "audio_selection", "rhythm_observation", "musical_observation", "groove_interpretation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "lossless_mastering"]
     },
     {
       "id": "daw-handoff",
@@ -191,7 +192,7 @@
       "id": "full-local-production",
       "label": "Full local production",
       "description": "Run the complete local prompt-and-recordings-to-YouTube-handoff workflow, including recurring agent work and visuals.",
-      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "agent_dispatch", "recording_session_intake", "recording_clearance", "research_records", "lyric_development", "audio_selection", "rhythm_observation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "daw_interchange", "daw_roundtrip", "lossless_mastering", "media_analysis", "visual_development", "promptable_visuals", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"]
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "agent_dispatch", "recording_session_intake", "recording_clearance", "research_records", "lyric_development", "audio_selection", "rhythm_observation", "musical_observation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "daw_interchange", "daw_roundtrip", "lossless_mastering", "media_analysis", "visual_development", "promptable_visuals", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"]
     }
   ]
 }

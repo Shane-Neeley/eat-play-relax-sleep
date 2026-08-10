@@ -29,6 +29,7 @@ from .harness import create_song_run
 from .interchange import prepare_daw_interchange, verify_daw_interchange
 from .master import approve_master, render_master
 from .mix import render_mix, review_mix
+from .musical_observation import observe_musical_performance
 from .lyrics import create_lyric_development, load_lyric_development, review_lyric_variant
 from .performance import compare_performances, review_comparison
 from .phase import observe_phase_relationship
@@ -545,6 +546,17 @@ def parser() -> argparse.ArgumentParser:
         help="Minimum separation between reported attacks",
     )
     rhythm.add_argument("--note", default="", help="Performer context or what the agent should listen for")
+
+    observe = commands.add_parser(
+        "observe",
+        help="Observe phrase regions, pitch evidence, and pulse ambiguity without correcting a performance",
+    )
+    observe.add_argument("source")
+    observe.add_argument("--song", required=True)
+    observe.add_argument("--role", required=True, help="Purpose of the performance, such as family answer")
+    observe.add_argument("--start", type=float, default=0, help="Listening-region start in seconds")
+    observe.add_argument("--duration", type=float, help="Listening-region duration; required only for unknown/long media")
+    observe.add_argument("--note", default="", help="Performer context and the arranger's listening question")
 
     groove = commands.add_parser(
         "groove",
@@ -1200,6 +1212,23 @@ def main(argv: list[str] | None = None) -> int:
                 "player_language": report["player_language"],
                 "timing_observation": report["timing_observation"],
                 "events": report["events"],
+                "interpretation_limits": report["interpretation_limits"],
+            }, indent=2))
+        elif args.command == "observe":
+            destination, report = observe_musical_performance(
+                args.source,
+                args.song,
+                args.role,
+                args.start,
+                args.duration,
+                args.note,
+            )
+            print(json.dumps({
+                "observation": str(destination),
+                "player_language": report["player_language"],
+                "phrase_observation": report["phrase_observation"],
+                "pitch_observation": report["pitch_observation"],
+                "pulse_observation": report["pulse_observation"],
                 "interpretation_limits": report["interpretation_limits"],
             }, indent=2))
         elif args.command == "groove":

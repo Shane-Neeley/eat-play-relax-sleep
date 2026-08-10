@@ -922,6 +922,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
     from .daw_return import verify_daw_return_mix
     from .groove import verify_groove_development
     from .interchange import verify_daw_interchange
+    from .musical_observation import verify_musical_observation
     from .rhythm import verify_rhythm_observation
 
     attention: list[str] = []
@@ -1018,6 +1019,22 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
             invalid_rhythm_observations += 1
             attention.append(f"Invalid rhythm observation {observation_path.relative_to(song_path)}: {exc}")
             continue
+
+    musical_observations = [
+        path for path in _project_files(song_path / "notes" / "musical-observations")
+        if path.suffix == ".json"
+    ]
+    invalid_musical_observations = 0
+    for observation_path in musical_observations:
+        try:
+            verify_musical_observation(
+                song_path, observation_path, verify_checksum=verify
+            )
+        except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+            invalid_musical_observations += 1
+            attention.append(
+                f"Invalid musical observation {observation_path.relative_to(song_path)}: {exc}"
+            )
 
     groove_counts = {"total": 0, "invalid": 0, "pending": 0, "keep": 0, "change": 0, "stop": 0}
     groove_manifests = [
@@ -2430,6 +2447,8 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         "selected_recordings": len(selected_recordings),
         "rhythm_observations": len(rhythm_observations),
         "invalid_rhythm_observations": invalid_rhythm_observations,
+        "musical_observations": len(musical_observations),
+        "invalid_musical_observations": invalid_musical_observations,
         "groove_developments": groove_counts,
         "phase_observations": len(phase_observations),
         "invalid_phase_observations": invalid_phase_observations,
@@ -2562,6 +2581,8 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         next_actions.append("Restore or re-observe drifted multi-microphone phase evidence before relying on it in processing or mixing decisions.")
     if inventory["invalid_rhythm_observations"]:
         next_actions.append("Restore or re-observe drifted performed-rhythm evidence before interpreting it as a groove.")
+    if inventory["invalid_musical_observations"]:
+        next_actions.append("Restore or re-observe drifted phrase, pitch, and pulse evidence before using it in an arrangement.")
     if inventory["rhythm_observations"] and inventory["groove_developments"]["total"] == 0:
         next_actions.append("If a drummer-facing grid audition serves the current intent, author one explicit interpretation with `eprs groove add`; free-time remains valid.")
     if inventory["groove_developments"]["pending"]:
@@ -2670,6 +2691,7 @@ def format_song_status(status: dict) -> str:
             f"{inventory['raw_recordings']} raw recording(s), "
             f"{inventory['selected_recordings']} selected recording(s), "
             f"{inventory['rhythm_observations']} rhythm observation(s), "
+            f"{inventory['musical_observations']} musical observation(s), "
             f"{inventory['groove_developments']['total']} groove interpretation(s) "
             f"({inventory['groove_developments']['pending']} pending review), "
             f"{inventory['phase_observations']} phase observation(s), "

@@ -11,6 +11,7 @@ from .clearance import load_recording_clearance
 from .groove import verify_groove_development
 from .interchange import verify_daw_interchange
 from .lyrics import load_lyric_development
+from .musical_observation import verify_musical_observation
 from .plan import load_production_plan
 from .plan_progress import production_plan_progress
 from .picture import verify_picture
@@ -305,6 +306,67 @@ def _rhythm_summaries(
             "timing_observation": report.get("timing_observation"),
             "events": events,
             "events_omitted": max(0, len(report.get("events", [])) - len(events)),
+            "interpretation_limits": report.get("interpretation_limits"),
+        })
+    return summaries, errors
+
+
+def _musical_observation_summaries(
+    song: Path,
+    budget: dict[str, int],
+    *,
+    verify: bool,
+    limit: int = 8,
+) -> tuple[list[dict], list[str]]:
+    """Summarize arrangement-facing measurements while keeping unknowns explicit."""
+    summaries: list[dict] = []
+    errors: list[str] = []
+    root = song / "notes" / "musical-observations"
+    if not root.is_dir():
+        return summaries, errors
+    paths = sorted(
+        (path for path in root.rglob("*.json") if not path.name.startswith(".")),
+        reverse=True,
+    )[:limit]
+    for path in paths:
+        try:
+            resolved, report = verify_musical_observation(
+                song, path, verify_checksum=verify
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            errors.append(f"{path.relative_to(song)}: {exc}")
+            continue
+        note, note_truncated = _clip_text(report.get("note"), budget, 2048)
+        language = report.get("player_language", {})
+        player_language = {}
+        if isinstance(language, dict):
+            for key in ("phrasing", "pitch", "pulse"):
+                value, truncated = _clip_text(language.get(key), budget, 2048)
+                player_language[key] = value
+                player_language[f"{key}_truncated"] = truncated
+            questions = []
+            for value in language.get("arranger_questions", [])[:12]:
+                text, truncated = _clip_text(value, budget, 1024)
+                questions.append({"text": text, "truncated": truncated})
+            player_language["arranger_questions"] = questions
+        phrases = report.get("phrase_observation", {}).get("regions", [])
+        pitch = report.get("pitch_observation", {})
+        pulse = report.get("pulse_observation", {})
+        summaries.append({
+            "id": report.get("analysis_id"),
+            "path": str(resolved.relative_to(song.resolve())),
+            "created_at": report.get("created_at"),
+            "role": report.get("role"),
+            "note": note,
+            "note_truncated": note_truncated,
+            "source": {key: report.get("source", {}).get(key) for key in ("path", "sha256")},
+            "region": report.get("region"),
+            "player_language": player_language,
+            "phrase_regions": phrases[:24],
+            "phrase_regions_omitted": max(0, len(phrases) - 24),
+            "pitch_candidates": pitch.get("candidates", [])[:12],
+            "pitch_periodic_fraction": pitch.get("periodic_fraction"),
+            "tempo_candidates": pulse.get("tempo_candidates", []),
             "interpretation_limits": report.get("interpretation_limits"),
         })
     return summaries, errors
@@ -2349,6 +2411,13 @@ def build_agent_context(
     attention.extend(
         f"Invalid recent rhythm observation: {error}" for error in rhythm_errors
     )
+    recent_musical_observations, musical_observation_errors = (
+        _musical_observation_summaries(song_path, budget, verify=verify)
+    )
+    attention.extend(
+        f"Invalid recent musical observation: {error}"
+        for error in musical_observation_errors
+    )
     recent_grooves, groove_errors = _groove_summaries(song_path, budget)
     attention.extend(
         f"Invalid recent groove development: {error}" for error in groove_errors
@@ -2404,6 +2473,7 @@ def build_agent_context(
         "creative_briefs": briefs,
         "recent_experiments": recent_experiments,
         "recent_rhythm_observations": recent_rhythm,
+        "recent_musical_observations": recent_musical_observations,
         "recent_groove_developments": recent_grooves,
         "recent_picture_candidates": recent_pictures,
         "recent_youtube_assets": recent_youtube_assets,
@@ -2532,6 +2602,10 @@ def render_agent_context_markdown(packet: dict) -> str:
         "## Performed rhythm observations",
         "",
         _json_block(packet["recent_rhythm_observations"]),
+        "",
+        "## Phrase, pitch, and pulse observations",
+        "",
+        _json_block(packet["recent_musical_observations"]),
         "",
         "## Drummer-facing groove developments",
         "",
