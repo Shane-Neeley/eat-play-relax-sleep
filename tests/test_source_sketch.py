@@ -82,6 +82,7 @@ class SourceSketchTests(unittest.TestCase):
             status = song_status(song, verify=True)
             self.assertEqual(status["inventory"]["source_sketches"]["total"], 1)
             self.assertEqual(status["inventory"]["source_sketches"]["pending"], 1)
+            self.assertEqual(status["inventory"]["source_sketches"]["shapes"]["one-pass"], 1)
             context = build_agent_context(song, verify=True)
             self.assertEqual(context["recent_source_sketches"][0]["id"], sketch["id"])
             self.assertEqual(
@@ -120,6 +121,100 @@ class SourceSketchTests(unittest.TestCase):
             self.assertNotEqual(
                 fresh["outputs"]["mix_score_sha256"], sketch["outputs"]["mix_score_sha256"]
             )
+
+    def test_explicit_conversation_and_loop_shapes_repeat_without_warping_sources(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            guitar = root / "guitar.wav"
+            voices = root / "voices.wav"
+            tone_wav(guitar, 196)
+            tone_wav(voices, 294)
+            _, run = create_song_run(
+                "Two Turn Room",
+                "A guitar call, a family answer, and a spoken loop that can leave gaps.",
+                root=root / "songs",
+                seed=321,
+                recordings=[("guitar call", guitar), ("family voices", voices)],
+                render_visual_preview=False,
+            )
+            song = root / "songs" / "two-turn-room"
+            raw_digests = {
+                path: sha256(path) for path in (song / "recordings" / "raw").glob("*.wav")
+            }
+
+            conversation_path, conversation = create_source_sketch(
+                song,
+                "Let the guitar call twice and let the family answer each turn.",
+                seed=991,
+                include_bed=False,
+                shape="call-response",
+                render_visual_preview=False,
+            )
+            self.assertEqual(conversation["arrangement"]["shape"], "call-response")
+            self.assertTrue(conversation["arrangement"]["repetition_is_explicit"])
+            self.assertTrue(conversation["arrangement"]["excerpting_is_explicit"])
+            self.assertEqual(conversation["arrangement"]["occurrences"], 4)
+            self.assertEqual(
+                {source["relationship_role"] for source in conversation["sources"]},
+                {"call", "answer"},
+            )
+            relationship_starts = {
+                source["relationship_role"]: source["placements"][0]["start_bars"]
+                for source in conversation["sources"]
+            }
+            self.assertEqual(
+                relationship_starts["answer"] - relationship_starts["call"], 2
+            )
+            for source in conversation["sources"]:
+                self.assertEqual(len(source["placements"]), 2)
+                self.assertEqual(
+                    source["placements"][1]["start_bars"]
+                    - source["placements"][0]["start_bars"],
+                    4,
+                )
+                self.assertIn("conversational turn", source["player_intent"])
+            conversation_score = json.loads(
+                (song / conversation["paths"]["mix_score"]).read_text()
+            )
+            self.assertEqual(len(conversation_score["tracks"]), 4)
+            self.assertEqual(conversation_score["source_sketch"]["shape"], "call-response")
+            verify_source_sketch(song, conversation_path)
+            conversation_context = build_agent_context(song, verify=True)
+            self.assertEqual(
+                conversation_context["recent_source_sketches"][0]["arrangement"]["shape"],
+                "call-response",
+            )
+            self.assertEqual(
+                len(conversation_context["recent_source_sketches"][0]["sources"][0]["placements"]),
+                2,
+            )
+
+            loop_path, loop = create_source_sketch(
+                song,
+                "Let each complete phrase recur as an ostinato while its performed length stays untouched.",
+                seed=992,
+                include_bed=False,
+                shape="loop",
+                render_visual_preview=False,
+            )
+            self.assertEqual(loop["arrangement"]["shape"], "loop")
+            self.assertGreater(loop["arrangement"]["occurrences"], 4)
+            for source in loop["sources"]:
+                self.assertGreater(len(source["placements"]), 2)
+                self.assertTrue(all(
+                    placement["duration_seconds"] == 0.3
+                    for placement in source["placements"]
+                ))
+                starts = [placement["start_bars"] for placement in source["placements"]]
+                self.assertEqual(len(set(b - a for a, b in zip(starts, starts[1:]))), 1)
+                self.assertIn("without time-stretching", source["player_intent"])
+            self.assertEqual({path: sha256(path) for path in raw_digests}, raw_digests)
+            verify_source_sketch(song, loop_path)
+            shaped_status = song_status(song, verify=True)["inventory"]["source_sketches"]
+            self.assertEqual(shaped_status["shapes"]["call-response"], 1)
+            self.assertEqual(shaped_status["shapes"]["loop"], 1)
+            production_map = (song / run["paths"]["production_map_dot"]).read_text()
+            self.assertIn("loop · seed 992", production_map)
 
     def test_source_sketch_requires_an_explicitly_captured_recording(self):
         with tempfile.TemporaryDirectory() as folder:

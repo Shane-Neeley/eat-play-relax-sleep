@@ -209,6 +209,10 @@ def parser() -> argparse.ArgumentParser:
     source_sketch.add_argument("--run", help="Run id or song-relative run.json; defaults to latest")
     source_sketch.add_argument("--intent", required=True, help="Player-facing relationship this pass should test")
     source_sketch.add_argument("--seed", type=int, help="Explicit seed for exact diagnostic replay")
+    source_sketch.add_argument(
+        "--shape", choices=("one-pass", "call-response", "loop"), default="one-pass",
+        help="Explicit occurrence shape; repeats/excerpts are never inferred from prompt text",
+    )
     source_sketch.add_argument("--no-bed", action="store_true", help="Arrange supplied recordings without the synthetic starter underneath")
     source_sketch.add_argument("--no-visual", action="store_true", help="Skip the optional source-synced visual preview")
     source_sketch.add_argument("--visual-seconds", type=float, default=8.0, help="Length of the optional source-synced visual preview")
@@ -979,6 +983,7 @@ def main(argv: list[str] | None = None) -> int:
                 run=args.run,
                 seed=args.seed,
                 include_bed=not args.no_bed,
+                shape=args.shape,
                 render_visual_preview=not args.no_visual,
                 visual_seconds=args.visual_seconds,
             )

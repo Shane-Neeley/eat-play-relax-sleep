@@ -21,6 +21,8 @@ from .visuals import compile_prompt, render_visual
 SOURCE_SKETCH_SCHEMA = "eprs.source-sketch/v1"
 RUN_SCHEMA = "eprs.song-run/v1"
 NOW_MARKER = "<!-- eprs.now/v1 -->"
+ARRANGEMENT_SHAPES = {"one-pass", "call-response", "loop"}
+DEFAULT_SHAPE = "one-pass"
 
 
 ROLE_WORDS = {
@@ -126,7 +128,16 @@ def _pan_width(group: str) -> float:
     }[group]
 
 
-def _player_intent(group: str, role: str, start_bars: int) -> str:
+def _player_intent(
+    group: str,
+    role: str,
+    start_bars: int,
+    *,
+    shape: str,
+    turns: int,
+    stride_bars: int | None,
+    relationship_role: str,
+) -> str:
     entrance = "from the downbeat" if start_bars == 0 else f"after {start_bars} bar{'s' if start_bars != 1 else ''}"
     statements = {
         "rhythm": f"Let {role} act as performed timekeeping {entrance}; keep its push, drag, accents, and gaps rather than forcing it to the grid.",
@@ -135,7 +146,95 @@ def _player_intent(group: str, role: str, start_bars: int) -> str:
         "harmonic": f"Let {role} open space {entrance}; preserve the attack, drift, decay, and any useful rough edge.",
         "texture": f"Let {role} color the room {entrance}; leave its internal timing and noise intact and hear whether it belongs.",
     }
+    if shape == "call-response":
+        return (
+            f"Treat {role} as the {relationship_role}. {statements[group]} Make {turns} "
+            "clearly separated conversational turn(s); "
+            "the score may audition the opening phrase twice but must not tune, tighten, or warp it."
+        )
+    if shape == "loop":
+        return (
+            f"{statements[group]} Repeat the complete captured phrase every {stride_bars} "
+            f"bar{'s' if stride_bars != 1 else ''} for {turns} occurrence(s), preserving its "
+            "performed length and any gap before the next entrance without time-stretching."
+        )
     return statements[group]
+
+
+def _arrangement_placements(
+    shape: str,
+    group: str,
+    duration: float,
+    seconds_per_bar: float,
+    horizon_seconds: float | None,
+    rng: random.Random,
+    relationship_role: str,
+    conversation_start_bars: int | None,
+) -> tuple[list[dict], int | None]:
+    """Choose explicit source occurrences without altering the source clock."""
+    if shape == "one-pass":
+        starts = [_start_bars(group, rng)]
+        maximum_duration = duration
+        stride_bars = None
+        clip_to_horizon = True
+    elif shape == "call-response":
+        if conversation_start_bars is None:
+            raise ValueError("call-response placement needs an explicit turn start")
+        base = conversation_start_bars
+        starts = [base, base + 4]
+        maximum_duration = min(duration, 2 * seconds_per_bar)
+        stride_bars = 4
+        clip_to_horizon = False
+    else:
+        first = _start_bars(group, rng)
+        stride_bars = max(1, math.ceil(duration / seconds_per_bar))
+        limit = horizon_seconds if horizon_seconds is not None else 8 * seconds_per_bar
+        starts = []
+        current = first
+        while (
+            current * seconds_per_bar + duration <= limit + 0.01
+            and len(starts) < 8
+        ):
+            starts.append(current)
+            current += stride_bars
+        if not starts:
+            starts = [first]
+        maximum_duration = duration
+        clip_to_horizon = False
+
+    placements: list[dict] = []
+    for bars in starts:
+        start = round(bars * seconds_per_bar, 6)
+        if (
+            clip_to_horizon
+            and horizon_seconds is not None
+            and start >= max(0.0, horizon_seconds - 0.05)
+        ):
+            continue
+        available = maximum_duration
+        if clip_to_horizon and horizon_seconds is not None:
+            available = min(available, horizon_seconds - start)
+        if available <= 0:
+            continue
+        placements.append({
+            "start_bars": bars,
+            "start_seconds": start,
+            "duration_seconds": round(available, 6),
+            "truncated_for_sketch": available < duration - 0.01,
+        })
+    if not placements:
+        available = (
+            duration
+            if not clip_to_horizon or horizon_seconds is None
+            else min(duration, horizon_seconds)
+        )
+        placements.append({
+            "start_bars": 0,
+            "start_seconds": 0.0,
+            "duration_seconds": round(available, 6),
+            "truncated_for_sketch": available < duration - 0.01,
+        })
+    return placements, stride_bars
 
 
 def _write_exact_json(path: Path, value: dict, label: str) -> None:
@@ -153,7 +252,8 @@ def _write_exact_json(path: Path, value: dict, label: str) -> None:
 def _now_markdown(song: Path, record: dict) -> str:
     paths = record["paths"]
     source_lines = "\n".join(
-        f"- **{item['role']}**: {item['player_intent']}"
+        f"- **{item['role']}** ({len(item.get('placements', [item.get('placement')]))} "
+        f"occurrence(s)): {item['player_intent']}"
         for item in record["sources"]
     )
     watch = f"- Watch: `{paths['visual_preview']}`\n" if paths.get("visual_preview") else "- Watch: no source-synced visual rendered for this pass\n"
@@ -165,6 +265,7 @@ This is a reversible diagnostic arrangement using the supplied recordings. It is
 
 - Listen: `{paths['mix']}`
 {watch}- Seed: `{record['randomness']['seed']}` ({record['randomness']['mode']})
+- Arrangement shape: `{record.get('arrangement', {}).get('shape', DEFAULT_SHAPE)}`
 - Mix score: `{paths['mix_score']}`
 - Source-sketch record: `{paths['source_sketch']}`
 - Production map: `{map_value}`
@@ -175,7 +276,7 @@ This is a reversible diagnostic arrangement using the supplied recordings. It is
 
 {source_lines}
 
-No source was normalized, tuned, quantized, denoised, compressed, limited, or time-stretched. Placement, conservative balance, and short truncation fades are the only authored moves.
+No source was normalized, tuned, quantized, denoised, compressed, limited, or time-stretched. Explicit occurrences, placement, conservative balance, and short truncation fades are the only authored moves.
 
 ## Next move
 
@@ -252,6 +353,14 @@ def verify_source_sketch(
         source_path = _inside(song_path, value or "", "recording")
         if not source_path.is_file() or source.get("sha256") != sha256(source_path):
             raise ValueError("source-sketch recording is missing or changed")
+    arrangement = record.get("arrangement")
+    shape = DEFAULT_SHAPE
+    if arrangement is not None:
+        if not isinstance(arrangement, dict) or arrangement.get("shape") not in ARRANGEMENT_SHAPES:
+            raise ValueError("source-sketch arrangement is invalid")
+        if arrangement.get("source_clock_preserved") is not True:
+            raise ValueError("source-sketch source-clock contract is invalid")
+        shape = arrangement["shape"]
     paths = record.get("paths")
     outputs = record.get("outputs")
     if not isinstance(paths, dict) or not isinstance(outputs, dict):
@@ -259,6 +368,50 @@ def verify_source_sketch(
     score = _inside(song_path, paths.get("mix_score", ""), "mix score")
     if not score.is_file() or outputs.get("mix_score_sha256") != sha256(score):
         raise ValueError("source-sketch mix score is missing or changed")
+    try:
+        score_record = json.loads(score.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid source-sketch mix score: {score}: {exc.msg}") from exc
+    score_binding = score_record.get("source_sketch")
+    if (
+        not isinstance(score_binding, dict)
+        or score_binding.get("shape", DEFAULT_SHAPE) != shape
+    ):
+        raise ValueError("source-sketch arrangement does not match its mix score")
+    mix_tracks = score_record.get("tracks")
+    if not isinstance(mix_tracks, list):
+        raise ValueError("source-sketch mix-score tracks are invalid")
+    tracks_by_id = {
+        item.get("id"): item for item in mix_tracks
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    occurrence_count = 0
+    for source in sources:
+        placements = source.get("placements")
+        if placements is None:
+            placements = [source.get("placement")]
+        if not isinstance(placements, list) or not placements:
+            raise ValueError("source-sketch source placements are invalid")
+        occurrence_count += len(placements)
+        for placement in placements:
+            if not isinstance(placement, dict):
+                raise ValueError("source-sketch source placement is invalid")
+            track_id = placement.get("track_id")
+            if track_id is None:
+                continue
+            track = tracks_by_id.get(track_id)
+            if not isinstance(track, dict) or any(
+                track.get(key) != expected for key, expected in {
+                    "path": source.get("path"),
+                    "start_seconds": placement.get("start_seconds"),
+                    "duration_seconds": placement.get("duration_seconds"),
+                    "gain_db": placement.get("gain_db"),
+                    "pan": placement.get("pan"),
+                }.items()
+            ):
+                raise ValueError("source-sketch placement does not match its mix-score track")
+    if arrangement is not None and arrangement.get("occurrences") != occurrence_count:
+        raise ValueError("source-sketch occurrence count is invalid")
     mix = _inside(song_path, paths.get("mix", ""), "mix")
     verify_mix_provenance(song_path, mix)
     mix_output = outputs.get("mix")
@@ -293,6 +446,7 @@ def create_source_sketch(
     run: str | Path | None = None,
     seed: int | None = None,
     include_bed: bool = True,
+    shape: str = DEFAULT_SHAPE,
     render_visual_preview: bool = True,
     visual_seconds: float = 8.0,
 ) -> tuple[Path, dict]:
@@ -302,6 +456,8 @@ def create_source_sketch(
         raise ValueError("source sketch requires player-facing intent")
     if visual_seconds <= 0:
         raise ValueError("source sketch visual_seconds must be positive")
+    if shape not in ARRANGEMENT_SHAPES:
+        raise ValueError("source sketch shape must be one-pass, call-response, or loop")
     song_path = Path(song).resolve()
     song_manifest = load_song_manifest(song_path)
     run_path, run_record = _load_run(song_path, run)
@@ -318,10 +474,20 @@ def create_source_sketch(
     ]
     if not recordings:
         raise ValueError("source sketch needs at least one captured recording")
+    if shape == "call-response" and len(recordings) < 2:
+        raise ValueError("call-response source sketch needs at least two captured recordings")
+    classifications = [_classify(item) for item in recordings]
+    caller_index = min(
+        range(len(recordings)),
+        key=lambda index: ({
+            "rhythm": 0, "harmonic": 1, "bass": 2, "texture": 3, "vocal": 4,
+        }[classifications[index]], index),
+    )
 
     seed_was_supplied = seed is not None
     sketch_seed = int(seed) if seed is not None else secrets.randbits(63)
     rng = random.Random(sketch_seed ^ 0x53_4F_55_52_43_45)
+    conversation_call_bar = rng.choice((0, 1)) if shape == "call-response" else None
     beat_path = _inside(song_path, paths.get("beat", ""), "BeatScript")
     if not beat_path.is_file():
         raise FileNotFoundError(beat_path)
@@ -355,53 +521,74 @@ def create_source_sketch(
         if not source.is_file() or item.get("sha256") != sha256(source):
             raise ValueError(f"captured recording is missing or changed: {role}")
         duration, media_probe = _audio_duration(source, role)
-        group = _classify(item)
-        bars = _start_bars(group, rng)
-        start = round(bars * seconds_per_bar, 6)
-        if bed_duration is not None and start >= max(0.0, bed_duration - 0.1):
-            bars = 0
-            start = 0.0
-        available = duration if bed_duration is None else min(duration, bed_duration - start)
-        if available <= 0:
-            raise ValueError(f"source sketch has no usable duration for {role}")
-        truncated = available < duration - 0.01
+        group = classifications[index - 1]
+        relationship_role = (
+            "call" if shape == "call-response" and index - 1 == caller_index
+            else "answer" if shape == "call-response"
+            else "ostinato" if shape == "loop"
+            else "single-pass"
+        )
         gain = round(_base_gain(group) - shared_attenuation + rng.uniform(-0.75, 0.0), 3)
         pan = round(rng.uniform(-_pan_width(group), _pan_width(group)), 3)
-        player_intent = _player_intent(group, role, bars)
-        track_id = slugify(role) or f"recording-{index}"
-        if any(track.get("id") == track_id for track in tracks):
-            track_id = f"{track_id}-{index}"
-        track = {
-            "id": track_id,
-            "role": role,
-            "intent": player_intent,
-            "path": str(source.relative_to(song_path)),
-            "start_seconds": start,
-            "source_start_seconds": 0,
-            "duration_seconds": round(available, 6),
-            "gain_db": gain,
-            "pan": pan,
-            "fade_in_ms": 0,
-            "fade_out_ms": 20 if truncated else 0,
-        }
-        tracks.append(track)
+        placements, stride_bars = _arrangement_placements(
+            shape, group, duration, seconds_per_bar, bed_duration, rng,
+            relationship_role,
+            (
+                conversation_call_bar
+                if relationship_role == "call"
+                else conversation_call_bar + 2
+                if relationship_role == "answer" and conversation_call_bar is not None
+                else None
+            ),
+        )
+        player_intent = _player_intent(
+            group,
+            role,
+            placements[0]["start_bars"],
+            shape=shape,
+            turns=len(placements),
+            stride_bars=stride_bars,
+            relationship_role=relationship_role,
+        )
+        source_id = slugify(role) or f"recording-{index}"
+        if any(source_plan.get("id") == source_id for source_plan in source_plans):
+            source_id = f"{source_id}-{index}"
+        source_path = str(source.relative_to(song_path))
+        placement_records = []
+        for occurrence, placement in enumerate(placements, start=1):
+            track_id = source_id if len(placements) == 1 else f"{source_id}-turn-{occurrence}"
+            track = {
+                "id": track_id,
+                "role": role,
+                "intent": player_intent,
+                "path": source_path,
+                "start_seconds": placement["start_seconds"],
+                "source_start_seconds": 0,
+                "duration_seconds": placement["duration_seconds"],
+                "gain_db": gain,
+                "pan": pan,
+                "fade_in_ms": 0,
+                "fade_out_ms": 20 if placement["truncated_for_sketch"] else 0,
+            }
+            tracks.append(track)
+            placement_records.append({
+                **placement,
+                "track_id": track_id,
+                "gain_db": gain,
+                "pan": pan,
+            })
         source_plans.append({
-            "id": track_id,
+            "id": source_id,
             "role": role,
             "classification": group,
-            "path": track["path"],
+            "relationship_role": relationship_role,
+            "path": source_path,
             "sha256": sha256(source),
             "probe": media_probe,
             "rights_note": item.get("rights_note"),
             "player_intent": player_intent,
-            "placement": {
-                "start_bars": bars,
-                "start_seconds": start,
-                "duration_seconds": track["duration_seconds"],
-                "truncated_for_sketch": truncated,
-                "gain_db": gain,
-                "pan": pan,
-            },
+            "placement": placement_records[0],
+            "placements": placement_records,
         })
 
     plan = {
@@ -412,6 +599,7 @@ def create_source_sketch(
         "intent": clean_intent,
         "seed": sketch_seed,
         "include_bed": include_bed,
+        "shape": shape,
         "seconds_per_bar": seconds_per_bar,
         "tracks": tracks,
     }
@@ -435,7 +623,8 @@ def create_source_sketch(
         "source_sketch": {
             "seed": sketch_seed,
             "run": str(run_path.relative_to(song_path)),
-            "randomness": "role-aware entrances plus conservative no-boost gain and pan variation",
+            "shape": shape,
+            "randomness": "role-aware occurrences plus conservative no-boost gain and pan variation",
         },
     }
     _write_exact_json(score_path, mix_score, "source-sketch mix score")
@@ -505,11 +694,18 @@ def create_source_sketch(
         "status": "diagnostic-source-arrangement",
         "title": run_record.get("title", song_manifest.get("title", song_path.name)),
         "intent": clean_intent,
+        "arrangement": {
+            "shape": shape,
+            "occurrences": sum(len(item["placements"]) for item in source_plans),
+            "source_clock_preserved": True,
+            "repetition_is_explicit": shape in {"call-response", "loop"},
+            "excerpting_is_explicit": shape == "call-response",
+        },
         "randomness": {
             "mode": "explicit-replay" if seed_was_supplied else "fresh-entropy",
             "seed": sketch_seed,
             "source": "caller" if seed_was_supplied else "OS entropy via secrets.randbits",
-            "choices": "role-aware entrance bars, conservative no-boost gain variation, and narrow pan variation",
+            "choices": "explicit arrangement shape, role-aware occurrences, conservative no-boost gain variation, and narrow pan variation",
         },
         "run": {"path": plan["run_path"], "sha256": plan["run_sha256"]},
         "request": {"path": plan["request_path"], "sha256": plan["request_sha256"]},

@@ -2382,6 +2382,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
     source_sketch_counts = {
         "total": 0, "invalid": 0, "pending": 0,
         "keep": 0, "change": 0, "stop": 0,
+        "shapes": {"one-pass": 0, "call-response": 0, "loop": 0},
     }
     for source_sketch_path in sorted(
         (song_path / "notes" / "source-sketches").glob("*/*/source-sketch.json")
@@ -2398,6 +2399,9 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
             )
             continue
         source_sketch_counts["total"] += 1
+        shape = source_sketch_record.get("arrangement", {}).get("shape", "one-pass")
+        if shape in source_sketch_counts["shapes"]:
+            source_sketch_counts["shapes"][shape] += 1
         decision = source_mix.get("review", {}).get("decision")
         if decision in {"keep", "change", "stop"}:
             source_sketch_counts[decision] += 1

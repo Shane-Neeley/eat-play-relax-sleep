@@ -226,7 +226,7 @@ def production_map_dot(song: str | Path, run: str | Path | None = None) -> tuple
         sketch_path, sketch = source_sketch
         sketch_paths = sketch.get("paths", {}) if isinstance(sketch.get("paths"), dict) else {}
         lines.extend([
-            _node("source_score", f"SOURCE-AWARE MIX SCORE\\n{sketch_paths.get('mix_score', 'unavailable')}\\nseed {sketch.get('randomness', {}).get('seed', 'unknown')}", "editable"),
+            _node("source_score", f"SOURCE-AWARE MIX SCORE\\n{sketch_paths.get('mix_score', 'unavailable')}\\n{sketch.get('arrangement', {}).get('shape', 'one-pass')} · seed {sketch.get('randomness', {}).get('seed', 'unknown')}", "editable"),
             _node("source_mix", f"SOURCE-AWARE MIX\\n{sketch_paths.get('mix', 'unavailable')}", "media"),
             _node("source_sketch", f"SOURCE-SKETCH EVIDENCE\\n{sketch_path.relative_to(song_path)}", "evidence"),
             _edge("request", "source_score", "bounds"),

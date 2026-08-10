@@ -22,10 +22,42 @@ checksums. It writes:
 - shallow `_LISTEN.wav`, optional `_WATCH.mp4`, and `NOW.md` pointers.
 
 The arrangement keeps each recording byte-for-byte unchanged. Role words only
-guide a small set of musical choices: entrance bar, conservative gain reduction,
-and narrow panning. The player's push, drag, breath, pitch, overlap, room sound,
-attack, decay, drift, and noise remain intact. Short fade-outs occur only when a
-source extends beyond the diagnostic bed.
+guide a small set of musical choices: explicit occurrences, entrance bar,
+conservative gain reduction, and narrow panning. The player's push, drag,
+breath, pitch, overlap, room sound, attack, decay, drift, and noise remain
+intact. Short fade-outs occur only when a one-pass source extends beyond the
+diagnostic bed or an explicitly requested conversational excerpt ends.
+
+## Explicit arrangement shapes
+
+Prompt text never silently turns into repetition or editing. Choose the
+occurrence shape directly:
+
+- `--shape one-pass` places every captured recording once and is the default;
+- `--shape call-response` requires at least two recordings, auditions each
+  opening phrase in two turns four bars apart, and records that excerpting and
+  repetition were explicitly requested. A rhythm/harmonic/bass source is
+  preferred as the call; if every source has the same broad role, the first is
+  the call and the remaining sources answer; and
+- `--shape loop` repeats each complete captured phrase at the next whole-bar
+  stride that can contain it. It inserts no stretch, warp, seam crossfade, or
+  timing correction; a short phrase therefore leaves its natural gap before
+  the next entrance.
+
+```bash
+./scripts/eprs source-sketch songs/signal-garden \
+  --shape call-response \
+  --intent "Let the guitar call twice; family voices answer each turn."
+
+./scripts/eprs source-sketch songs/signal-garden \
+  --shape loop \
+  --intent "Let each complete phrase recur as an ostinato without warping it."
+```
+
+Every occurrence is a separate, source-relative track in the editable mix
+score. The source-sketch record groups those tracks back under the immutable
+recording, exposes their bar/time positions, and states whether repetition or
+excerpting was requested.
 
 Fresh OS entropy is the default, so another pass gets a different seed and
 combination of choices. Reproduce a useful pass by supplying its recorded seed:
@@ -36,8 +68,9 @@ combination of choices. Reproduce a useful pass by supplying its recorded seed:
   --seed 777
 ```
 
-Use `--no-bed` to omit the generated starter pocket and `--no-visual` for an
-audio-only pass. Neither option changes a supplied recording.
+Use `--no-bed` to hear the source relationship without the generated starter
+pocket and `--no-visual` for an audio-only pass. Neither option changes a
+supplied recording.
 
 Every pass requires a complete listen. Record that decision on its working mix:
 

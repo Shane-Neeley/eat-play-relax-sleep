@@ -179,7 +179,7 @@ scripts/eprs adapter show audacity-editor --handoff record-to-eprs
 scripts/eprs status songs/<song-name>
 scripts/eprs performance --song songs/<song-name>
 scripts/eprs map songs/<song-name>
-scripts/eprs source-sketch songs/<song-name> --intent "Let the guitar invite; family voices answer after the room breathes."
+scripts/eprs source-sketch songs/<song-name> --shape call-response --intent "Let the guitar invite; family voices answer after the room breathes."
 scripts/eprs request add songs/<song-name>/code/production-request.json --song songs/<song-name>
 scripts/eprs request show <request-id> --song songs/<song-name>
 scripts/eprs plan add songs/<song-name>/code/production-plan.json --song songs/<song-name>

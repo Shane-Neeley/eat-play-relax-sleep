@@ -1733,10 +1733,12 @@ def _source_sketch_summaries(
                 "id": value.get("id"),
                 "role": value.get("role"),
                 "classification": value.get("classification"),
+                "relationship_role": value.get("relationship_role"),
                 "path": value.get("path"),
                 "player_intent": player_intent,
                 "player_intent_truncated": player_intent_truncated,
                 "placement": value.get("placement"),
+                "placements": value.get("placements", [value.get("placement")]),
             })
         review = mix_record.get("review", {})
         summaries.append({
@@ -1746,6 +1748,7 @@ def _source_sketch_summaries(
             "status": record.get("status"),
             "intent": intent,
             "intent_truncated": intent_truncated,
+            "arrangement": record.get("arrangement", {"shape": "one-pass"}),
             "randomness": record.get("randomness"),
             "mix": record.get("paths", {}).get("mix"),
             "visual_preview": record.get("paths", {}).get("visual_preview"),

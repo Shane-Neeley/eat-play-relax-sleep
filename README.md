@@ -96,6 +96,7 @@ arrangement:
 
 ```bash
 ./scripts/eprs source-sketch songs/signal-garden \
+  --shape call-response \
   --intent "Let the guitar invite; family voices answer after the room breathes."
 ```
 
@@ -104,6 +105,9 @@ record, updated production map, and shallow `_LISTEN.wav`/`NOW.md` handoff. It
 uses fresh entropy by default for role-aware entrances and conservative
 no-boost balance/pan choices; pass `--seed` to replay a pass. It does not tune,
 quantize, denoise, normalize, compress, limit, or time-stretch a performance.
+Choose `--shape one-pass`, `call-response`, or `loop` explicitly; prompt text
+never silently authorizes repetition or excerpting, and every occurrence stays
+visible in the editable mix score.
 See [source-aware sketches](docs/SOURCE_SKETCHES.md).
 
 The harness does not browse, download, upload, or publish. Supply a local
