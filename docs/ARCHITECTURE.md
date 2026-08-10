@@ -78,7 +78,10 @@ supplied files before any agent chooses a representation or experiment.
   supplied files. `eprs.production-request-record/v1` preserves recordings in
   raw intake and freezes other evidence under one atomic request directory.
   JSON `request add` and direct prompt-and-files `request capture` share the
-  same validator and record contract.
+  same validator and record contract. The record adds a non-executing
+  `input_routes` index derived from declared handling, role words, and filename
+  extension so agents can quickly route performances, rhythm ideas, lyrics,
+  pictures, notation, documents, and research leads without content inference.
 - `eprs.source-sketch/v1`: an explicit continuation from one exact agent-led
   run and captured request. It classifies supplied recordings only to choose
   seeded entrances, conservative no-boost gain, and narrow pan; writes an

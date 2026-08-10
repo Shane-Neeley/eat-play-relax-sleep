@@ -38,10 +38,14 @@ class ProductionRequestTests(unittest.TestCase):
             root = Path(folder)
             song = new_song(root / "songs", "Direct Intake")
             guitar = root / "guitar.wav"
+            beat = root / "beat-idea.wav"
             lyrics = root / "lyrics.txt"
+            picture = root / "porch-colors.png"
             tone_wav(guitar, 220)
+            tone_wav(beat, 110)
             lyrics.write_text("Keep the porch light / leave the ending open\n")
-            digests = {path: sha256(path) for path in (guitar, lyrics)}
+            picture.write_bytes(b"frozen visual-direction evidence")
+            digests = {path: sha256(path) for path in (guitar, beat, lyrics, picture)}
             prompt = "Loop the guitar invitation and let the lyric remain unfinished."
 
             manifest = capture_production_request(
@@ -52,9 +56,12 @@ class ProductionRequestTests(unittest.TestCase):
                 avoid=["Automatic timing correction"],
                 questions=["Where can a family response enter without crowding the guitar?"],
                 deliverables=["One small audition before arranging"],
-                references=["Call and response as a relationship"],
-                recordings=[("guitar invitation", guitar)],
-                evidence=[("lyric fragments", lyrics)],
+                references=[
+                    "Call and response as a relationship",
+                    "https://www.youtube.com/watch?v=example",
+                ],
+                recordings=[("guitar invitation", guitar), ("spoken boom—clap", beat)],
+                evidence=[("lyric fragments", lyrics), ("porch color direction", picture)],
             )
             _, request = load_production_request(song, manifest)
 
@@ -75,6 +82,28 @@ class ProductionRequestTests(unittest.TestCase):
             self.assertEqual({path: sha256(path) for path in digests}, digests)
             self.assertTrue((song / request["provided"]["guitar-invitation"]["path"]).is_file())
             self.assertTrue((manifest.parent / request["provided"]["lyric-fragments"]["path"]).is_file())
+            routes = {item["id"]: item for item in request["input_routes"]["provided"]}
+            self.assertEqual(routes["guitar-invitation"]["family"], "performed-audio")
+            self.assertIn("source-sketch", routes["guitar-invitation"]["first_action"])
+            self.assertIn(
+                "rhythm:", " ".join(routes["spoken-boom-clap"]["optional_followups"])
+            )
+            self.assertEqual(routes["lyric-fragments"]["family"], "lyrics-or-songwords")
+            self.assertEqual(routes["porch-color-direction"]["family"], "picture")
+            reference_families = {
+                item["family"] for item in request["input_routes"]["references"]
+            }
+            self.assertEqual(reference_families, {"research-lead", "youtube-reference"})
+            self.assertIn("does not execute", request["input_routes"]["authority"])
+            packet = build_agent_context(song, request=manifest.parent.name, verify=True)
+            routed_families = {
+                item["family"]
+                for item in packet["focus"]["production_request"]["record"]["input_routes"]["provided"]
+            }
+            self.assertEqual(
+                routed_families,
+                {"performed-audio", "lyrics-or-songwords", "picture"},
+            )
 
             args = parser().parse_args([
                 "request", "capture", "--song", str(song),

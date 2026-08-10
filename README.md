@@ -211,9 +211,12 @@ cp templates/production-plan.json songs/signal-garden/code/production-plan.json
 ```
 
 Recordings enter immutable raw intake; lyrics, MIDI, notes, images, and other
-evidence are frozen with checksums. Capturing the request never authorizes an
-agent to browse, process, upload, or publish. The optional request-bound plan is
-an immutable dependency map, not an executor or approval record. See
+evidence are frozen with checksums. The request records a fast file-by-file
+route for performed audio/video, rhythm ideas, lyrics, pictures, notation,
+documents, YouTube references, and other research leads; `NOW.md` surfaces the
+first action without decoding or processing the file. Capturing the request
+never authorizes an agent to browse, process, upload, or publish. The optional
+request-bound plan is an immutable dependency map, not an executor or approval record. See
 [production-request intake](docs/PRODUCTION_REQUESTS.md) and [production
 plans](docs/PRODUCTION_PLANS.md).
 

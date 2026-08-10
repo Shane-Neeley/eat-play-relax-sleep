@@ -31,6 +31,13 @@ class AgentDispatchTests(unittest.TestCase):
                 set(focused_request["provided"]), {"lyric-fragments", "room-note"}
             )
             self.assertEqual(
+                {item["id"] for item in focused_request["input_routes"]["provided"]},
+                {"lyric-fragments", "room-note"},
+            )
+            self.assertIn(
+                "does not execute", focused_request["input_routes"]["authority"]
+            )
+            self.assertEqual(
                 bundle["context"]["focus"]["work"]["item"]["request_origin"][
                     "schema"
                 ],

@@ -84,7 +84,11 @@ class SongHarnessTests(unittest.TestCase):
             self.assertEqual(song_status(song)["inventory"]["raw_recordings"], 1)
             self.assertEqual(song_status(song)["inventory"]["work_items"]["queued"], 1)
             self.assertIn("does not yet contain", (song / "NOW.md").read_text())
-            self.assertIn("Production map", (song / "NOW.md").read_text())
+            now = (song / "NOW.md").read_text()
+            self.assertIn("Production map", now)
+            self.assertIn("## Input routing", now)
+            self.assertIn("source-sketch", now)
+            self.assertIn("attributed research work", now)
 
     def test_default_entropy_changes_runs_but_explicit_seed_replays_audio(self):
         with tempfile.TemporaryDirectory() as folder:

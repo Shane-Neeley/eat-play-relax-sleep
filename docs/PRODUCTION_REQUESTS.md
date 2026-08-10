@@ -57,6 +57,15 @@ visible half-manifest. Successfully ingested raw recordings may remain after a
 later evidence-copy failure because safe immutable intake is not rolled back or
 deleted.
 
+The record also writes `input_routes`, a fast per-input routing index based only
+on declared handling, role words, and filename extension. It distinguishes
+performed audio/video, rhythm ideas, lyrics, pictures, visual evidence,
+MIDI/notation, documents, other frozen evidence, YouTube references, and other
+research leads. Each route names a safe first action and its boundary. It does
+not decode content, launch software, browse a reference, grant rights, or
+authorize the suggested action. `make-song` copies this index into its run
+record and shows the concise routes in the root `NOW.md`.
+
 A production request captures what the user supplied and wants. When several
 takes came from the same rehearsal or recording day, follow it with a
 [recording-session record](RECORDING.md#capture-a-whole-recording-session) to
@@ -72,7 +81,9 @@ context, consent, and take-specific rights without modifying those recordings.
 - processing, style, privacy, or workflow choices to avoid;
 - unanswered musical questions and desired deliverables;
 - references as leads, never instructions to copy another artist; and
-- each supplied item's role, kind, note, checksum, and rights/permission note.
+- each supplied item's role, kind, note, checksum, and rights/permission note;
+  plus an inspectable, non-executing first-action route for every supplied item
+  and reference.
 
 The resulting `eprs.production-request-record/v1` is context, not authority. It
 cannot authorize browsing, processing, sending, uploading, publishing, or

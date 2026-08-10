@@ -745,6 +745,62 @@ def _phase_summaries(
     return summaries, errors
 
 
+def _bounded_input_routes(
+    value: object,
+    budget: dict[str, int],
+    *,
+    provided_ids: set[str] | None = None,
+    limit: int = 20,
+) -> dict:
+    if not isinstance(value, dict):
+        return {"provided": [], "references": [], "authority": None}
+    provided_values = value.get("provided", [])
+    reference_values = value.get("references", [])
+    provided_values = provided_values if isinstance(provided_values, list) else []
+    reference_values = reference_values if isinstance(reference_values, list) else []
+    if provided_ids is not None:
+        provided_values = [
+            item for item in provided_values
+            if isinstance(item, dict) and item.get("id") in provided_ids
+        ]
+    provided_routes = []
+    for item in provided_values[:limit]:
+        if not isinstance(item, dict):
+            continue
+        route = {key: item.get(key) for key in ("id", "family", "basis")}
+        for key in ("role", "first_action", "boundary"):
+            route[key], route[f"{key}_truncated"] = _clip_text(
+                item.get(key), budget, 2048
+            )
+        followup_values = item.get("optional_followups", [])
+        followup_values = followup_values if isinstance(followup_values, list) else []
+        followups = []
+        for followup in followup_values[:10]:
+            text, truncated = _clip_text(followup, budget, 1024)
+            followups.append({"text": text, "truncated": truncated})
+        route["optional_followups"] = followups
+        provided_routes.append(route)
+    reference_routes = []
+    for item in reference_values[:limit]:
+        if not isinstance(item, dict):
+            continue
+        route = {"family": item.get("family")}
+        for key in ("reference", "first_action", "boundary"):
+            route[key], route[f"{key}_truncated"] = _clip_text(
+                item.get(key), budget, 2048
+            )
+        reference_routes.append(route)
+    authority, authority_truncated = _clip_text(value.get("authority"), budget, 2048)
+    return {
+        "provided": provided_routes,
+        "provided_omitted": max(0, len(provided_values) - len(provided_routes)),
+        "references": reference_routes,
+        "references_omitted": max(0, len(reference_values) - len(reference_routes)),
+        "authority": authority,
+        "authority_truncated": authority_truncated,
+    }
+
+
 def _production_request_summaries(
     song: Path,
     budget: dict[str, int],
@@ -803,6 +859,7 @@ def _production_request_summaries(
             "intended_experience": experience,
             "intended_experience_truncated": experience_truncated,
             "provided": provided_summaries,
+            "input_routes": _bounded_input_routes(request.get("input_routes"), budget),
             "questions": questions,
             "deliverables": deliverables,
         })
@@ -1945,6 +2002,12 @@ def build_agent_context(
                 **list_truncation,
                 "provided": provided_records,
                 "provided_omitted": max(0, len(provided) - len(provided_records)),
+                "input_routes": _bounded_input_routes(
+                    request_record.get("input_routes"),
+                    budget,
+                    provided_ids=set(provided_records),
+                    limit=MAX_EVIDENCE_RECORDS,
+                ),
                 "suggested_next_actions": request_record.get("suggested_next_actions"),
                 "authority": request_record.get("authority"),
             },

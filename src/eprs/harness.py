@@ -298,6 +298,20 @@ def _now_markdown(song: Path, manifest: dict) -> str:
         if novelty.get("enforced") else
         "- Novelty: explicit seed replay; matching a prior artifact is allowed\n"
     )
+    routes = manifest.get("input_routes", {})
+    provided_routes = routes.get("provided", []) if isinstance(routes, dict) else []
+    reference_routes = routes.get("references", []) if isinstance(routes, dict) else []
+    routing_lines = [
+        f"- **{item['role']}** (`{item['family']}`): {item['first_action']}"
+        for item in provided_routes if isinstance(item, dict)
+    ]
+    routing_lines.extend(
+        f"- **Reference** (`{item['family']}`): {item['first_action']} — `{item['reference']}`"
+        for item in reference_routes if isinstance(item, dict)
+    )
+    if not routing_lines:
+        routing_lines = ["- No files or research leads were supplied in this run."]
+    routing_text = "\n".join(routing_lines)
     return f"""<!-- eprs.now/v1 -->
 # Current song run
 
@@ -313,6 +327,12 @@ This file is the shallow entry point for the latest agent-led run. The generated
 - Starter audio: `{paths['audio_preview']}`
 - Rhythm map: `{paths['rhythm_map']}`
 {visual_line}{map_line}- Run manifest: `{paths['run_manifest']}`
+
+## Input routing
+
+{routing_text}
+
+These are inspectable first-action suggestions, not processing, browsing, sampling, approval, or publication authority. Read the exact request rights notes before acting.
 
 ## Next move
 
@@ -479,6 +499,10 @@ def create_song_run(
             "evidence": evidence_count,
             "references": len(references),
         },
+        "input_routes": request_record.get("input_routes", {
+            "provided": [], "references": [],
+            "authority": "No routing metadata was recorded.",
+        }),
         "starter": {
             "purpose": "synthetic diagnostic control, not a source-aware arrangement",
             "supplied_recordings_used": False,

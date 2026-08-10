@@ -27,9 +27,12 @@ For a new project:
   --avoid "WHAT MUST NOT HAPPEN"
 ```
 
-Fresh runs use OS entropy. `SONG/NOW.md` points to the latest request, source,
-audition, visual score, and run manifest. An explicit `--seed` is for diagnostic
-replay; omit it for the next genuine variation.
+Fresh runs use OS entropy and reject an artifact-level creative fingerprint
+already recorded in that song. `SONG/NOW.md` points to the latest request,
+file-by-file input routes, source, audition, visual score, and run manifest. An
+explicit `--seed` is for diagnostic replay and may intentionally match history;
+omit it for the next genuine variation. See `docs/RANDOMNESS.md` for scope and
+limits.
 
 For an existing project:
 
