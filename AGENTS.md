@@ -54,7 +54,13 @@ This repository is a creative production system, not a scratch directory. Work f
    grant permission to browse, publish, send, or change unrelated files.
    Automated runners should use `dispatch next` to combine atomic claiming with
    verified bounded context preparation. It releases preparation failures with
-   evidence but does not invoke an agent or broaden authority. For a file-based
+   evidence but does not invoke an agent or broaden authority. To invoke one
+   explicit local file-agent, use `runner run` with an ignored validated
+   profile. Runner v1 requires OS isolation, hard-denies network access, allows
+   child writes only in its run workspace, caps logs, enforces a deadline,
+   terminates descendants, verifies raw integrity, and preserves a receipt.
+   It cannot edit the repo/song directly, and a completed run is not listening
+   or creative approval. See `docs/AGENT_RUNNERS.md`. For a manually operated file-based
    runner, write a new packet with `dispatch next --out`, initialize its bound
    response with `dispatch response-init`, and return it through `dispatch
    accept`; this freezes both sides and refuses claim, checksum, action, or
@@ -210,6 +216,9 @@ scripts/eprs dispatch next --song songs/<song-name> --agent <agent-name>
 scripts/eprs dispatch next --song songs/<song-name> --agent <agent-name> --out /tmp/agent-packet.json
 scripts/eprs dispatch response-init --packet /tmp/agent-packet.json --out /tmp/agent-response.json
 scripts/eprs dispatch accept /tmp/agent-response.json --packet /tmp/agent-packet.json --song songs/<song-name>
+scripts/eprs runner validate .eprs-local/runners/<profile>.json
+scripts/eprs runner run .eprs-local/runners/<profile>.json --packet /tmp/agent-packet.json --song songs/<song-name>
+scripts/eprs runner show notes/runner-runs/<profile>/<run> --song songs/<song-name>
 scripts/eprs work claim-next --song songs/<song-name> --agent <agent-name>
 scripts/eprs work start <work-id> --song songs/<song-name> --agent <agent-name>
 scripts/eprs work release <work-id> --song songs/<song-name> --agent <agent-name> --note "Why this attempt stopped"

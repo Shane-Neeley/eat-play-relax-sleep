@@ -19,7 +19,7 @@ test-fast:
 		tests.test_adapters tests.test_beat tests.test_context tests.test_evidence \
 		tests.test_dispatch \
 		tests.test_plan tests.test_plan_progress tests.test_planning \
-		tests.test_request tests.test_research tests.test_runtime tests.test_visuals \
+		tests.test_request tests.test_research tests.test_runner tests.test_runtime tests.test_visuals \
 		tests.test_work tests.test_work_origin
 	node --test tests-js/*.test.mjs
 

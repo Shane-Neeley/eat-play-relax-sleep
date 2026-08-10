@@ -177,6 +177,23 @@ file. It does not launch an agent, browse, enable network access, process audio,
 upload, publish, or satisfy a production-plan gate. The scheduler still decides
 whether and how to invoke an agent within current user authorization.
 
+When the target implements the file protocol, EPRS can make that separate
+launch explicit and isolated:
+
+```bash
+./scripts/eprs runner run .eprs-local/runners/local-agent.json \
+  --packet /tmp/signal-garden-dispatch.json \
+  --song songs/signal-garden
+```
+
+Runner v1 always denies network access—even when the packet permits read-only
+research—and gives the child write access only to its private response
+workspace. It validates and freezes successful results through the same accept
+path, or releases failed work with deadline/process/log/raw-integrity evidence.
+See [isolated agent runners](AGENT_RUNNERS.md). Manual packet operation remains
+the route for online research until a read-only network proxy can enforce and
+record methods, destinations, and responses.
+
 ## Exact packet and response protocol
 
 For a local Codex, Claude, Gemini, or another explicitly operated runner, write

@@ -62,6 +62,34 @@
       }
     },
     {
+      "id": "sandbox_exec",
+      "label": "macOS sandbox-exec",
+      "kind": "command-set",
+      "required": false,
+      "platforms": ["Darwin"],
+      "commands": [
+        {"name": "sandbox-exec"}
+      ],
+      "capabilities": ["agent_runner_isolation"],
+      "install_hints": {
+        "Darwin": "Agent runner isolation requires the sandbox-exec command supplied by macOS."
+      }
+    },
+    {
+      "id": "bubblewrap",
+      "label": "Bubblewrap",
+      "kind": "command-set",
+      "required": false,
+      "platforms": ["Linux"],
+      "commands": [
+        {"name": "bwrap", "version_args": ["--version"]}
+      ],
+      "capabilities": ["agent_runner_isolation"],
+      "install_hints": {
+        "Linux": "Install the bubblewrap package to run packet/response agents with network and host writes denied."
+      }
+    },
+    {
       "id": "node",
       "label": "Node.js",
       "kind": "command-set",
@@ -143,8 +171,14 @@
     {
       "id": "daily-agent-work",
       "label": "Daily agent work",
-      "description": "Claim due local work, prepare verified bounded context, and preserve result evidence without launching an agent.",
+      "description": "Claim due local work, prepare verified bounded context, and preserve result evidence; launching remains a separate explicit isolated-runner action.",
       "capabilities": ["work_queue", "agent_dispatch", "agent_context"]
+    },
+    {
+      "id": "isolated-agent-runner",
+      "label": "Isolated local agent runner",
+      "description": "Run one explicit shell-free packet/response profile with OS-enforced network denial, workspace-only host writes, bounded logs, a deadline, and a preserved receipt.",
+      "capabilities": ["work_queue", "agent_dispatch", "agent_context", "agent_runner_isolation"]
     },
     {
       "id": "performed-groove-development",

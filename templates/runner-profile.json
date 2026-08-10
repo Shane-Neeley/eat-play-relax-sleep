@@ -1,0 +1,20 @@
+{
+  "schema": "eprs.runner-profile/v1",
+  "id": "local-file-agent",
+  "label": "Local packet/response file agent",
+  "protocol": "eprs.packet-response-files/v1",
+  "executable": "your-file-agent",
+  "arguments": [
+    "--packet",
+    "{packet}",
+    "--response",
+    "{response}",
+    "--workspace",
+    "{workspace}"
+  ],
+  "isolation": "auto",
+  "network_mode": "deny",
+  "timeout_seconds": 900,
+  "terminate_grace_seconds": 3,
+  "max_log_bytes": 1048576
+}

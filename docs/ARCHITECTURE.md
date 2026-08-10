@@ -57,10 +57,11 @@ supplied files before any agent chooses a representation or experiment.
   a song, validates referenced evidence, optionally verifies checksums, and
   exposes versioned `eprs.status/v1` JSON.
 - `eprs.performance/v1`: a read-only diagnostic over EPRS-owned visual render
-  processes and optional recent song render provenance. It distinguishes active
-  work from stale orphaned Chromium roots and reports elapsed time, CPU, memory,
-  concurrency, and render-to-media ratio without stopping processes or granting
-  operational authority.
+  and isolated agent-runner processes plus optional recent song receipts. It
+  distinguishes active work from stale orphaned Chromium roots and reports
+  elapsed time, CPU, memory, render timing, runner deadline/cleanup/isolation,
+  capped-log, raw-integrity, and response evidence without stopping processes
+  or granting operational authority.
 - Fresh `make-song` and `source-sketch` passes compare artifact-level creative
   fingerprints against song-local history before writing a candidate. The
   seed, scope, and collision count remain visible; explicit seeds permit exact
@@ -162,6 +163,15 @@ supplied files before any agent chooses a representation or experiment.
   evidence drift, and freezes the packet, response, and results in one work run.
   Read-only research must be explicitly enabled on the packet; raw mutation,
   remote changes, sending, upload, and publication remain forbidden.
+- `eprs.runner-profile/v1`: a private, shell-free executable and literal
+  argument contract for the packet/response file protocol. Only packet,
+  response, and workspace placeholders are allowed; mandatory automatic OS
+  isolation and hard network denial cannot be weakened by a profile.
+- `eprs.agent-runner-execution/v1`: a song-local receipt over one staged
+  profile and dispatch packet, mandatory sandbox provider, writable workspace,
+  deadline, process group, bounded stdout/stderr, raw before/after integrity,
+  accepted response, and failure release. It proves an execution boundary, not
+  taste, consent, rights, approval, upload, or publication.
 - `eprs.adapter-fit/v1`: a focused, non-ranking projection of declared
   plan-step capabilities onto current doctor results and all matching adapter
   handoffs. It separates software readiness from guide coverage and carries

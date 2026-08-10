@@ -33,12 +33,22 @@ weights, send recordings, or claim that output is approved.
 
 ## Suno: collaboration, credits, and API reality
 
-As of the check date, Suno's official public material documents the web/mobile
-product and subscription credits, but no supported public developer API or API
-credit schedule was found. Do not build against cookie automation, scraping,
-reverse-engineered endpoints, or third-party “Suno API” wrappers. Suno's terms
-also prohibit scraping and obtaining content through means the service did not
-intentionally provide.
+Suno now exposes an [official developer platform](https://platform.suno.com/)
+that describes a REST API for original songs, covers, and mashups. This changes
+the earlier recommendation: investigate the official platform before any
+reseller. Its public signed-out page does not expose an API credit schedule, so
+EPRS still must not estimate or spend official API credits until the account
+console provides a current quote and terms.
+
+[APIFrame's Suno endpoint](https://apiframe.ai/docs/music/suno) could help as a
+replaceable experimental provider: it documents text/custom-lyric generation,
+asynchronous jobs/webhooks, follow-up operations, WAV downloads, and stem
+separation. Rank it behind the official API. APIFrame is an additional data,
+rights, billing, and availability boundary, and its own current marketing is
+internally inconsistent: the same page says Suno has no official API even
+though Suno's platform is live, and displays different free/paid credit counts
+in its pricing cards and FAQ. Treat the console quote—not a landing-page
+estimate—as authoritative.
 
 The official pricing page currently displays annual-billing-equivalent prices
 of **$8/month for Pro** and **$24/month for Premier** (taxes extra), with 2,500
@@ -65,10 +75,21 @@ For this project:
    terms grant Suno a broad, perpetual license over submitted content and voice
    models for service, monetization, promotion, marketing, and model
    improvement. A generic “okay to make a song” is not the same permission.
-4. If Suno later publishes an official API, add it as an optional external
-   adapter with an explicit user-operated credential and per-run cost ceiling.
-   Until then, required API credits are **not estimable because there is no
-   documented official API product to buy**.
+4. Pilot the **official Suno API first**, with an explicit user-operated
+   credential, a small prepaid ceiling, private-by-default jobs, exact request
+   and response capture, downloaded outputs, and per-operation cost receipts.
+   Do not put a key in a song, runner profile, Git, log, or dispatch packet.
+5. If APIFrame is tested, use it only behind the same provider-neutral boundary.
+   Its July 2026 guide quotes **11 APIFrame credits per action** and two tracks
+   from an initial generation. At its quoted $0.01 top-up rate, a narrow pilot
+   of 20 generation actions plus 10 extend/stem actions would be 330 credits,
+   or roughly **$3.30**. This is a planning example, not a current price
+   guarantee; verify the console because the public pages conflict.
+6. Keep family voices and private recordings local unless each performer (and a
+   guardian where applicable) gives separate informed permission for the exact
+   provider and current terms. APIFrame says it transmits necessary inputs to
+   the underlying model provider and keeps API request logs for 90 days; using
+   a reseller does not avoid Suno's submission terms.
 
 Paid commercial-use rights do not guarantee copyright protection, uniqueness,
 or non-infringement. Preserve substantial human authorship—performances,
@@ -87,3 +108,7 @@ clear contribution log.
 - [Suno pricing](https://suno.com/pricing), [plan credit allotments](https://help.suno.com/en/articles/2410049),
   [paid-plan rights](https://help.suno.com/en/articles/9601665), and
   [terms of service](https://about.suno.com/terms)
+- [Suno official API platform](https://platform.suno.com/)
+- [APIFrame Suno documentation](https://apiframe.ai/docs/music/suno),
+  [APIFrame API guide and action pricing](https://apiframe.ai/guides/suno-api-guide),
+  [terms](https://apiframe.ai/terms), and [privacy policy](https://apiframe.ai/privacy)

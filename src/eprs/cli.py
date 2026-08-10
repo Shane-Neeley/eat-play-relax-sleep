@@ -47,6 +47,7 @@ from .publication import prepare_publication_handoff, record_publication_receipt
 from .release import package_release
 from .research import create_research_record, load_research_record
 from .runtime import format_performance_report, performance_report
+from .runner import load_runner_profile, run_agent_profile, verify_runner_receipt
 from .request import (
     DEFAULT_RIGHTS_NOTE,
     capture_production_request,
@@ -323,6 +324,27 @@ def parser() -> argparse.ArgumentParser:
     )
     dispatch_response_init.add_argument("--packet", required=True)
     dispatch_response_init.add_argument("--out", required=True)
+
+    runner = commands.add_parser(
+        "runner",
+        help="Validate or execute an explicit packet/response agent profile in a mandatory OS sandbox",
+    )
+    runner_commands = runner.add_subparsers(dest="runner_command", required=True)
+    runner_validate = runner_commands.add_parser(
+        "validate", help="Validate a shell-free eprs.runner-profile/v1"
+    )
+    runner_validate.add_argument("profile")
+    runner_run = runner_commands.add_parser(
+        "run", help="Run one ready dispatch packet with network and host writes denied"
+    )
+    runner_run.add_argument("profile")
+    runner_run.add_argument("--packet", required=True)
+    runner_run.add_argument("--song", required=True)
+    runner_show = runner_commands.add_parser(
+        "show", help="Verify and show one preserved agent-runner receipt"
+    )
+    runner_show.add_argument("receipt")
+    runner_show.add_argument("--song", required=True)
 
     check = commands.add_parser("check", help="Parse and validate a .beat file")
     check.add_argument("beat")
@@ -1084,6 +1106,26 @@ def main(argv: list[str] | None = None) -> int:
                 print(accept_agent_response(args.song, args.packet, args.response))
             elif args.dispatch_command == "response-init":
                 print(initialize_agent_response(args.packet, args.out))
+        elif args.command == "runner":
+            if args.runner_command == "validate":
+                path, profile, digest = load_runner_profile(args.profile)
+                print(json.dumps({
+                    "path": str(path),
+                    "sha256": digest,
+                    "profile": profile,
+                    "network_hard_denied": True,
+                    "host_write_scope": "runner workspace only",
+                }, indent=2))
+            elif args.runner_command == "run":
+                path, receipt = run_agent_profile(
+                    args.song, args.profile, args.packet
+                )
+                print(json.dumps({"path": str(path), **receipt}, indent=2))
+                if receipt["status"] != "completed":
+                    return 2
+            elif args.runner_command == "show":
+                path, receipt = verify_runner_receipt(args.song, args.receipt)
+                print(json.dumps({"path": str(path), **receipt}, indent=2))
         elif args.command == "check":
             beat = load(args.beat)
             print(f"OK: {beat.title} — {beat.bars} bars, {len(beat.tracks)} tracks, {beat.duration:.2f}s")

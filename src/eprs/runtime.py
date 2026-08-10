@@ -32,6 +32,8 @@ def _elapsed_seconds(value: str) -> int:
 
 
 def _process_kind(command: str) -> str | None:
+    if "/notes/runner-runs/" in command or "\\notes\\runner-runs\\" in command:
+        return "eprs-agent-runner"
     root = str(PROJECT_ROOT.resolve())
     if root not in command:
         return None
@@ -115,6 +117,56 @@ def _visual_timings(song: Path, limit: int = 20) -> tuple[list[dict], list[str]]
     return timings, errors
 
 
+def _runner_timings(song: Path, limit: int = 20) -> tuple[list[dict], list[str]]:
+    """Summarize preserved runner receipts without touching live processes."""
+    timings: list[dict] = []
+    errors: list[str] = []
+    root = song / "notes" / "runner-runs"
+    if not root.is_dir():
+        return timings, errors
+    candidates = sorted(
+        root.glob("*/*/runner.json"),
+        key=lambda path: path.stat().st_mtime_ns,
+        reverse=True,
+    )[:limit]
+    for path in candidates:
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{path.relative_to(song)}: {exc}")
+            continue
+        if record.get("schema") != "eprs.agent-runner-execution/v1":
+            errors.append(f"{path.relative_to(song)}: unsupported runner receipt schema")
+            continue
+        process = record.get("process", {})
+        isolation = record.get("isolation", {})
+        logs = record.get("logs", {})
+        timings.append({
+            "path": str(path.relative_to(song)),
+            "status": record.get("status"),
+            "profile": record.get("profile", {}).get("id"),
+            "agent": record.get("dispatch", {}).get("agent"),
+            "work_item": record.get("dispatch", {}).get("work_item"),
+            "started_at": process.get("started_at"),
+            "ended_at": process.get("ended_at"),
+            "elapsed_seconds": process.get("elapsed_seconds"),
+            "pid": process.get("pid"),
+            "exit_code": process.get("exit_code"),
+            "timed_out": process.get("timed_out"),
+            "cleanup_verified": (
+                process.get("termination", {}).get("cleanup_verified")
+                if isinstance(process.get("termination"), dict) else None
+            ),
+            "isolation_provider": isolation.get("provider"),
+            "network_hard_denied": isolation.get("network_hard_denied"),
+            "raw_unchanged": record.get("raw_integrity", {}).get("unchanged"),
+            "stdout_truncated": logs.get("stdout", {}).get("truncated"),
+            "stderr_truncated": logs.get("stderr", {}).get("truncated"),
+            "response_accepted": record.get("response", {}).get("accepted"),
+        })
+    return timings, errors
+
+
 def performance_report(
     song: str | Path | None = None,
     *,
@@ -139,6 +191,7 @@ def performance_report(
     orphaned = [item for item in processes if item["orphaned"]]
     active = [item for item in processes if not item["orphaned"]]
     timings: list[dict] = []
+    runner_timings: list[dict] = []
     timing_errors: list[str] = []
     song_value = None
     if song is not None:
@@ -146,6 +199,8 @@ def performance_report(
         load_song_manifest(song_path)
         song_value = str(song_path)
         timings, timing_errors = _visual_timings(song_path)
+        runner_timings, runner_errors = _runner_timings(song_path)
+        timing_errors.extend(runner_errors)
     return {
         "schema": PERFORMANCE_SCHEMA,
         "generated_at": utc_now(),
@@ -162,6 +217,7 @@ def performance_report(
         },
         "processes": processes,
         "recent_visual_renders": timings,
+        "recent_agent_runs": runner_timings,
         "errors": timing_errors,
         "guidance": (
             "Stale EPRS Remotion browser roots need explicit review; this report never stops them."
@@ -202,6 +258,16 @@ def format_performance_report(report: dict) -> str:
             )
             lines.append(
                 f"- {render['path']}: {timing_label} · {render.get('quality')}"
+            )
+    agent_runs = report.get("recent_agent_runs", [])
+    if agent_runs:
+        lines.append(f"Recent agent runs: {len(agent_runs)}")
+        for run in agent_runs[:5]:
+            elapsed = run.get("elapsed_seconds")
+            elapsed_label = f"{elapsed:g}s" if isinstance(elapsed, (int, float)) else "running"
+            lines.append(
+                f"- {run['path']}: {run.get('status')} · {elapsed_label} · "
+                f"{run.get('isolation_provider')} · network denied"
             )
     lines.append(report["guidance"])
     return "\n".join(lines)
