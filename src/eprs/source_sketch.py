@@ -23,6 +23,7 @@ RUN_SCHEMA = "eprs.song-run/v1"
 NOW_MARKER = "<!-- eprs.now/v1 -->"
 ARRANGEMENT_SHAPES = {"one-pass", "call-response", "loop"}
 DEFAULT_SHAPE = "one-pass"
+NOVELTY_MAX_ATTEMPTS = 1_024
 
 
 ROLE_WORDS = {
@@ -237,6 +238,191 @@ def _arrangement_placements(
     return placements, stride_bars
 
 
+def _source_creative_fingerprint(
+    shape: str,
+    bed_sha256: str | None,
+    source_plans: list[dict],
+) -> str:
+    """Hash audible arrangement choices while excluding labels and replay seed."""
+    payload = {
+        "shape": shape,
+        "bed_sha256": bed_sha256,
+        "sources": [{
+            "sha256": source.get("sha256"),
+            "relationship_role": source.get("relationship_role"),
+            "placements": [{
+                key: placement.get(key) for key in (
+                    "start_seconds", "duration_seconds", "gain_db", "pan",
+                )
+            } for placement in source.get("placements", [source.get("placement")])
+            if isinstance(placement, dict)],
+        } for source in source_plans],
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _prior_source_fingerprints(song: Path) -> set[str]:
+    fingerprints: set[str] = set()
+    for path in (song / "notes" / "source-sketches").glob("*/*/source-sketch.json"):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if record.get("schema") != SOURCE_SKETCH_SCHEMA:
+            continue
+        randomness = record.get("randomness")
+        stored = randomness.get("creative_fingerprint") if isinstance(randomness, dict) else None
+        arrangement = record.get("arrangement")
+        sources = record.get("sources")
+        if (
+            isinstance(stored, str) and len(stored) == 64
+            and isinstance(arrangement, dict)
+            and arrangement.get("shape") in ARRANGEMENT_SHAPES
+            and isinstance(sources, list)
+            and stored == _source_creative_fingerprint(
+                arrangement["shape"], arrangement.get("bed_sha256"), sources
+            )
+        ):
+            fingerprints.add(stored)
+    return fingerprints
+
+
+def _prepare_source_inputs(song: Path, recordings: list[dict]) -> list[dict]:
+    """Validate and probe immutable media once, outside novelty retries."""
+    prepared: list[dict] = []
+    for index, item in enumerate(recordings, start=1):
+        role = str(
+            item.get("role") or item.get("declared_id") or f"recording {index}"
+        ).strip()
+        source = _inside(song, item.get("path", ""), role)
+        source_digest = sha256(source) if source.is_file() else None
+        if source_digest is None or item.get("sha256") != source_digest:
+            raise ValueError(f"captured recording is missing or changed: {role}")
+        duration, media_probe = _audio_duration(source, role)
+        prepared.append({
+            "role": role,
+            "classification": _classify(item),
+            "path": str(source.relative_to(song)),
+            "sha256": source_digest,
+            "duration_seconds": duration,
+            "probe": media_probe,
+            "rights_note": item.get("rights_note"),
+        })
+    return prepared
+
+
+def _build_source_plan(
+    song: Path,
+    prepared_sources: list[dict],
+    shape: str,
+    seed: int,
+    seconds_per_bar: float,
+    bed_path: Path,
+    bed_duration: float | None,
+    include_bed: bool,
+) -> tuple[list[dict], list[dict]]:
+    rng = random.Random(seed ^ 0x53_4F_55_52_43_45)
+    caller_index = min(
+        range(len(prepared_sources)),
+        key=lambda index: ({
+            "rhythm": 0, "harmonic": 1, "bass": 2, "texture": 3, "vocal": 4,
+        }[prepared_sources[index]["classification"]], index),
+    )
+    conversation_call_bar = rng.choice((0, 1)) if shape == "call-response" else None
+    shared_attenuation = 3.0 * math.log2(max(1, len(prepared_sources)))
+    source_plans: list[dict] = []
+    tracks: list[dict] = []
+    if include_bed:
+        tracks.append({
+            "id": "synthetic-pocket",
+            "role": "quiet synthetic pocket",
+            "intent": "Stay underneath the supplied performances as a timing and low-frequency question, not as a replacement band.",
+            "path": str(bed_path.relative_to(song)),
+            "start_seconds": 0,
+            "source_start_seconds": 0,
+            "duration_seconds": bed_duration,
+            "gain_db": -18.0,
+            "pan": 0,
+            "fade_in_ms": 0,
+            "fade_out_ms": 0,
+        })
+
+    for index, item in enumerate(prepared_sources, start=1):
+        role = item["role"]
+        duration = item["duration_seconds"]
+        group = item["classification"]
+        relationship_role = (
+            "call" if shape == "call-response" and index - 1 == caller_index
+            else "answer" if shape == "call-response"
+            else "ostinato" if shape == "loop"
+            else "single-pass"
+        )
+        gain = round(_base_gain(group) - shared_attenuation + rng.uniform(-0.75, 0.0), 3)
+        pan = round(rng.uniform(-_pan_width(group), _pan_width(group)), 3)
+        placements, stride_bars = _arrangement_placements(
+            shape, group, duration, seconds_per_bar, bed_duration, rng,
+            relationship_role,
+            (
+                conversation_call_bar
+                if relationship_role == "call"
+                else conversation_call_bar + 2
+                if relationship_role == "answer" and conversation_call_bar is not None
+                else None
+            ),
+        )
+        player_intent = _player_intent(
+            group,
+            role,
+            placements[0]["start_bars"],
+            shape=shape,
+            turns=len(placements),
+            stride_bars=stride_bars,
+            relationship_role=relationship_role,
+        )
+        source_id = slugify(role) or f"recording-{index}"
+        if any(source_plan.get("id") == source_id for source_plan in source_plans):
+            source_id = f"{source_id}-{index}"
+        source_path = item["path"]
+        placement_records = []
+        for occurrence, placement in enumerate(placements, start=1):
+            track_id = source_id if len(placements) == 1 else f"{source_id}-turn-{occurrence}"
+            tracks.append({
+                "id": track_id,
+                "role": role,
+                "intent": player_intent,
+                "path": source_path,
+                "start_seconds": placement["start_seconds"],
+                "source_start_seconds": 0,
+                "duration_seconds": placement["duration_seconds"],
+                "gain_db": gain,
+                "pan": pan,
+                "fade_in_ms": 0,
+                "fade_out_ms": 20 if placement["truncated_for_sketch"] else 0,
+            })
+            placement_records.append({
+                **placement,
+                "track_id": track_id,
+                "gain_db": gain,
+                "pan": pan,
+            })
+        source_plans.append({
+            "id": source_id,
+            "role": role,
+            "classification": group,
+            "relationship_role": relationship_role,
+            "path": source_path,
+            "sha256": item["sha256"],
+            "probe": item["probe"],
+            "rights_note": item.get("rights_note"),
+            "player_intent": player_intent,
+            "placement": placement_records[0],
+            "placements": placement_records,
+        })
+    return source_plans, tracks
+
+
 def _write_exact_json(path: Path, value: dict, label: str) -> None:
     content = json.dumps(value, indent=2) + "\n"
     if path.exists():
@@ -258,6 +444,13 @@ def _now_markdown(song: Path, record: dict) -> str:
     )
     watch = f"- Watch: `{paths['visual_preview']}`\n" if paths.get("visual_preview") else "- Watch: no source-synced visual rendered for this pass\n"
     map_value = paths.get("production_map_svg") or paths.get("production_map_dot")
+    novelty = record["randomness"].get("novelty", {})
+    novelty_line = (
+        f"- Novelty: checked `{novelty.get('prior_fingerprints_checked', 0)}` prior "
+        f"source arrangement(s); rejected `{novelty.get('collision_rejections', 0)}` collision(s)\n"
+        if novelty.get("enforced") else
+        "- Novelty: explicit seed replay; matching a prior artifact is allowed\n"
+    )
     return f"""{NOW_MARKER}
 # Current source-aware sketch
 
@@ -265,7 +458,7 @@ This is a reversible diagnostic arrangement using the supplied recordings. It is
 
 - Listen: `{paths['mix']}`
 {watch}- Seed: `{record['randomness']['seed']}` ({record['randomness']['mode']})
-- Arrangement shape: `{record.get('arrangement', {}).get('shape', DEFAULT_SHAPE)}`
+{novelty_line}- Arrangement shape: `{record.get('arrangement', {}).get('shape', DEFAULT_SHAPE)}`
 - Mix score: `{paths['mix_score']}`
 - Source-sketch record: `{paths['source_sketch']}`
 - Production map: `{map_value}`
@@ -412,6 +605,30 @@ def verify_source_sketch(
                 raise ValueError("source-sketch placement does not match its mix-score track")
     if arrangement is not None and arrangement.get("occurrences") != occurrence_count:
         raise ValueError("source-sketch occurrence count is invalid")
+    bed_track = tracks_by_id.get("synthetic-pocket")
+    bed_digest = None
+    if isinstance(bed_track, dict):
+        bed_path = _inside(song_path, bed_track.get("path", ""), "starter bed")
+        if not bed_path.is_file():
+            raise ValueError("source-sketch starter bed is missing")
+        bed_digest = sha256(bed_path)
+    if (
+        arrangement is not None
+        and "bed_sha256" in arrangement
+        and arrangement.get("bed_sha256") != bed_digest
+    ):
+        raise ValueError("source-sketch starter-bed fingerprint input is invalid")
+    expected_fingerprint = _source_creative_fingerprint(shape, bed_digest, sources)
+    randomness = record.get("randomness")
+    stored_fingerprint = (
+        randomness.get("creative_fingerprint") if isinstance(randomness, dict) else None
+    )
+    if stored_fingerprint is not None and stored_fingerprint != expected_fingerprint:
+        raise ValueError("source-sketch creative fingerprint is invalid")
+    if stored_fingerprint is not None:
+        novelty = randomness.get("novelty")
+        if not isinstance(novelty, dict) or not isinstance(novelty.get("enforced"), bool):
+            raise ValueError("source-sketch novelty evidence is invalid")
     mix = _inside(song_path, paths.get("mix", ""), "mix")
     verify_mix_provenance(song_path, mix)
     mix_output = outputs.get("mix")
@@ -476,18 +693,8 @@ def create_source_sketch(
         raise ValueError("source sketch needs at least one captured recording")
     if shape == "call-response" and len(recordings) < 2:
         raise ValueError("call-response source sketch needs at least two captured recordings")
-    classifications = [_classify(item) for item in recordings]
-    caller_index = min(
-        range(len(recordings)),
-        key=lambda index: ({
-            "rhythm": 0, "harmonic": 1, "bass": 2, "texture": 3, "vocal": 4,
-        }[classifications[index]], index),
-    )
 
     seed_was_supplied = seed is not None
-    sketch_seed = int(seed) if seed is not None else secrets.randbits(63)
-    rng = random.Random(sketch_seed ^ 0x53_4F_55_52_43_45)
-    conversation_call_bar = rng.choice((0, 1)) if shape == "call-response" else None
     beat_path = _inside(song_path, paths.get("beat", ""), "BeatScript")
     if not beat_path.is_file():
         raise FileNotFoundError(beat_path)
@@ -496,100 +703,46 @@ def create_source_sketch(
     if include_bed and not bed_path.is_file():
         raise FileNotFoundError(bed_path)
     bed_duration = _audio_duration(bed_path, "starter bed")[0] if include_bed else None
-    shared_attenuation = 3.0 * math.log2(max(1, len(recordings)))
-
-    source_plans = []
-    tracks = []
-    if include_bed:
-        tracks.append({
-            "id": "synthetic-pocket",
-            "role": "quiet synthetic pocket",
-            "intent": "Stay underneath the supplied performances as a timing and low-frequency question, not as a replacement band.",
-            "path": str(bed_path.relative_to(song_path)),
-            "start_seconds": 0,
-            "source_start_seconds": 0,
-            "duration_seconds": bed_duration,
-            "gain_db": -18.0,
-            "pan": 0,
-            "fade_in_ms": 0,
-            "fade_out_ms": 0,
-        })
-
-    for index, item in enumerate(recordings, start=1):
-        role = str(item.get("role") or item.get("declared_id") or f"recording {index}").strip()
-        source = _inside(song_path, item.get("path", ""), role)
-        if not source.is_file() or item.get("sha256") != sha256(source):
-            raise ValueError(f"captured recording is missing or changed: {role}")
-        duration, media_probe = _audio_duration(source, role)
-        group = classifications[index - 1]
-        relationship_role = (
-            "call" if shape == "call-response" and index - 1 == caller_index
-            else "answer" if shape == "call-response"
-            else "ostinato" if shape == "loop"
-            else "single-pass"
+    bed_sha256 = sha256(bed_path) if include_bed else None
+    prepared_sources = _prepare_source_inputs(song_path, recordings)
+    if seed_was_supplied:
+        sketch_seed = int(seed)
+        source_plans, tracks = _build_source_plan(
+            song_path, prepared_sources, shape, sketch_seed, seconds_per_bar,
+            bed_path, bed_duration, include_bed,
         )
-        gain = round(_base_gain(group) - shared_attenuation + rng.uniform(-0.75, 0.0), 3)
-        pan = round(rng.uniform(-_pan_width(group), _pan_width(group)), 3)
-        placements, stride_bars = _arrangement_placements(
-            shape, group, duration, seconds_per_bar, bed_duration, rng,
-            relationship_role,
-            (
-                conversation_call_bar
-                if relationship_role == "call"
-                else conversation_call_bar + 2
-                if relationship_role == "answer" and conversation_call_bar is not None
-                else None
-            ),
+        creative_fingerprint = _source_creative_fingerprint(
+            shape, bed_sha256, source_plans
         )
-        player_intent = _player_intent(
-            group,
-            role,
-            placements[0]["start_bars"],
-            shape=shape,
-            turns=len(placements),
-            stride_bars=stride_bars,
-            relationship_role=relationship_role,
-        )
-        source_id = slugify(role) or f"recording-{index}"
-        if any(source_plan.get("id") == source_id for source_plan in source_plans):
-            source_id = f"{source_id}-{index}"
-        source_path = str(source.relative_to(song_path))
-        placement_records = []
-        for occurrence, placement in enumerate(placements, start=1):
-            track_id = source_id if len(placements) == 1 else f"{source_id}-turn-{occurrence}"
-            track = {
-                "id": track_id,
-                "role": role,
-                "intent": player_intent,
-                "path": source_path,
-                "start_seconds": placement["start_seconds"],
-                "source_start_seconds": 0,
-                "duration_seconds": placement["duration_seconds"],
-                "gain_db": gain,
-                "pan": pan,
-                "fade_in_ms": 0,
-                "fade_out_ms": 20 if placement["truncated_for_sketch"] else 0,
-            }
-            tracks.append(track)
-            placement_records.append({
-                **placement,
-                "track_id": track_id,
-                "gain_db": gain,
-                "pan": pan,
-            })
-        source_plans.append({
-            "id": source_id,
-            "role": role,
-            "classification": group,
-            "relationship_role": relationship_role,
-            "path": source_path,
-            "sha256": sha256(source),
-            "probe": media_probe,
-            "rights_note": item.get("rights_note"),
-            "player_intent": player_intent,
-            "placement": placement_records[0],
-            "placements": placement_records,
-        })
+        novelty = {
+            "enforced": False,
+            "scope": "explicit seed replay may intentionally match prior song artifacts",
+            "collision_rejections": 0,
+        }
+    else:
+        prior_fingerprints = _prior_source_fingerprints(song_path)
+        for attempt in range(1, NOVELTY_MAX_ATTEMPTS + 1):
+            sketch_seed = secrets.randbits(63)
+            source_plans, tracks = _build_source_plan(
+                song_path, prepared_sources, shape, sketch_seed, seconds_per_bar,
+                bed_path, bed_duration, include_bed,
+            )
+            creative_fingerprint = _source_creative_fingerprint(
+                shape, bed_sha256, source_plans
+            )
+            if creative_fingerprint not in prior_fingerprints:
+                novelty = {
+                    "enforced": True,
+                    "scope": "song-local source checksums, bed, shape, occurrence timing, duration, gain, and pan",
+                    "prior_fingerprints_checked": len(prior_fingerprints),
+                    "collision_rejections": attempt - 1,
+                    "maximum_attempts": NOVELTY_MAX_ATTEMPTS,
+                }
+                break
+        else:
+            raise RuntimeError(
+                f"could not find a new source arrangement after {NOVELTY_MAX_ATTEMPTS} entropy draws"
+            )
 
     plan = {
         "run_path": str(run_path.relative_to(song_path)),
@@ -696,6 +849,7 @@ def create_source_sketch(
         "intent": clean_intent,
         "arrangement": {
             "shape": shape,
+            "bed_sha256": bed_sha256,
             "occurrences": sum(len(item["placements"]) for item in source_plans),
             "source_clock_preserved": True,
             "repetition_is_explicit": shape in {"call-response", "loop"},
@@ -705,6 +859,8 @@ def create_source_sketch(
             "mode": "explicit-replay" if seed_was_supplied else "fresh-entropy",
             "seed": sketch_seed,
             "source": "caller" if seed_was_supplied else "OS entropy via secrets.randbits",
+            "creative_fingerprint": creative_fingerprint,
+            "novelty": novelty,
             "choices": "explicit arrangement shape, role-aware occurrences, conservative no-boost gain variation, and narrow pan variation",
         },
         "run": {"path": plan["run_path"], "sha256": plan["run_sha256"]},

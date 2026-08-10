@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import wave
 
 from eprs.harness import create_song_run
@@ -52,6 +53,7 @@ class SongHarnessTests(unittest.TestCase):
 
             self.assertEqual(manifest["schema"], "eprs.song-run/v1")
             self.assertEqual(manifest["randomness"]["mode"], "explicit-replay")
+            self.assertFalse(manifest["randomness"]["novelty"]["enforced"])
             self.assertEqual(manifest["randomness"]["seed"], 12345)
             self.assertEqual(manifest["inputs"]["recordings"], 1)
             self.assertFalse(manifest["starter"]["supplied_recordings_used"])
@@ -107,6 +109,11 @@ class SongHarnessTests(unittest.TestCase):
                 render_visual_preview=False,
             )
             self.assertEqual(replay["randomness"]["mode"], "explicit-replay")
+            self.assertFalse(replay["randomness"]["novelty"]["enforced"])
+            self.assertEqual(
+                replay["randomness"]["creative_fingerprint"],
+                first["randomness"]["creative_fingerprint"],
+            )
             self.assertEqual(
                 sha256(song / first["paths"]["beat"]), sha256(song / replay["paths"]["beat"])
             )
@@ -118,6 +125,34 @@ class SongHarnessTests(unittest.TestCase):
             self.assertEqual(rebuilt["run"], replay["paths"]["run_manifest"])
             self.assertEqual(rebuilt["renderer"]["status"], "disabled")
             self.assertTrue((song / rebuilt["dot"]["path"]).is_file())
+
+    def test_fresh_entropy_rejects_a_prior_musical_structure_before_intake(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            entropy = [100, 100, *range(101, 2_000)]
+            with patch("eprs.harness.secrets.randbits", side_effect=entropy):
+                _, first = create_song_run(
+                    "Novelty Gate",
+                    "A patient crooked pulse.",
+                    root=root / "songs",
+                    render_visual_preview=False,
+                )
+                song = root / "songs" / "novelty-gate"
+                _, second = create_song_run(
+                    None,
+                    "A patient crooked pulse.",
+                    song=song,
+                    render_visual_preview=False,
+                )
+
+            self.assertTrue(second["randomness"]["novelty"]["enforced"])
+            self.assertEqual(second["randomness"]["novelty"]["prior_fingerprints_checked"], 1)
+            self.assertGreaterEqual(second["randomness"]["novelty"]["collision_rejections"], 1)
+            self.assertNotEqual(
+                first["randomness"]["creative_fingerprint"],
+                second["randomness"]["creative_fingerprint"],
+            )
+            self.assertEqual(song_status(song)["inventory"]["production_requests"]["total"], 2)
 
 
 if __name__ == "__main__":

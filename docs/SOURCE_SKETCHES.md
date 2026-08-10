@@ -59,8 +59,12 @@ score. The source-sketch record groups those tracks back under the immutable
 recording, exposes their bar/time positions, and states whether repetition or
 excerpting was requested.
 
-Fresh OS entropy is the default, so another pass gets a different seed and
-combination of choices. Reproduce a useful pass by supplying its recorded seed:
+Fresh OS entropy is the default. The command compares each proposed audible
+arrangement fingerprint with prior source sketches in the song and redraws a
+collision, so another pass changes more than the seed. The compact history scan
+does not repeatedly hash large source files; final verification still checks
+the chosen pass against the actual media. Reproduce a useful pass by supplying
+its recorded seed:
 
 ```bash
 ./scripts/eprs source-sketch songs/signal-garden \
@@ -82,4 +86,5 @@ Every pass requires a complete listen. Record that decision on its working mix:
 
 `keep` means the diagnostic answered its current musical question. It is not a
 master approval, rights clearance, upload authorization, or publication
-authorization.
+authorization. See [randomness and artifact novelty](RANDOMNESS.md) for the
+fingerprint scope and limits.

@@ -61,6 +61,11 @@ supplied files before any agent chooses a representation or experiment.
   work from stale orphaned Chromium roots and reports elapsed time, CPU, memory,
   concurrency, and render-to-media ratio without stopping processes or granting
   operational authority.
+- Fresh `make-song` and `source-sketch` passes compare artifact-level creative
+  fingerprints against song-local history before writing a candidate. The
+  seed, scope, and collision count remain visible; explicit seeds permit exact
+  replay. Source history uses manifest-bound compact fields so large recordings
+  are not rehashed for every candidate. See `docs/RANDOMNESS.md`.
 - `eprs.agent-context/v1`: a bounded, read-only handoff view over song status,
   due work, focused production-request/work/experiment evidence, creative
   briefs, recent request, production-plan, research, lyric variants, experiment,

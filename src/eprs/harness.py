@@ -9,12 +9,13 @@ leaves a compact handoff at the song root.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import random
 import secrets
 
-from .beat import dumps, load, mutate, parse
+from .beat import Beat, dumps, load, mutate, parse
 from .frontdoor import expose_current_media
 from .production_map import write_production_map
 from .request import (
@@ -38,6 +39,7 @@ from .work import create_work_item
 
 
 HARNESS_SCHEMA = "eprs.song-run/v1"
+NOVELTY_MAX_ATTEMPTS = 1_024
 
 
 _BEAT_STUDIES = (
@@ -145,6 +147,86 @@ def _starter_beat(title: str, prompt: str, seed: int):
     return variation
 
 
+def _beat_creative_fingerprint(beat) -> str:
+    """Hash audible BeatScript choices while excluding labels and replay seed."""
+    payload = {
+        # BeatScript parses a serialized whole-number tempo as a float. Keep
+        # the fingerprint stable across the in-memory -> file -> parser round
+        # trip so prior artifacts can actually block a duplicate structure.
+        "tempo": float(beat.tempo),
+        "meter": list(beat.meter),
+        "resolution": beat.resolution,
+        "bars": beat.bars,
+        "swing": beat.swing,
+        "tracks": [{
+            "name": track.name,
+            "kind": track.kind,
+            "steps": track.steps,
+            "options": track.options,
+        } for track in beat.tracks],
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _prior_starter_fingerprints(song: Path) -> set[str]:
+    fingerprints: set[str] = set()
+    for run_path in (song / "notes" / "runs").glob("*/run.json"):
+        try:
+            record = json.loads(run_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if record.get("schema") != HARNESS_SCHEMA:
+            continue
+        beat_value = record.get("paths", {}).get("beat")
+        if isinstance(beat_value, str):
+            beat_path = (song / beat_value).resolve()
+            try:
+                beat_path.relative_to(song.resolve())
+                fingerprints.add(_beat_creative_fingerprint(load(beat_path)))
+                continue
+            except (FileNotFoundError, ValueError):
+                pass
+        randomness = record.get("randomness")
+        stored = randomness.get("creative_fingerprint") if isinstance(randomness, dict) else None
+        if isinstance(stored, str) and len(stored) == 64:
+            fingerprints.add(stored)
+    return fingerprints
+
+
+def _choose_starter(
+    song: Path,
+    title: str,
+    prompt: str,
+    seed: int | None,
+) -> tuple[int, Beat, str, dict]:
+    if seed is not None:
+        chosen_seed = int(seed)
+        beat = _starter_beat(title, prompt, chosen_seed)
+        return chosen_seed, beat, _beat_creative_fingerprint(beat), {
+            "enforced": False,
+            "scope": "explicit seed replay may intentionally match prior song artifacts",
+            "collision_rejections": 0,
+        }
+    prior = _prior_starter_fingerprints(song)
+    for attempt in range(1, NOVELTY_MAX_ATTEMPTS + 1):
+        chosen_seed = secrets.randbits(63)
+        beat = _starter_beat(title, prompt, chosen_seed)
+        fingerprint = _beat_creative_fingerprint(beat)
+        if fingerprint not in prior:
+            return chosen_seed, beat, fingerprint, {
+                "enforced": True,
+                "scope": "song-local BeatScript musical structure excluding title and seed",
+                "prior_fingerprints_checked": len(prior),
+                "collision_rejections": attempt - 1,
+                "maximum_attempts": NOVELTY_MAX_ATTEMPTS,
+            }
+    raise RuntimeError(
+        f"could not find a new starter structure after {NOVELTY_MAX_ATTEMPTS} entropy draws"
+    )
+
+
 def _agent_brief(
     title: str,
     prompt: str,
@@ -209,6 +291,13 @@ def _now_markdown(song: Path, manifest: dict) -> str:
         and manifest["inputs"]["recordings"]
         else ""
     )
+    novelty = manifest["randomness"].get("novelty", {})
+    novelty_line = (
+        f"- Novelty: checked `{novelty.get('prior_fingerprints_checked', 0)}` prior "
+        f"musical structure(s); rejected `{novelty.get('collision_rejections', 0)}` collision(s)\n"
+        if novelty.get("enforced") else
+        "- Novelty: explicit seed replay; matching a prior artifact is allowed\n"
+    )
     return f"""<!-- eprs.now/v1 -->
 # Current song run
 
@@ -218,7 +307,7 @@ This file is the shallow entry point for the latest agent-led run. The generated
 - Song: `{manifest['title']}`
 - Run: `{manifest['id']}`
 - Seed: `{manifest['randomness']['seed']}` ({manifest['randomness']['mode']})
-- Request: `{paths['request']}`
+{novelty_line}- Request: `{paths['request']}`
 - Agent work: `{paths['agent_work']}`
 - Starter BeatScript: `{paths['beat']}`
 - Starter audio: `{paths['audio_preview']}`
@@ -276,7 +365,9 @@ def create_song_run(
         if not run_title:
             raise ValueError("existing song has no usable title")
     seed_was_supplied = seed is not None
-    run_seed = int(seed) if seed is not None else secrets.randbits(63)
+    run_seed, beat, creative_fingerprint, novelty = _choose_starter(
+        song_path, run_title, prompt, seed
+    )
     slug = slugify(run_title) or "song"
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_id = f"{stamp}-{slug}-{run_seed:x}"[:180]
@@ -308,7 +399,6 @@ def create_song_run(
     code_path = song_path / "code" / f"{file_key}.beat"
     visual_score_path = song_path / "visuals" / f"{file_key}.json"
     brief_path = song_path / "code" / f"{file_key}.md"
-    beat = _starter_beat(run_title, prompt, run_seed)
     code_path.write_text(dumps(beat), encoding="utf-8")
     brief_path.write_text(
         _agent_brief(
@@ -379,6 +469,8 @@ def create_song_run(
             "mode": "explicit-replay" if seed_was_supplied else "fresh-entropy",
             "seed": run_seed,
             "source": "caller" if seed_was_supplied else "OS entropy via secrets.randbits",
+            "creative_fingerprint": creative_fingerprint,
+            "novelty": novelty,
             "replay_command": f"./scripts/eprs make-song --song {song_path} --prompt {prompt!r} --seed {run_seed}",
         },
         "status": "starter-preview",
@@ -439,6 +531,10 @@ def create_song_run(
         "seed": run_seed,
         "created_at": manifest["created_at"],
     }
-    song_manifest["harness"] = {"schema": HARNESS_SCHEMA, "fresh_entropy_by_default": True}
+    song_manifest["harness"] = {
+        "schema": HARNESS_SCHEMA,
+        "fresh_entropy_by_default": True,
+        "fresh_artifact_novelty_check": True,
+    }
     song_manifest_path.write_text(json.dumps(song_manifest, indent=2) + "\n", encoding="utf-8")
     return run_manifest_path, manifest

@@ -4,6 +4,7 @@ import math
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import wave
 
 from eprs.context import build_agent_context, render_agent_context_markdown
@@ -57,6 +58,7 @@ class SourceSketchTests(unittest.TestCase):
             self.assertEqual(sketch["schema"], "eprs.source-sketch/v1")
             self.assertEqual(sketch["randomness"]["mode"], "explicit-replay")
             self.assertEqual(sketch["randomness"]["seed"], 777)
+            self.assertFalse(sketch["randomness"]["novelty"]["enforced"])
             self.assertEqual(
                 {item["classification"] for item in sketch["sources"]},
                 {"harmonic", "vocal"},
@@ -111,13 +113,24 @@ class SourceSketchTests(unittest.TestCase):
             self.assertEqual(reviewed_status["inventory"]["source_sketches"]["pending"], 0)
             self.assertEqual(reviewed_status["inventory"]["source_sketches"]["keep"], 1)
 
-            fresh_path, fresh = create_source_sketch(
-                song,
-                sketch["intent"],
-                render_visual_preview=False,
-            )
+            with patch(
+                "eprs.source_sketch.secrets.randbits",
+                side_effect=[777, *range(778, 2_000)],
+            ):
+                fresh_path, fresh = create_source_sketch(
+                    song,
+                    sketch["intent"],
+                    render_visual_preview=False,
+                )
             self.assertNotEqual(fresh_path, manifest_path)
             self.assertNotEqual(fresh["randomness"]["seed"], 777)
+            self.assertTrue(fresh["randomness"]["novelty"]["enforced"])
+            self.assertEqual(fresh["randomness"]["novelty"]["prior_fingerprints_checked"], 1)
+            self.assertGreaterEqual(fresh["randomness"]["novelty"]["collision_rejections"], 1)
+            self.assertNotEqual(
+                fresh["randomness"]["creative_fingerprint"],
+                sketch["randomness"]["creative_fingerprint"],
+            )
             self.assertNotEqual(
                 fresh["outputs"]["mix_score_sha256"], sketch["outputs"]["mix_score_sha256"]
             )
