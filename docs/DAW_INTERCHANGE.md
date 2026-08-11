@@ -53,6 +53,34 @@ format declarations, the reference mix and provenance snapshot, reconstruction
 evidence, and the explicit false authority/action flags. `eprs status --verify`
 performs the same package checks as part of song continuity.
 
+## File bytes and decoded audio are different questions
+
+A local Audacity handoff validated an important diagnostic distinction. A
+16-bit native bounce and a later 24-bit WAV master had different file checksums
+and container bytes, but produced the same checksum after both were decoded to
+one declared sample rate, channel layout, and PCM format. Likewise, an FFmpeg
+reference and its working mix had different WAV file bytes but identical
+normalized decoded PCM.
+
+EPRS still preserves and verifies the original file checksum because container
+metadata, word length, and exact returned bytes are provenance. When the
+musical question is whether two files carry the same decoded samples, compare
+them separately at one explicit format instead of interpreting unequal file
+hashes as audible change:
+
+```bash
+ffmpeg -v error -i candidate.wav -map 0:a:0 \
+  -ac 2 -ar 48000 -c:a pcm_f32le -f hash -hash sha256 -
+```
+
+Use the same declared decode command for both candidates and record it with the
+result. A matching decoded hash proves sample equality only under that decode;
+it does not prove that the external session is reproducible, that its
+provenance is complete, or that the mix has been heard and approved. The
+interchange reconstruction test remains stricter for an EPRS-authored package:
+it compares the package's declared float samples directly within its fixed
+tolerance.
+
 ## What the package means
 
 The source mix need not have a `keep` decision: a common use is handing a

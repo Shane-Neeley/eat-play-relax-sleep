@@ -102,3 +102,37 @@ Every pass requires a complete listen. Record that decision on its working mix:
 master approval, rights clearance, upload authorization, or publication
 authorization. See [randomness and artifact novelty](RANDOMNESS.md) for the
 fingerprint scope and limits.
+
+## A cross-tool pattern that worked: environmental call plus authored pulse
+
+A successful local prototype paired an intact 70-second environmental
+vocalization recording with a deterministic 57.6-second Sonic Pi beat, then
+auditioned and refined the relationship in Audacity. The musical value came
+from the contrast: freely timed calls supplied irregular living phrases and
+room depth, while a restrained electronic pulse supplied a stable frame. The
+calls were not useful because they had been forced onto the grid; their gaps,
+timing, and environmental tail were the reason the pairing worked.
+
+The portable EPRS version of that workflow is:
+
+1. Capture the environmental take and authored beat as distinct recordings
+   with truthful roles, provenance, permission, and rights notes.
+2. Keep both raw files unchanged. Preserve the editable Sonic Pi source and its
+   deterministic seed as composition evidence alongside the rendered beat.
+3. Use `source-sketch --shape one-pass --no-bed` for the smallest reversible
+   relationship audition, or author an `eprs.mix/v1` score when exact entrances
+   and common-start placement are the musical question.
+4. Do not quantize, gate, denoise, or chop the environmental calls merely to
+   make them resemble percussion. Listen first for whether the stable beat
+   frames the free-time phrases.
+5. When Audacity or another editor should continue the balance, use an
+   [interchange package](DAW_INTERCHANGE.md), preserve the native session
+   separately, and capture a lossless return with declared changes and
+   unknowns.
+6. Record the complete-listen decision separately from technical analysis and
+   from any eventual clearance or release decision.
+
+This pattern generalizes to birds, room sound, spoken calls, playground noise,
+water, machinery, or another human/environmental performance. The source role
+and rights context must remain specific even when the public teaching pattern
+is generic.
