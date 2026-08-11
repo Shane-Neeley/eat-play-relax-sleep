@@ -1,4 +1,5 @@
 from pathlib import Path
+import math
 import tempfile
 import unittest
 import wave
@@ -52,6 +53,29 @@ class BeatTests(unittest.TestCase):
                 self.assertEqual(wav.getframerate(), SAMPLE_RATE)
                 self.assertEqual(wav.getnchannels(), 2)
                 self.assertGreater(wav.getnframes(), beat.duration * SAMPLE_RATE)
+
+    def test_render_accepts_lossless_24_bit_voice_samples(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sample = root / "voice.wav"
+            rate = 24_000
+            values = [round(math.sin(2 * math.pi * 220 * frame / rate) * 1_000_000) for frame in range(rate // 10)]
+            payload = b"".join(value.to_bytes(3, "little", signed=True) for value in values)
+            with wave.open(str(sample), "wb") as wav:
+                wav.setnchannels(1)
+                wav.setsampwidth(3)
+                wav.setframerate(rate)
+                wav.writeframes(payload)
+            source = root / "sample.beat"
+            source.write_text(BEAT.replace(
+                "track kick | X... .... x... .... | ; gain=0.7",
+                "track voice | X... .... .... .... | ; sample=voice.wav gain=0.7",
+            ))
+            target = root / "render.wav"
+            render(load(source), target)
+            with wave.open(str(target), "rb") as wav:
+                self.assertEqual(wav.getframerate(), SAMPLE_RATE)
+                self.assertGreater(wav.getnframes(), 0)
 
     def test_visualization_contains_tracks(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -143,6 +143,20 @@
       }
     },
     {
+      "id": "qwen3_tts",
+      "label": "Qwen3-TTS local voice generator",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "qwen-tts-demo", "version_args": ["--version"]}
+      ],
+      "capabilities": ["local_voice_generation"],
+      "install_hints": {
+        "Darwin": "Create an isolated Python 3.11+ environment and install `qwen-tts`; add `pyworld` for optional formant-aware pitch processing; use the project runner for local voice design or custom-voice generation.",
+        "Linux": "Create an isolated Python 3.11+ environment and install `qwen-tts`; add `pyworld` for optional formant-aware pitch processing; use the project runner for local voice design or custom-voice generation."
+      }
+    },
+    {
       "id": "audacity",
       "label": "Audacity",
       "kind": "application",
@@ -191,6 +205,12 @@
       "label": "Optional local generative-music collaboration",
       "description": "Hand an owned prompt, lyrics, or reference recording to an explicitly operated local generator and return new audio plus exact model, seed, settings, rights, and listening evidence.",
       "capabilities": ["local_ai_music_generation", "reference_audio_generation", "generative_stems"]
+    },
+    {
+      "id": "local-voice-collaboration",
+      "label": "Optional local voice generation",
+      "description": "Generate bounded original speech or character voice cues locally, optionally apply declared formant-aware pitch treatment, then preserve raw audio, exact model, prompt, seed, controls, output, and rights evidence.",
+      "capabilities": ["local_voice_generation"]
     },
     {
       "id": "source-to-master",

@@ -124,6 +124,11 @@ This repository is a creative production system, not a scratch directory. Work f
    the recipe's `evidence` list and state its use. Do not bind unrelated project
    files, treat evidence as authority, or edit old provenance after evidence
    drift; supersede it with a new render.
+   Synthetic or explicitly authorized monophonic voice cues may instead use
+   `eprs autotune` when pitch correction is the stated musical experiment.
+   Declare key, scale, preset, and player-facing intent; preserve the raw cue
+   and checksum sidecar; never infer imitation from an artist reference. Read
+   `docs/VOCALS.md` before directing or tuning TTS.
 10. Render experiments to new files, inspect them with `scripts/eprs analyze`, and record listening notes and a keep/change/stop decision.
 11. Build arrangements from a versioned `eprs.mix/v1` score. Treat float mix
    headroom warnings as unresolved work, not permission to limit automatically.
@@ -480,6 +485,7 @@ scripts/eprs comp songs/<song-name>/code/family-comp.json --song songs/<song-nam
 scripts/eprs comp-review songs/<song-name>/stems/<role>/<title>/<comp>.wav --song songs/<song-name> --decision keep --listening-note "How the complete edit feels."
 scripts/eprs process songs/<song-name>/code/family-voices.json --song songs/<song-name>
 scripts/eprs process-review songs/<song-name>/stems/<role>/<title>/<stem>.wav --song songs/<song-name> --decision keep --listening-note "What survived and what changed."
+scripts/eprs autotune songs/<song-name>/audio/cues/title.wav --out songs/<song-name>/audio/cues-tuned/title.wav --intent "Make the title answer the synth." --preset tight --key D --scale dorian
 scripts/eprs experiment --song songs/<song-name> --source "family voices=/path/to/take.wav" --hypothesis "Does the room answer the last phrase?"
 scripts/eprs mix songs/<song-name>/code/first-mix.json --song songs/<song-name>
 scripts/eprs mix-review songs/<song-name>/mixes/<title>/<mix>.wav --song songs/<song-name> --decision keep --listening-note "Listened end to end; balance, headroom, edges, and decay are intentional."

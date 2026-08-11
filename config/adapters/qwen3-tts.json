@@ -1,0 +1,51 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "qwen3-tts-local-voice",
+  "label": "Qwen3-TTS local voice-generation adapter",
+  "summary": "Use Qwen3-TTS VoiceDesign or CustomVoice as an optional local instrument for original spoken or character cues, with no private voice uploaded and no child or living-artist imitation assumed.",
+  "provider": "qwen3_tts",
+  "capabilities": ["local_voice_generation"],
+  "handoffs": [
+    {
+      "id": "brief-to-voice-cues",
+      "label": "Generate bounded original voice cues",
+      "intent": "Make short, song-local spoken or character cues whose tone, rhythm, emotional direction, and optional declared pitch treatment support an authored arrangement.",
+      "capabilities": ["local_voice_generation"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "A song-relative lyric or cue list and one player-facing voice description",
+        "An explicit model id, seed, language, output role, and rights note",
+        "For pitch correction: an explicit key, scale, preset, and musical reason; never a silently inferred key",
+        "Only an owned or synthetic reference voice when voice cloning is deliberately authorized"
+      ],
+      "outputs": [
+        "New lossless WAV cues outside recordings/raw and FINAL",
+        "A sidecar recording exact model id, mode, seed, prompt, device, sample rate, output checksums, and license note",
+        "When tuning is requested, preserved raw cues plus per-cue autotune settings, analysis, and checksums"
+      ],
+      "steps": [
+        "Run `PATH=.eprs-local/qwen3-tts/bin:$PATH eprs doctor --workflow local-voice-collaboration` and inspect the exact Qwen3-TTS model card and license before generation.",
+        "Use VoiceDesign or CustomVoice for an original character by default; do not upload family voices or use a child's voice.",
+        "Generate the smallest useful cue set, preserve every candidate, and compare the cues in the complete arrangement.",
+        "For an audible tuned character, use the runner's `--autotune-preset` controls or render alternatives with `eprs autotune`; read `docs/VOCALS.md` and describe behavior rather than naming an artist.",
+        "Bring only a musically useful candidate into an experiment or mix; generated audio is not automatically approved or cleared for release."
+      ],
+      "verification": [
+        "Confirm every raw and processed output opens, has the declared duration/sample rate/channels, is not clipped or truncated, and matches its recorded checksum.",
+        "For tuning, confirm voiced-frame coverage and target notes, then compare raw and tuned cues at matched level in stereo and mono.",
+        "Confirm the generated voice is synthetic or consent-cleared, the source prompt is preserved, and no model result is presented as a human performance or release approval."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The editable cue list, model/version, seed, instruction, generated candidates, checksums, and exact rights/license context",
+      "The distinction between synthetic character voice, consented human voice, and external reference material"
+    ],
+    "avoid": [
+      "Uploading private family or child recordings, imitating a living artist or identifiable child, hiding failed generations, or copying a reference performance",
+      "Treating an Apache-2.0 code/weight license as a blanket clearance for every input, dataset, voice, or downstream use"
+    ]
+  }
+}

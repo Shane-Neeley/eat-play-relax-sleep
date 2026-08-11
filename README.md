@@ -5,6 +5,9 @@ A local-first creative operating system where agents and musicians can write cod
 The public repository contains playable BeatScript studies, reusable creative templates, an interactive browser Beat Lab, safe recording intake, experiment lineage, SVG rhythm maps, audio analysis, and a YouTube-ready FFmpeg adapter.
 
 It also includes a [promptable audio-reactive visual engine](docs/VISUALS.md): custom seeded SVG worlds rendered through Remotion, with natural-language score compilation and per-render provenance—no faces or stock footage required.
+Synthetic voice cues can be generated with optional Qwen3-TTS and then passed
+through [agent-addressable, formant-aware pitch correction](docs/VOCALS.md),
+with raw/tuned candidates and checksum-bearing settings kept separate.
 The visual-method research ranking lives in [VISUAL_METHODS.md](docs/VISUAL_METHODS.md).
 The current local-model and Suno collaboration ranking lives in
 [AI_GENERATION.md](docs/AI_GENERATION.md).
@@ -30,6 +33,7 @@ make studio             # then open http://localhost:8000
 make visuals-install
 ./scripts/eprs doctor --workflow full-local-production --strict
 ./scripts/eprs adapter list --available --workflow full-local-production
+./scripts/eprs autotune --help
 make visual-studio      # interactive Remotion preview
 ```
 

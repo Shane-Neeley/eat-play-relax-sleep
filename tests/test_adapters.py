@@ -141,8 +141,8 @@ class SoftwareAdapterTests(unittest.TestCase):
         self.assertEqual(
             {item["id"] for item in profiles},
             {
-                "ace-step-local-generator", "audacity-editor", "ffmpeg-media", "remotion-picture",
-                "sonic-pi-live-code",
+                "ace-step-local-generator", "audacity-editor", "ffmpeg-media", "qwen3-tts-local-voice",
+                "remotion-picture", "sonic-pi-live-code",
             },
         )
         catalog = adapter_catalog(available_only=True)
@@ -264,7 +264,7 @@ class SoftwareAdapterTests(unittest.TestCase):
             )
             self.assertTrue(private["provider"]["available"])
             self.assertNotIn(str(local_tool), json.dumps(catalog))
-            self.assertEqual(len(load_adapter_profiles()), 5)
+            self.assertEqual(len(load_adapter_profiles()), 6)
 
     def test_cli_exposes_list_filters_and_exact_guides(self):
         diagnostic = parser().parse_args([

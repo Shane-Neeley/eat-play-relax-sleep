@@ -20,6 +20,10 @@ Then capture a prompt and supplied material without first writing a schema:
 Recordings are copied into immutable raw intake; evidence is frozen separately.
 The command does not process, browse, upload, publish, or infer permission.
 
+Default duration: most complete songs should land around 2–3 minutes. Shorter
+renders are welcome as experiments or sketches, but should be labeled as such
+until the arrangement is intentionally complete.
+
 To contribute a public teaching project, copy only the smallest useful, rights-cleared source material into `examples/songs/`. Remove personal paths and private notes, confirm recording and sample permissions, and run `make public-check` before committing.
 
 Each new song exposes `_LISTEN.*`, `_WATCH.*`, `_CHANGE_ME.md`, and

@@ -83,14 +83,25 @@ def _hit(kind: str, duration: float, rng: random.Random, frequency: float | None
 def _load_sample(path: Path) -> tuple[list[float], int]:
     with wave.open(str(path), "rb") as wav:
         channels, width, rate, frames = wav.getnchannels(), wav.getsampwidth(), wav.getframerate(), wav.getnframes()
-        if width != 2:
-            raise ValueError(f"External sample must be 16-bit PCM WAV for headless rendering: {path}")
-        raw = array("h")
-        raw.frombytes(wav.readframes(frames))
-        if channels == 1:
-            mono = [sample / 32768.0 for sample in raw]
+        if width not in {1, 2, 3, 4}:
+            raise ValueError(f"External sample must be 8/16/24/32-bit integer PCM WAV for headless rendering: {path}")
+        payload = wav.readframes(frames)
+        if width == 1:
+            raw = [(value - 128) / 128 for value in payload]
+        elif width == 2:
+            values = array("h")
+            values.frombytes(payload)
+            raw = [value / 32768 for value in values]
         else:
-            mono = [sum(raw[i : i + channels]) / (channels * 32768.0) for i in range(0, len(raw), channels)]
+            scale = float(1 << (width * 8 - 1))
+            raw = [
+                int.from_bytes(payload[index:index + width], "little", signed=True) / scale
+                for index in range(0, len(payload), width)
+            ]
+        if channels == 1:
+            mono = list(raw)
+        else:
+            mono = [sum(raw[i : i + channels]) / channels for i in range(0, len(raw), channels)]
     return mono, rate
 
 

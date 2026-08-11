@@ -2,6 +2,13 @@
 
 BeatScript is deliberately smaller than a DAW. It is a shared sketchpad for a musician and an agent.
 
+## Default song length
+
+Most songs should target roughly **2–3 minutes** once they become complete listening
+versions. Short 8–24 bar renders are still useful, but label them as sketches,
+controls, or arrangement studies; do not let a short prototype silently become the
+default finished-song length.
+
 ```beat
 title "Porchlight Pocket"
 tempo 94
@@ -28,7 +35,7 @@ Pattern symbols:
 
 Note lanes use spaces. `C3+E3+G3` is a chord, `.` is a rest, and `~` is currently silence reserved for a future tie operation.
 
-Track options after `;` include `gain`, `pan` (-1 to +1), `humanize_ms`, `offset_ms`, and `sample`. Note lanes also accept `voice` and step-based `length`. A sample path is resolved relative to the `.beat` file. The headless renderer accepts 16-bit PCM WAV; FFmpeg can safely create a derived compatible stem from other source formats.
+Track options after `;` include `gain`, `pan` (-1 to +1), `humanize_ms`, `offset_ms`, and `sample`. Note lanes also accept `voice` and step-based `length`. A sample path is resolved relative to the `.beat` file. The headless renderer accepts 8-, 16-, 24-, or 32-bit integer PCM WAV, including the 24-bit output from `eprs autotune`; FFmpeg can safely create a derived compatible stem from other source formats.
 
 Long-form arrangements can scope any lane with one-indexed `start_bar` and `end_bar`. Add `every_bars=N` to sound only every Nth bar within that range—useful for crash marks and other sparse events. For example, this marks bars 17, 25, 33, and 41:
 

@@ -10,6 +10,7 @@ import sys
 from . import __version__
 from .adapters import adapter_catalog, adapter_guide
 from .audio import render
+from .autotune import PRESETS as AUTOTUNE_PRESETS, render_autotune, settings_for
 from .beat import dumps, load, mutate
 from .context import build_agent_context, render_agent_context_markdown, write_agent_context
 from .clearance import create_recording_clearance, load_recording_clearance
@@ -636,6 +637,27 @@ def parser() -> argparse.ArgumentParser:
     process_review.add_argument("--song", required=True)
     process_review.add_argument("--listening-note", required=True)
     process_review.add_argument("--decision", choices=("keep", "change", "stop"), required=True)
+
+    autotune = commands.add_parser(
+        "autotune",
+        help="Render explicit formant-aware pitch correction for a monophonic voice WAV",
+        description="Render explicit formant-aware pitch correction for a monophonic voice WAV.",
+    )
+    autotune.add_argument("source", help="Source mono/stereo voice audio; never overwritten")
+    autotune.add_argument("--out", required=True, help="New lossless WAV destination")
+    autotune.add_argument("--intent", required=True, help="Player-facing reason for this vocal treatment")
+    autotune.add_argument("--preset", choices=tuple(AUTOTUNE_PRESETS), default="tight")
+    autotune.add_argument("--key", default="C")
+    autotune.add_argument("--scale", default="chromatic")
+    autotune.add_argument("--strength", type=float, help="Pitch-correction amount from 0 to 1")
+    autotune.add_argument("--retune-ms", type=float, help="Correction response time; zero makes hard steps")
+    autotune.add_argument("--switch-hysteresis-cents", type=float)
+    autotune.add_argument("--minimum-note-ms", type=float)
+    autotune.add_argument("--wet", type=float, help="Processed balance from 0 to 1")
+    autotune.add_argument("--formant-shift-semitones", type=float)
+    autotune.add_argument("--output-gain-db", type=float)
+    autotune.add_argument("--f0-floor-hz", type=float)
+    autotune.add_argument("--f0-ceil-hz", type=float)
 
     compare = commands.add_parser(
         "compare",
@@ -1338,6 +1360,33 @@ def main(argv: list[str] | None = None) -> int:
                 args.listening_note,
                 args.decision,
             ))
+        elif args.command == "autotune":
+            settings = settings_for(
+                args.preset,
+                key=args.key,
+                scale=args.scale,
+                overrides={
+                    "correction_strength": args.strength,
+                    "retune_ms": args.retune_ms,
+                    "switch_hysteresis_cents": args.switch_hysteresis_cents,
+                    "minimum_note_ms": args.minimum_note_ms,
+                    "wet": args.wet,
+                    "formant_shift_semitones": args.formant_shift_semitones,
+                    "output_gain_db": args.output_gain_db,
+                    "f0_floor_hz": args.f0_floor_hz,
+                    "f0_ceil_hz": args.f0_ceil_hz,
+                },
+            )
+            destination, sidecar, metadata = render_autotune(
+                args.source, args.out, settings, intent=args.intent,
+            )
+            print(json.dumps({
+                "audio": str(destination),
+                "metadata": str(sidecar),
+                "settings": metadata["settings"],
+                "analysis": metadata["analysis"],
+                "review": metadata["review"],
+            }, indent=2))
         elif args.command == "compare":
             destination, report = compare_performances(args.spec, args.song)
             print(json.dumps({

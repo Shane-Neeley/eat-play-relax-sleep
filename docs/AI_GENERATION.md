@@ -1,8 +1,9 @@
-# Optional AI music generation
+# Optional AI audio generation
 
-Checked 2026-08-09. This is a production ranking, not a claim that a model is
-original, rights-cleared, or musically useful. Re-check the exact code, weight,
-dataset, input, and service terms before a public release.
+Mid-2026 update, researched 2026-08-10. This is a production ranking, not a
+claim that a model is original, rights-cleared, or musically useful. Re-check
+the exact code, weight, dataset, input, and service terms before a public
+release.
 
 EPRS treats a generator as one optional instrument. It receives one bounded
 hypothesis and returns candidates plus provenance. It does not replace raw
@@ -12,23 +13,35 @@ recordings, taste, arrangement, listening, rights review, or the editable mix.
 
 | Rank | Method | Fit for this project | Main constraint |
 | --- | --- | --- | --- |
-| 1 | **ACE-Step 1.5 sidecar** | Best first pilot. The official project is MIT-licensed, exposes a local UI and REST server, accepts text and reference audio, supports cover/repaint/extract/complete workflows, records controllable random factors, and documents a core setup around 10 GB disk with low-memory modes. | The accelerated macOS package requires Apple Silicon. Intel macOS falls back to CPU and is likely too slow for a pleasant daily loop; use a deliberately operated GPU sidecar instead of silently installing a large stack. |
-| 2 | **HeartMuLa 3B** | Apache-2.0 code and weights, strong lyric control, multilingual full songs, explicit temperature/top-k sampling, and a useful lyric transcriber/codec family. | The official repository still lists reference-audio conditioning and accelerated inference as unfinished; current inference is described around real time. Better for a lyric-generation comparison than the first mixed-input adapter. |
-| 3 | **YuE** | Apache-2.0 full-song lyric-to-song generation, audio prompting, LoRA, and incremental community workflows. The project explicitly encourages artists to incorporate and monetize outputs with attribution. | Heavy: the official project recommends at least 80 GB GPU memory for longer multi-session songs and reports roughly six minutes on an RTX 4090 for 30 seconds of audio. Its older TODO still lists first-class seeding, so provenance and replay need extra care. |
-| 4 | **Muse** | The strongest reproducibility research track: MIT code, public checkpoints, training/evaluation pipeline, and a released 116k-song dataset. Fine-grained segment-level style control could eventually map well to EPRS arrangement plans. | Young Linux/vLLM-oriented research stack with Python 3.10 and older dependency constraints. Audit dataset and checkpoint terms separately from the repository license before distribution. |
-| hold | **SongGeneration 2 / LeVo 2** | Promising full-song quality, lyric accuracy, text direction, and audio prompting. | Uses custom Tencent terms. “Open source” in a project description is not enough to assume unrestricted commercial distribution. Keep out of the default production path pending an exact license review. |
-| watch | **WanSong** | A July 2026 paper reports long songs with simultaneous vocal and backing stems, which is architecturally attractive for editable collaboration. | A paper is not an installable, licensed adapter. Wait for official code, weights, license, and hardware evidence. |
+| 1 for voices | **Qwen3-TTS 1.7B / 0.6B** | Best immediate voice upgrade for this Mac: Apache-2.0 models with VoiceDesign, CustomVoice, instruction-level emotion/prosody control, 10 languages, and a documented 3-second cloning path. The v2 song uses CustomVoice with a built-in speaker; VoiceDesign remains available for described synthetic characters. | The model is speech-first, not a singing model; keep cues short and arrange them as authored samples. Voice cloning still requires explicit consent and rights for the reference. |
+| 1 for whole songs | **ACE-Step 1.5** | MIT-licensed whole-song model with text/lyrics, reference audio, cover/repaint/extract/complete modes, 48 kHz variable-length output, and a consumer-GPU-oriented stack. Good future source of arrangement candidates, not a replacement for the EPRS score. | The full environment is large and model output still needs listening, provenance, and rights review. Keep it optional and do not upload private voices. |
+| 2 for singing | **SoulX-Singer** | Apache-2.0 zero-shot singing voice synthesis with melody/F0 or MIDI conditioning; architecturally closer to a controllable sung hook than ordinary TTS. | Separate preprocessing models and a Python 3.10 environment; not installed in this Mac pass. Treat it as an explicit future singing-voice experiment. |
+| 3 for voices | **Fish Audio S2 Pro** | 5B multilingual TTS with inline free-form prosody/emotion tags, multi-speaker/multi-turn support, and streaming-oriented architecture. | Fish Audio Research License permits research/non-commercial use free; commercial use needs a separate license. Do not use it for release-bound voices without that clearance. |
+| research | **UniVoice / X-Voice / PFluxTTS** | Mid-2026 research shows a clear direction toward unified speech+singer models, smaller multilingual cloning, and flow-matching voice synthesis. These are useful design signals for future adapters. | A paper is not an installable, licensed, reproducible project asset. Wait for official code/weights and hardware evidence before adding them to the default path. |
+| research | **HeartMuLa / Muse / YuE / WanSong** | Stronger candidates for lyric-to-song or long-form research, with useful structure, tags, or stem ideas. | Hardware, license, conditioning, or reproducibility constraints keep them out of this local voice pass. |
 
-The immediate engineering decision is therefore to support ACE-Step as an
-optional provider-neutral handoff, not to vendor a model or make it required.
+### Implemented in EPRS
+
+The shared registry now declares an optional `local_voice_generation` capability
+and a Qwen3-TTS adapter. `scripts/qwen3_tts_voice.py` supports bounded
+VoiceDesign or CustomVoice batches and writes a checksum-bearing render manifest.
+It can also preserve raw cues and pass them through the optional, local
+[formant-aware pitch processor](VOCALS.md). It does not start a service, upload
+audio, clone a person, or promote output to a master.
+
+The immediate engineering decision is therefore to support Qwen3-TTS as the
+optional local voice path and ACE-Step as the optional whole-song path, not to
+vendor either model or make either one required.
 Run:
 
 ```bash
 ./scripts/eprs doctor --workflow local-ai-collaboration
 ./scripts/eprs adapter show ace-step-local-generator --handoff brief-to-candidates
+PATH=.eprs-local/qwen3-tts/bin:$PATH ./scripts/eprs doctor --workflow local-voice-collaboration
+./scripts/eprs adapter show qwen3-tts-local-voice --handoff brief-to-voice-cues
 ```
 
-The adapter only describes the boundary. It does not start a server, download
+The adapters only describe the boundary. They do not start a server, download
 weights, send recordings, or claim that output is approved.
 
 ## Suno: collaboration, credits, and API reality
@@ -98,8 +111,18 @@ clear contribution log.
 
 ## Primary sources
 
+- [Qwen3-TTS official repository](https://github.com/QwenLM/Qwen3-TTS),
+  [Qwen3-TTS Hugging Face collection](https://huggingface.co/collections/Qwen/qwen3-tts),
+  and [Qwen3-TTS technical report](https://arxiv.org/abs/2601.15621)
 - [ACE-Step 1.5 project and license](https://github.com/ace-step/ACE-Step-1.5)
-  and [official installation/hardware guide](https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/INSTALL.md)
+  and [ACE-Step 1.5 Hugging Face model card](https://huggingface.co/ACE-Step/Ace-Step1.5)
+- [SoulX-Singer model card](https://huggingface.co/Soul-AILab/SoulX-Singer)
+  and [SoulX-Singer paper](https://arxiv.org/abs/2602.07803)
+- [Fish Audio S2 Pro model card](https://huggingface.co/fishaudio/s2-pro)
+  and [Fish Audio technical report](https://arxiv.org/abs/2603.08823)
+- [UniVoice paper](https://arxiv.org/abs/2606.05852),
+  [X-Voice paper](https://arxiv.org/abs/2605.05611), and
+  [PFluxTTS paper](https://arxiv.org/abs/2602.04160)
 - [HeartMuLa official repository](https://github.com/HeartMuLa/heartlib)
 - [YuE official repository](https://github.com/multimodal-art-projection/YuE)
 - [Muse official repository](https://github.com/yuhui1038/Muse)
