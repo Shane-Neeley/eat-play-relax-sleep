@@ -12,6 +12,24 @@ stem, then inspect and review that stem through EPRS before mixing or publishing
 levels, no network control, and no infinite loop. It is a safe first check that
 Sonic Pi can make a useful bed for vocals, guitar, or found sound.
 
+[`eprs-pull-me-in-v1.rb`](eprs-pull-me-in-v1.rb) is the next step when a loop is
+technically correct but musically flat. It is a finite 32-bar arrangement with
+a teaser motif, broken pocket, lift, deliberate drop, hook payoff, and final
+turnaround. The motif returns in changed rhythms and registers while the drums,
+bass, harmony, and density evolve.
+
+### Engagement checks
+
+Before calling a bed release-ready, ask:
+
+- Does something recognizable arrive in the first two bars?
+- Does the first full groove earn its entrance by withholding information first?
+- Is there a real contrast section or drop before the final payoff?
+- Does the last bar answer or transform the hook instead of simply stopping?
+
+If the answer is no, change the arrangement and motif before adding more effects
+or louder mastering. Loud repetition is still repetition.
+
 ```bash
 ./scripts/eprs doctor --capability live_coding
 ./scripts/eprs adapter show sonic-pi-live-code --handoff develop-live-code

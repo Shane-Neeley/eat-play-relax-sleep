@@ -11,6 +11,7 @@ from eprs.system import load_toolchain
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / "examples" / "sonic-pi" / "eprs-gentle-groove-v5.rb"
+PULL_IN_EXAMPLE = ROOT / "examples" / "sonic-pi" / "eprs-pull-me-in-v1.rb"
 GUIDE = ROOT / "docs" / "SONIC_PI.md"
 VISUAL_CUES = ROOT / "visuals" / "adapters" / "sonic-pi-visual-cues.rb"
 PERCUSSIVE_NOTE = GUIDE
@@ -64,6 +65,28 @@ class SonicPiContractTests(unittest.TestCase):
         self.assertLessEqual(max(amps), 0.55)
         self.assertNotIn("set_drive!", source)
 
+    def test_pull_in_example_has_song_form_instead_of_a_repeated_loop(self):
+        source = PULL_IN_EXAMPLE.read_text()
+        for marker in (
+            "32.times",
+            ":tease",
+            ":pocket",
+            ":lift",
+            ":drop",
+            ":hook",
+            ":final",
+            "use_random_seed 20260812",
+            "with_fx :echo",
+            "Final two bars are intentionally audible as a turnaround",
+        ):
+            self.assertIn(marker, source)
+        self.assertGreaterEqual(source.count("in_thread(name:"), 4)
+        self.assertGreaterEqual(source.count("sleep 0.25"), 1)
+        self.assertGreaterEqual(source.count("sleep 0.5"), 2)
+        self.assertNotIn("live_loop", source)
+        self.assertNotIn("use_osc", source)
+        self.assertNotRegex(source, r"(?:/Users/|/private/|https?://)")
+
     def test_visual_cue_source_is_local_only(self):
         source = VISUAL_CUES.read_text()
         self.assertIn('use_osc "127.0.0.1", 57121', source)
@@ -97,6 +120,16 @@ class SonicPiContractTests(unittest.TestCase):
     def test_gentle_example_has_valid_ruby_syntax(self):
         result = subprocess.run(
             ["ruby", "-c", str(EXAMPLE)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+
+    @unittest.skipUnless(shutil.which("ruby"), "Ruby is not installed")
+    def test_pull_in_example_has_valid_ruby_syntax(self):
+        result = subprocess.run(
+            ["ruby", "-c", str(PULL_IN_EXAMPLE)],
             capture_output=True,
             text=True,
             check=False,

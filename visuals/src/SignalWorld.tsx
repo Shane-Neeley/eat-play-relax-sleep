@@ -170,6 +170,69 @@ const OctopusInkOverlay = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const PillowFightOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const centerX = width * 0.5;
+  const centerY = height * 0.52;
+  const pillowCount = 7;
+  const pillows = Array.from({length: pillowCount}, (_, index) => {
+    const lane = index - (pillowCount - 1) / 2;
+    const phase = time * (0.62 + index * 0.05) * spec.motion.speed + index * 0.88;
+    const arc = Math.sin(phase) * height * (0.15 + highs * 0.05);
+    const x = centerX + lane * width * 0.08 + Math.cos(phase * 0.8) * width * 0.035;
+    const y = centerY + arc + Math.cos(phase * 1.6) * height * 0.025;
+    const rotate = Math.sin(phase * 1.2) * 18;
+    const scale = 1 + bass * 0.18 + (index % 2) * 0.04;
+    return {x, y, rotate, scale, index};
+  });
+  const stars = Array.from({length: 38}, (_, index) => {
+    const angle = seeded(spec.seed + 40, index) * Math.PI * 2 + time * 0.06;
+    const radius = Math.min(width, height) * (0.16 + seeded(spec.seed + 53, index) * 0.44);
+    return {
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius * 0.62,
+      size: 3 + seeded(spec.seed + 67, index) * 11 + highs * 8,
+      color: spec.palette[index % 4],
+    };
+  });
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <filter id="pillow-shadow"><feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#000000" floodOpacity="0.38" /></filter>
+        <linearGradient id="sheet-grid" x1="0" x2="1">
+          <stop offset="0%" stopColor={rgba(spec.palette[3], 0.05)} />
+          <stop offset="100%" stopColor={rgba(spec.palette[1], 0.13 + mids * 0.08)} />
+        </linearGradient>
+      </defs>
+      <rect x={width * 0.08} y={height * 0.18} width={width * 0.84} height={height * 0.66} rx={18} fill="url(#sheet-grid)" stroke={rgba(spec.palette[3], 0.28)} strokeWidth={3} />
+      {Array.from({length: 10}, (_, index) => (
+        <line key={`sheet-x-${index}`} x1={width * (0.12 + index * 0.085)} x2={width * (0.12 + index * 0.085)} y1={height * 0.2} y2={height * 0.82} stroke={rgba(spec.palette[2], 0.12)} strokeWidth={2} />
+      ))}
+      {Array.from({length: 7}, (_, index) => (
+        <line key={`sheet-y-${index}`} x1={width * 0.1} x2={width * 0.9} y1={height * (0.24 + index * 0.085)} y2={height * (0.24 + index * 0.085)} stroke={rgba(spec.palette[2], 0.12)} strokeWidth={2} />
+      ))}
+      {stars.map((star, index) => (
+        <path key={`star-${index}`} d={`M ${star.x} ${star.y - star.size} L ${star.x + star.size * 0.28} ${star.y - star.size * 0.28} L ${star.x + star.size} ${star.y} L ${star.x + star.size * 0.28} ${star.y + star.size * 0.28} L ${star.x} ${star.y + star.size} L ${star.x - star.size * 0.28} ${star.y + star.size * 0.28} L ${star.x - star.size} ${star.y} L ${star.x - star.size * 0.28} ${star.y - star.size * 0.28} Z`} fill={star.color} opacity={0.18 + highs * 0.36} />
+      ))}
+      {pillows.map((pillow) => (
+        <g key={`pillow-${pillow.index}`} transform={`translate(${pillow.x} ${pillow.y}) rotate(${pillow.rotate}) scale(${pillow.scale})`} filter="url(#pillow-shadow)">
+          <rect x={-width * 0.055} y={-height * 0.038} width={width * 0.11} height={height * 0.076} rx={20} fill={pillow.index % 2 ? spec.palette[3] : spec.palette[1]} stroke={spec.palette[pillow.index % 4]} strokeWidth={4} />
+          <path d={`M ${-width * 0.047} 0 C ${-width * 0.028} ${-height * 0.028} ${width * 0.028} ${-height * 0.028} ${width * 0.047} 0 C ${width * 0.024} ${height * 0.03} ${-width * 0.026} ${height * 0.03} ${-width * 0.047} 0`} fill="none" stroke={rgba(spec.background, 0.42)} strokeWidth={2} />
+        </g>
+      ))}
+      <g fill={spec.palette[2]} opacity={0.68} fontFamily="Impact, Arial Black, sans-serif" fontSize={Math.max(24, width * 0.032)}>
+        <text x={width * 0.12} y={height * 0.18}>SOLO ROUND</text>
+        <text x={width * 0.62} y={height * 0.82}>SETTLE THE ROOM</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
 export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -181,6 +244,7 @@ export const SignalWorld = (props: Props) => {
     <AbsoluteFill style={{pointerEvents: "none", opacity: texturePhase * 0.34, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E\")", mixBlendMode: "soft-light"}} />
     <div style={{position: "absolute", inset: 0, boxShadow: "inset 0 0 180px rgba(0,0,0,.72)"}} />
     {props.spec.motif === "octopus-ink" ? <OctopusInkOverlay {...props} /> : null}
+    {props.spec.motif === "pillow-fight" ? <PillowFightOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };
@@ -195,6 +259,6 @@ export const TitleTransmission = ({spec}: {spec: VisualSpec}) => {
   const lower = spec.typography.position === "lower-left";
   return <div style={{position: "absolute", left: lower ? 80 : "50%", bottom: lower ? 72 : "50%", transform: lower ? undefined : "translate(-50%, 50%)", width: lower ? "auto" : "100%", textAlign: lower ? "left" : "center", opacity, color: spec.palette[3], textShadow: `0 0 36px ${rgba(spec.palette[0], .65)}`}}>
     <div style={{font: "600 22px ui-monospace,monospace", letterSpacing: ".32em", marginBottom: 18}}>{spec.subtitle}</div>
-    <div style={{font: "500 86px Georgia,serif", letterSpacing: "-.04em"}}>{spec.title}</div>
+    <div style={{font: "500 86px Georgia,serif", letterSpacing: "0"}}>{spec.title}</div>
   </div>;
 };

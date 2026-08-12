@@ -47,6 +47,13 @@ to answer one arrangement question quickly. The starter in
 is deliberately a bounded 12-bar groove with no network control or infinite
 loop. It can become a bed for Bark/Qwen vocals, guitar, or a found sound.
 
+When a bed feels like a technically correct loop rather than a song, use
+[`examples/sonic-pi/eprs-pull-me-in-v1.rb`](../examples/sonic-pi/eprs-pull-me-in-v1.rb)
+as the arrangement reference. Its discipline is simple: introduce a motif
+early, withhold the full pocket, make the lift audible, create a real drop, and
+return with a changed final hook. More samples and more compression cannot
+substitute for that sequence of expectations.
+
 ### 2. Sample instrument
 
 Sonic Pi can play built-in and local WAV/AIFF/FLAC samples, change playback rate,
