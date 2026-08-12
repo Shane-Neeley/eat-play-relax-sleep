@@ -70,15 +70,20 @@ def _selection_filter(start: float, duration: float, repeat: int, crossfade: flo
     pieces = [f"{trim},asplit={repeat}{branches}"]
     if crossfade == 0:
         inputs = "".join(f"[part{index}]" for index in range(repeat))
-        pieces.append(f"{inputs}concat=n={repeat}:v=0:a=1[out]")
+        pieces.append(f"{inputs}concat=n={repeat}:v=0:a=1[joined]")
+        pieces.append("[joined]asetpts=PTS-STARTPTS[out]")
         return ";".join(pieces)
     previous = "part0"
     for index in range(1, repeat):
-        output = "out" if index == repeat - 1 else f"joined{index}"
+        output = f"joined{index}"
         pieces.append(
             f"[{previous}][part{index}]acrossfade=d={crossfade:.12g}:c1=tri:c2=tri[{output}]"
         )
         previous = output
+    # Some FFmpeg builds preserve a negative PTS from acrossfade. Reset the
+    # completed phrase before the WAV muxer measures duration, or a valid
+    # repeated selection can appear truncated during provenance verification.
+    pieces.append(f"[{previous}]asetpts=PTS-STARTPTS[out]")
     return ";".join(pieces)
 
 

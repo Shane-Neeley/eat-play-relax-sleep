@@ -67,6 +67,7 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(metadata["selection"]["repeat"], 3)
             self.assertFalse(metadata["processing"]["automatic_normalization"])
             self.assertFalse(metadata["processing"]["time_stretch"])
+            self.assertIn("asetpts=PTS-STARTPTS[out]", metadata["processing"]["filter"])
             self.assertEqual(metadata["output"]["sha256"], sha256(selected))
             raw = [
                 path for path in (song / "recordings" / "raw").rglob("*")
