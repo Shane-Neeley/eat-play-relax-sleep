@@ -1531,7 +1531,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
             if verify:
                 try:
                     from .lyrics import verify_lyric_development
-                    _, lyric = verify_lyric_development(song_path, manifest_path)
+                    # The inventory walk may yield a repo-relative manifest
+                    # path while the verifier's song-root resolver expects a
+                    # song-relative or absolute path. Normalize here so
+                    # `status --verify` does not join `songs/<slug>` twice.
+                    _, lyric = verify_lyric_development(song_path, manifest_path.resolve())
                     recipe = lyric["recipe"]
                     sources = lyric["sources"]
                     variants = recipe["variants"]

@@ -6,6 +6,7 @@ export type VisualSpec = {
   subtitle: string;
   prompt: string;
   world: VisualWorld;
+  motif?: "octopus-ink";
   seed: number;
   palette: [string, string, string, string];
   background: string;
@@ -54,6 +55,7 @@ export const normalizeSpec = (candidate: Partial<VisualSpec>): VisualSpec => {
     prompt: candidate.prompt || "A patient signal growing in a dark room",
     world: ["portal", "ribbons", "constellation"].includes(candidate.world || "")
       ? candidate.world as VisualWorld : "portal",
+    motif: candidate.motif === "octopus-ink" ? "octopus-ink" : undefined,
     seed: Number.isInteger(candidate.seed) ? candidate.seed as number : 1,
     palette,
     background: candidate.background || "#090b10",

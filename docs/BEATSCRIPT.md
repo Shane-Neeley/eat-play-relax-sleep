@@ -37,6 +37,16 @@ Note lanes use spaces. `C3+E3+G3` is a chord, `.` is a rest, and `~` is currentl
 
 Track options after `;` include `gain`, `pan` (-1 to +1), `humanize_ms`, `offset_ms`, and `sample`. Note lanes also accept `voice` and step-based `length`. A sample path is resolved relative to the `.beat` file. The headless renderer accepts 8-, 16-, 24-, or 32-bit integer PCM WAV, including the 24-bit output from `eprs autotune`; FFmpeg can safely create a derived compatible stem from other source formats.
 
+Sample lanes can opt into explicit source leveling with `sample_level=rms` or
+`sample_level=peak`. RMS leveling defaults to a target RMS of `0.16` and a
+peak ceiling of `0.88`; override them with `sample_target_rms=`,
+`sample_target_peak=`, and `sample_peak_ceiling=` when a source needs a
+different role. This is per-source gain staging, not a claim that different
+recordings have equal biological loudness. The final prototype renderer also
+raises non-silent under-filled mixes to its safe `0.92` peak instead of leaving
+them unnecessarily quiet. Delivery mastering remains an explicit separate
+decision.
+
 Long-form arrangements can scope any lane with one-indexed `start_bar` and `end_bar`. Add `every_bars=N` to sound only every Nth bar within that range—useful for crash marks and other sparse events. For example, this marks bars 17, 25, 33, and 41:
 
 ```beat

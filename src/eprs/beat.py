@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 from pathlib import Path
 import random
 import re
@@ -151,6 +152,9 @@ def validate(beat: Beat) -> None:
             end_bar = int(track.options.get("end_bar", str(beat.bars)))
             every_bars = int(track.options.get("every_bars", "1"))
             float(track.options.get("offset_ms", "0"))
+            float(track.options.get("gain", "0.65"))
+            float(track.options.get("pan", "0"))
+            float(track.options.get("humanize_ms", "0"))
         except ValueError as exc:
             raise ValueError(f"track {track.name!r} has an invalid arrangement option") from exc
         if not 1 <= start_bar <= end_bar <= beat.bars:
@@ -159,6 +163,20 @@ def validate(beat: Beat) -> None:
             )
         if every_bars < 1:
             raise ValueError(f"track {track.name!r} every_bars must be positive")
+        sample_level = track.options.get("sample_level", "none").lower()
+        if sample_level not in {"none", "rms", "peak"}:
+            raise ValueError(f"track {track.name!r} sample_level must be none, rms, or peak")
+        for key, minimum, maximum in (
+            ("sample_target_rms", 0.01, 1.0),
+            ("sample_target_peak", 0.01, 1.0),
+            ("sample_peak_ceiling", 0.05, 1.0),
+        ):
+            try:
+                value = float(track.options.get(key, str(minimum)))
+            except ValueError as exc:
+                raise ValueError(f"track {track.name!r} has an invalid {key}") from exc
+            if not math.isfinite(value) or not minimum <= value <= maximum:
+                raise ValueError(f"track {track.name!r} {key} must be between {minimum:g} and {maximum:g}")
 
 
 def expanded_steps(track: Track, count: int) -> list[str]:

@@ -6,6 +6,11 @@
   "provider": "sonic_pi",
   "capabilities": [
     "live_coding",
+    "sample_playback",
+    "audio_recording",
+    "midi_io",
+    "ableton_link",
+    "session_recording",
     "local_osc"
   ],
   "handoffs": [
@@ -14,7 +19,8 @@
       "label": "Develop a playable live-code experiment",
       "intent": "Turn a bounded musical hypothesis into a small playable Sonic Pi source without treating the live system as the project database.",
       "capabilities": [
-        "live_coding"
+        "live_coding",
+        "sample_playback"
       ],
       "automation": "gui",
       "requires_user_operation": true,
@@ -34,6 +40,90 @@
       "verification": [
         "Confirm the source parses in the intended Sonic Pi version and referenced samples exist.",
         "Listen to the complete experiment and record what the prototype preserves, changes, and leaves unresolved."
+      ]
+    },
+    {
+      "id": "record-lossless-stem",
+      "label": "Record a lossless Sonic Pi stem",
+      "intent": "Capture a bounded Sonic Pi performance as a new lossless experiment artifact while keeping the editable source and the listening decision separate.",
+      "capabilities": [
+        "audio_recording"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A reviewed Sonic Pi source buffer or saved set",
+        "A bounded recording duration and destination under the song workspace"
+      ],
+      "outputs": [
+        "A lossless WAV stem",
+        "The exact source, app version, take duration, and technical inspection notes"
+      ],
+      "steps": [
+        "Open the source in the intended Sonic Pi version and confirm the output device before running it.",
+        "Use Sonic Pi's Record control for the smallest useful audition; stop the performance before importing the stem into another mix.",
+        "Keep the source and recorded bytes unchanged, then hand the new file to EPRS analysis and review."
+      ],
+      "verification": [
+        "Confirm the WAV exists, has the intended sample rate/channel layout, and is not silent or clipped.",
+        "Compare the recorded duration with the intended musical bars; inspect for accidental GUI tails or duplicated saves.",
+        "Record a complete listen and a keep/change/stop decision before promotion."
+      ]
+    },
+    {
+      "id": "sync-midi-or-link",
+      "label": "Sync with MIDI or Ableton Link",
+      "intent": "Use external timing or audio peers as an explicit performance experiment without making hardware or network state part of the portable source of truth.",
+      "capabilities": [
+        "midi_io",
+        "ableton_link"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A named MIDI clock/device or an intentionally enabled Ableton Link peer",
+        "A musical reason for external timing or live audio exchange"
+      ],
+      "outputs": [
+        "An editable source with the external dependency named",
+        "A lossless captured result plus the device/peer and sync settings"
+      ],
+      "steps": [
+        "Enable only the intended device or Link peer in Sonic Pi's IO controls; do not assume a connected device is authorized or musically useful.",
+        "For v5 MIDI clock, use `use_bpm :midi` with an explicit `quantum:` when bar alignment matters; for Link audio, name the peer and channel in the source.",
+        "Record the resulting performance locally and preserve a standalone EPRS stem so the project remains portable if the device or peer disappears."
+      ],
+      "verification": [
+        "Confirm the intended MIDI source or Link peer is the one being followed and that the first bar lands where expected.",
+        "Check for jitter, phase drift, monitoring bleed, and accidental remote/network exposure.",
+        "Treat the result as a performance capture, not a deterministic render, unless all external state is frozen and documented."
+      ]
+    },
+    {
+      "id": "record-session-video",
+      "label": "Capture a Sonic Pi session video",
+      "intent": "Use Sonic Pi v5's built-in session recording or GUI streaming for a live artifact or visual experiment while keeping the EPRS release picture path separate.",
+      "capabilities": [
+        "session_recording"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A deliberate live-performance or behind-the-scenes brief",
+        "A separate approved audio/master path if the capture will become a release candidate"
+      ],
+      "outputs": [
+        "A session capture with its Sonic Pi source and app version",
+        "A review note distinguishing performance documentation from release picture"
+      ],
+      "steps": [
+        "Use session recording for an intentional live artifact; do not silently substitute it for the frame-accurate EPRS picture renderer.",
+        "If using Syphon/Spout streaming, keep the receiver local and explicitly configured.",
+        "For a release, rebuild the final picture through the approved EPRS master and picture-review path."
+      ],
+      "verification": [
+        "Confirm the capture contains the intended window and master mix, with no private desktop or source-domain information visible.",
+        "Watch the complete capture and record whether it is documentation, experiment, or release candidate."
       ]
     },
     {

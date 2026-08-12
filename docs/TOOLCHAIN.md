@@ -15,6 +15,8 @@ Run the read-only check from the repository root:
 ./scripts/eprs doctor --workflow daw-handoff --strict
 ./scripts/eprs doctor --workflow daily-agent-work --workflow youtube-release
 ./scripts/eprs doctor --capability live_coding --strict
+./scripts/eprs adapter list --available --capability audio_recording
+./scripts/eprs adapter show sonic-pi-live-code --handoff record-lossless-stem
 ```
 
 The `eprs.doctor/v1` JSON report includes resolved paths, concise version
@@ -22,6 +24,12 @@ strings, capabilities, platform applicability, and actionable installation
 hints. `--strict` exits nonzero only when a required tool is unavailable;
 optional creative tools remain choices. Doctor never installs, upgrades,
 enables scripting, or changes system settings.
+
+Sonic Pi's optional v5 routes are exposed separately so a plan can ask for
+`live_coding`, `sample_playback`, `audio_recording`, `midi_io`,
+`ableton_link`, `session_recording`, or `local_osc` without pretending that a
+live GUI session is a deterministic EPRS render. See [Sonic Pi in EPRS](SONIC_PI.md)
+for the version notes, gentle defaults, source map, and review checklist.
 
 ## Ask whether one workflow is ready
 

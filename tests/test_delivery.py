@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 import unittest
 import wave
@@ -12,6 +13,19 @@ from eprs.master import approve_master, render_master
 from eprs.mix import render_mix, review_mix
 from eprs.selection import select_audio
 from eprs.system import new_song, sha256, song_status
+
+
+def _ffmpeg_has_filter(name: str) -> bool:
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        return False
+    result = subprocess.run(
+        [ffmpeg, "-hide_banner", "-filters"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return f" {name} " in result.stdout
 
 
 def tone_wav(path: Path, seconds: float = 0.2) -> None:
@@ -66,7 +80,10 @@ def lossless_master(root: Path, song: Path) -> Path:
     return master
 
 
-@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg required")
+@unittest.skipUnless(
+    shutil.which("ffmpeg") and shutil.which("ffprobe") and _ffmpeg_has_filter("drawtext"),
+    "FFmpeg with drawtext required for title-card rendering",
+)
 class YouTubeDeliveryTests(unittest.TestCase):
     def test_youtube_requires_approval_then_renders_and_records_review(self):
         with tempfile.TemporaryDirectory() as folder:

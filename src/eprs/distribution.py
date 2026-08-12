@@ -10,7 +10,7 @@ import re
 import shutil
 
 from .clearance import approved_clearance_coverage, recording_session_matches, verify_recording_clearance
-from .lineage import trace_audio_lineage
+from .lineage import trace_audio_lineage, validate_external_audio_visibility
 from .master import verify_master_provenance
 from .system import load_song_manifest, probe, sha256, slugify, utc_now
 
@@ -68,6 +68,7 @@ def _date(value: object, key: str) -> str | None:
 def _public_recording_clearance(song: Path, master: Path, values: object) -> tuple[dict, list[Path]]:
     """Require public clearance for every session-linked raw recording in the master."""
     lineage = trace_audio_lineage(song, master)
+    validate_external_audio_visibility(lineage, "public", "distribution")
     raw_paths = {item["path"] for item in lineage["raw_recordings"]}
     matches = recording_session_matches(song, raw_paths)
     if values is None:

@@ -57,6 +57,32 @@ session, CLI, or future adapter:
 Authentication, network policy, account selection, quotas, platform processing,
 and the consequential upload action remain outside this local command set.
 
+## Skill-aware YouTube operation
+
+In a skill-aware agent host, use the environment-provided `youtube-channel`
+skill for the separately authorized API or YouTube Studio operation. The skill
+is an operator guide, not an EPRS capability, approval record, credential, or
+authorization source. Its presence must not change the false authorization
+flags in the handoff or bypass the explicit-current-user requirement above.
+
+Before the skill uploads anything, give it the exact handoff and require it to:
+
+- re-verify the visible destination channel at operation time;
+- use only the handoff-bound video, metadata, thumbnail, captions, and chapters;
+- apply no broader visibility than `metadata.visibility_intent`;
+- verify upload, processing, checks, final visibility, and the resulting video
+  ID rather than treating an open dialog or progress bar as success; and
+- return the fields required by `eprs.youtube-publication-receipt/v1`.
+
+Keep destination channel titles and IDs, account emails, OAuth project IDs,
+browser-profile names, credential locations, tokens, and other operator-specific
+state out of tracked EPRS files. Put machine-specific integration guidance in
+ignored `.eprs-local/` data or in the external skill installation. Public
+examples should say “the explicitly authorized channel” rather than naming a
+real account. Do not add an account-specific publisher to `config/toolchain.json`
+or `config/adapters/`: external publication remains a consequential operation,
+not a detected local production capability.
+
 ## Record what happened
 
 Copy and fill the receipt template only after the external action:

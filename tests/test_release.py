@@ -11,10 +11,13 @@ from eprs.publication import prepare_publication_handoff
 from eprs.release import package_release
 from eprs.session import create_recording_session
 from eprs.system import new_song, sha256, song_status
-from tests.test_delivery import lossless_master
+from tests.test_delivery import _ffmpeg_has_filter, lossless_master
 
 
-@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg required")
+@unittest.skipUnless(
+    shutil.which("ffmpeg") and shutil.which("ffprobe") and _ffmpeg_has_filter("drawtext"),
+    "FFmpeg with drawtext required for release-video fixtures",
+)
 class ReleaseTests(unittest.TestCase):
     def _approved_media(self, root: Path, song: Path) -> tuple[Path, Path]:
         master = lossless_master(root, song)

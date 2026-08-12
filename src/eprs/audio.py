@@ -80,7 +80,33 @@ def _hit(kind: str, duration: float, rng: random.Random, frequency: float | None
     return out
 
 
-def _load_sample(path: Path) -> tuple[list[float], int]:
+def _level_sample(samples: list[float], options: dict[str, str]) -> list[float]:
+    """Apply explicit per-sample leveling without allowing inter-sample overs."""
+    mode = options.get("sample_level", "none").lower()
+    if mode == "none":
+        return samples
+    if mode not in {"rms", "peak"}:
+        raise ValueError(f"sample_level must be none, rms, or peak: {mode}")
+    if not samples:
+        return samples
+    peak = max(abs(value) for value in samples)
+    if peak <= 0:
+        return samples
+    if mode == "peak":
+        target = float(options.get("sample_target_peak", "0.82"))
+        scale = target / peak
+    else:
+        target = float(options.get("sample_target_rms", "0.16"))
+        rms = math.sqrt(sum(value * value for value in samples) / len(samples))
+        if rms <= 0:
+            return samples
+        scale = target / rms
+    ceiling = float(options.get("sample_peak_ceiling", "0.88"))
+    scale = min(scale, ceiling / peak)
+    return [value * scale for value in samples]
+
+
+def _load_sample(path: Path, options: dict[str, str] | None = None) -> tuple[list[float], int]:
     with wave.open(str(path), "rb") as wav:
         channels, width, rate, frames = wav.getnchannels(), wav.getsampwidth(), wav.getframerate(), wav.getnframes()
         if width not in {1, 2, 3, 4}:
@@ -102,7 +128,7 @@ def _load_sample(path: Path) -> tuple[list[float], int]:
             mono = list(raw)
         else:
             mono = [sum(raw[i : i + channels]) / channels for i in range(0, len(raw), channels)]
-    return mono, rate
+    return _level_sample(mono, options or {}), rate
 
 
 def _resample(samples: list[float], source_rate: int) -> list[float]:
@@ -140,7 +166,7 @@ def render(beat: Beat, output: str | Path) -> Path:
             sample_path = Path(options["sample"])
             if not sample_path.is_absolute() and beat.source:
                 sample_path = (beat.source.parent / sample_path).resolve()
-            sample_data, rate = _load_sample(sample_path)
+            sample_data, rate = _load_sample(sample_path, options)
             sample_data = _resample(sample_data, rate)
         events = expanded_steps(track, beat.total_steps)
         for step_index, token in enumerate(events):
@@ -184,8 +210,11 @@ def render(beat: Beat, output: str | Path) -> Path:
     for index in range(delay, frame_count):
         left[index] += right[index - delay] * 0.09
         right[index] += left[index - delay] * 0.09
-    peak = max(1.0, max(abs(x) for x in left), max(abs(x) for x in right))
-    scale = 0.92 / peak
+    peak = max(max(abs(x) for x in left), max(abs(x) for x in right))
+    # Keep every non-silent render at the same safe peak. The old max(1.0, peak)
+    # floor preserved quiet mixes at their input level, making sparse songs
+    # needlessly quiet even when they had ample headroom.
+    scale = 0.92 / peak if peak else 1.0
     pcm = array("h")
     for l_value, r_value in zip(left, right):
         pcm.append(round(max(-1, min(1, l_value * scale)) * 32767))

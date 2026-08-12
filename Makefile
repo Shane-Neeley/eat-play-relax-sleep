@@ -1,5 +1,7 @@
 .PHONY: doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio
 
+EPRS_PYTHON ?= python3
+
 doctor:
 	./scripts/eprs doctor
 
@@ -9,13 +11,13 @@ check:
 	./scripts/eprs check examples/beats/sleep-circuit.beat
 
 test:
-	PYTHONPATH=src python3 -m unittest discover -s tests -v
+	PYTHONPATH=src $(EPRS_PYTHON) -m unittest discover -s tests -v
 	node --test tests-js/*.test.mjs
 
 # Quick control-plane feedback while iterating. Run the full media suite above
 # before a checkpoint or handoff.
 test-fast:
-	PYTHONPATH=src python3 -m unittest -v \
+	PYTHONPATH=src $(EPRS_PYTHON) -m unittest -v \
 		tests.test_adapters tests.test_beat tests.test_context tests.test_evidence \
 		tests.test_dispatch \
 		tests.test_plan tests.test_plan_progress tests.test_planning \
@@ -24,7 +26,7 @@ test-fast:
 	node --test tests-js/*.test.mjs
 
 public-check:
-	python3 scripts/check_public_repo.py
+	$(EPRS_PYTHON) scripts/check_public_repo.py
 
 demo:
 	./scripts/render_demos.sh

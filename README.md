@@ -127,6 +127,41 @@ downloaded video as a `--recording` when its audio should be preserved, and put
 the source URL in `--reference` for an agent to research under the normal
 request/work evidence rules.
 
+### Freeze an iNaturalist sound reference
+
+Wildlife sound is a first-class creative reference when it changes the musical
+question. Query observations with attached sounds through the iNaturalist skill,
+then freeze one exact sound with its observation and sound-level attribution:
+
+```bash
+./scripts/eprs inaturalist sound 168281317 \
+  --song songs/signal-garden \
+  --role "gorilla call reference" \
+  --sound-id 744247 \
+  --note "Study the call spacing; invent the musical response."
+```
+
+The file is stored under `references/inaturalist-audio/`, not as an owned raw
+performance. Its sidecar is part of audio lineage and records the sound URL,
+license, attribution, and reference-only boundary. Use `eprs select` only after
+rights review; CC BY-NC, all-rights-reserved, and unknown sounds cannot enter a
+public or monetized release through the release gates.
+
+Turn the frozen reference into a five-lane creative study:
+
+```bash
+./scripts/eprs inaturalist study \
+  songs/signal-garden/references/inaturalist-audio/forest-call-reference/observation-<id>-sound-<id>.mp3 \
+  --song songs/signal-garden --role "forest call study" \
+  --key C --scale minor-pentatonic
+```
+
+The resulting `eprs.inaturalist-creative-study/v1` record measures attack
+spacing, energy, rough pitch, and a brightness proxy, then keeps independent
+creative prompts for beats, noises, lyrics, vocals, and tones. See the
+[2026 animal-sound AI brief](docs/ANIMAL_SOUND_AI_2026.md) for the research
+trail and the limits on calling model pattern discovery “translation.”
+
 ```bash
 ./scripts/eprs new "Signal Garden"
 cp templates/creative-brief.md songs/signal-garden/briefs/v1.md
@@ -372,7 +407,12 @@ uploader without contacting YouTube:
 After an authorized external uploader returns the actual video ID, URL,
 visibility, and timestamps, preserve that state with `publication receipt`.
 FINAL remains immutable and unpublished in its own manifest; external state is
-append-only history. See [offline publication handoffs](docs/PUBLICATION.md).
+append-only history. A skill-aware host may use an installed `youtube-channel`
+skill for that external operation, but the skill neither authorizes publication
+nor belongs in EPRS provenance; pass it the exact handoff and record only its
+verified result. Keep real channel/account identifiers in ignored operator
+configuration, not public examples. See
+[offline publication handoffs](docs/PUBLICATION.md).
 
 ## Bring in a live or field recording
 

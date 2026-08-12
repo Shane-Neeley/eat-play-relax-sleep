@@ -1,0 +1,39 @@
+{
+  "schema": "wild-frequency.arrangement/v4",
+  "title": "Wild Frequency: Call It Wild | Beat Drop Mix",
+  "tempo_bpm": 122,
+  "meter": "4/4",
+  "key": "D minor",
+  "chord_loop": ["Dm", "Bb", "F", "C"],
+  "sonic_pi_bars": 72,
+  "duration_target_seconds": 142,
+  "vocal_method": "existing Bark cue performances reused phrase-by-phrase with tight, transparent, gloopy, and hard-step D-natural-minor treatments",
+  "guide_melody_a": "D4 F4 A4 A4 | F4 D4 F4 A4 | A4 C5 A4 G4 | G4 F4 E4 D4",
+  "guide_melody_b": "D4 E4 F4 A4 | C5 A4 F4 E4 | D4 F4 G4 A4 | C5 A4 G4 F4",
+  "animal_count": 10,
+  "retained_animals": [
+    "Southern Cassowary",
+    "Superb Lyrebird",
+    "Australian Buff-banded Rail",
+    "Bell Miner",
+    "Spotted Pardalote"
+  ],
+  "new_animals": [
+    "Tawny Frogmouth",
+    "Superb Fairywren",
+    "Southern Brown Tree Frog",
+    "Common Eastern Froglet",
+    "Laughing Kookaburra"
+  ],
+  "sections": [
+    {"bars": "0-7", "name": "forest intro", "beat": "none", "melody": "pad fragments"},
+    {"bars": "8-15", "name": "first pulse", "beat": "kick and hats", "melody": "A"},
+    {"bars": "16-23", "name": "build", "beat": "snare lift and bass", "melody": "B"},
+    {"bars": "24-39", "name": "first drop", "beat": "full groove", "melody": "A plus octave replies"},
+    {"bars": "40-47", "name": "melodic middle", "beat": "strip back", "melody": "B"},
+    {"bars": "48-55", "name": "second build", "beat": "riser and snare roll", "melody": "B into A"},
+    {"bars": "56-67", "name": "final drop", "beat": "full groove plus counterline", "melody": "A and B"},
+    {"bars": "68-71", "name": "animal release", "beat": "half-time tail", "melody": "held D"}
+  ],
+  "creative_note": "The drop is an authored structural change: the first eight bars leave room for animal space, the kick and bass arrive in layers, and the complete drum/bass/lead stack enters at bar 24 before the main vocal hook."
+}

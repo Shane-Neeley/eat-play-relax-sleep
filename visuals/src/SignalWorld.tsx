@@ -118,6 +118,58 @@ const Constellation = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const OctopusInkOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const centerX = width * 0.5;
+  const centerY = height * 0.60;
+  const pulse = 1 + bass * 0.16;
+  const armPaths = Array.from({length: 8}, (_, index) => {
+    const angle = -Math.PI * 0.92 + index * (Math.PI * 1.84 / 7);
+    const sx = centerX + Math.cos(angle) * width * 0.06;
+    const sy = centerY + Math.sin(angle) * height * 0.055 + height * 0.03;
+    const ex = centerX + Math.cos(angle) * width * (0.16 + 0.018 * Math.sin(time * 1.7 + index));
+    const ey = centerY + height * 0.19 + Math.sin(time * 1.4 + index) * height * 0.028;
+    const bend = Math.sin(time * 1.1 + index * 0.8) * width * 0.045;
+    return `M ${sx} ${sy} Q ${sx + bend} ${(sy + ey) / 2} ${ex} ${ey}`;
+  });
+  const cloud = Array.from({length: 16}, (_, index) => {
+    const angle = index * Math.PI * 2 / 16 + time * 0.08;
+    const radius = Math.min(width, height) * (0.13 + (index % 4) * 0.018 + bass * 0.05);
+    const x = centerX + Math.cos(angle) * radius * 1.45;
+    const y = centerY + Math.sin(angle) * radius * 0.72;
+    const r = Math.min(width, height) * (0.025 + (index % 3) * 0.008 + mids * 0.012);
+    return <circle key={`cloud-${index}`} cx={x} cy={y} r={r} fill={spec.palette[2]} opacity={0.11 + bass * 0.08} />;
+  });
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <g opacity={0.86}>
+        <circle cx={centerX} cy={centerY} r={Math.min(width, height) * (0.24 + bass * 0.05)} fill="none" stroke={spec.palette[0]} strokeWidth={3 + bass * 8} strokeDasharray="12 24" opacity={0.36 + bass * 0.16} />
+        {cloud}
+        <g fill="none" stroke={spec.palette[1]} strokeWidth={Math.max(5, width * 0.005)} strokeLinecap="round" opacity={0.78}>
+          {armPaths.map((d, index) => <path key={`arm-${index}`} d={d} />)}
+        </g>
+        <ellipse cx={centerX} cy={centerY - height * 0.025} rx={width * 0.105 * pulse} ry={height * 0.105 * pulse} fill={spec.palette[2]} fillOpacity={0.44} stroke={spec.palette[1]} strokeWidth={5} />
+        <ellipse cx={centerX} cy={centerY - height * 0.032} rx={width * 0.074} ry={height * 0.066} fill={spec.background} fillOpacity={0.86} />
+        <circle cx={centerX - width * 0.028} cy={centerY - height * 0.052} r={width * 0.009} fill={spec.palette[3]} />
+        <circle cx={centerX + width * 0.028} cy={centerY - height * 0.052} r={width * 0.009} fill={spec.palette[3]} />
+        <path d={`M ${centerX - width * 0.026} ${centerY - height * 0.005} Q ${centerX} ${centerY + height * 0.018} ${centerX + width * 0.026} ${centerY - height * 0.005}`} fill="none" stroke={spec.palette[0]} strokeWidth={4} strokeLinecap="round" opacity={0.85} />
+      </g>
+      <g fill="none" stroke={spec.palette[3]} strokeWidth={3} opacity={0.34}>
+        <path d={`M ${width * 0.17} ${height * 0.10} q ${width * 0.05} ${height * 0.04} 0 ${height * 0.15} l ${width * 0.05} ${height * 0.08}`} />
+        <path d={`M ${width * 0.83} ${height * 0.10} q ${-width * 0.05} ${height * 0.04} 0 ${height * 0.15} l ${-width * 0.05} ${height * 0.08}`} />
+      </g>
+      <g fill={spec.palette[3]} opacity={0.48} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.013)} letterSpacing="0.18em">
+        <text x={width * 0.08} y={height * 0.12}>CURIOUS HAND</text>
+        <text x={width * 0.68} y={height * 0.12}>BOUNDARY SIGNAL</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
 export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -128,6 +180,7 @@ export const SignalWorld = (props: Props) => {
     <AbsoluteFill style={{pointerEvents: "none", opacity: props.spec.texture.scanlines, backgroundImage: "repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(0,0,0,.45) 4px)"}} />
     <AbsoluteFill style={{pointerEvents: "none", opacity: texturePhase * 0.34, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E\")", mixBlendMode: "soft-light"}} />
     <div style={{position: "absolute", inset: 0, boxShadow: "inset 0 0 180px rgba(0,0,0,.72)"}} />
+    {props.spec.motif === "octopus-ink" ? <OctopusInkOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };

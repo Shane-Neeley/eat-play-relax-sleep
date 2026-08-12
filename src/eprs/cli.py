@@ -12,6 +12,7 @@ from .adapters import adapter_catalog, adapter_guide
 from .audio import render
 from .autotune import PRESETS as AUTOTUNE_PRESETS, render_autotune, settings_for
 from .beat import dumps, load, mutate
+from .bioacoustic_models import bioacoustic_model_catalog
 from .context import build_agent_context, render_agent_context_markdown, write_agent_context
 from .clearance import create_recording_clearance, load_recording_clearance
 from .comp import render_comp, review_comp
@@ -28,6 +29,8 @@ from .frontdoor import expose_current_media
 from .groove import create_groove_development, review_groove, verify_groove_development
 from .harness import create_song_run
 from .interchange import prepare_daw_interchange, verify_daw_interchange
+from .inaturalist_audio import download_inaturalist_sound
+from .inaturalist_study import study_inaturalist_sound
 from .master import approve_master, render_master
 from .mix import render_mix, review_mix
 from .musical_observation import observe_musical_performance
@@ -376,6 +379,37 @@ def parser() -> argparse.ArgumentParser:
         "--rights-note",
         default="rights and performer permissions not yet confirmed; do not publish",
         help="Known ownership/permission context; uncertainty should remain explicit",
+    )
+
+    inaturalist = commands.add_parser(
+        "inaturalist",
+        help="Freeze an iNaturalist sound as attributed song-local reference evidence",
+    )
+    inaturalist_commands = inaturalist.add_subparsers(dest="inaturalist_command", required=True)
+    inaturalist_sound = inaturalist_commands.add_parser(
+        "sound",
+        help="Download one public iNaturalist observation sound without treating it as permission",
+    )
+    inaturalist_sound.add_argument("observation_id", type=int)
+    inaturalist_sound.add_argument("--song", required=True)
+    inaturalist_sound.add_argument("--role", required=True, help="Reference role, such as forest call")
+    inaturalist_sound.add_argument("--sound-id", type=int, help="Required when the observation has multiple sounds")
+    inaturalist_sound.add_argument("--note", default="")
+    inaturalist_sound.add_argument("--user-agent", default=None)
+    inaturalist_study = inaturalist_commands.add_parser(
+        "study",
+        help="Measure a frozen iNaturalist sound and map it to creative cues",
+    )
+    inaturalist_study.add_argument("source", help="Frozen sound path, usually under references/inaturalist-audio")
+    inaturalist_study.add_argument("--song", required=True)
+    inaturalist_study.add_argument("--role", required=True, help="Study role, such as frog rhythm reference")
+    inaturalist_study.add_argument("--key", default="C")
+    inaturalist_study.add_argument("--scale", default="minor-pentatonic")
+    inaturalist_study.add_argument("--tempo-bpm", type=float)
+    inaturalist_study.add_argument("--note", default="")
+    inaturalist_commands.add_parser(
+        "models",
+        help="List current optional bioacoustic AI models and their boundaries",
     )
 
     request = commands.add_parser(
@@ -1169,6 +1203,43 @@ def main(argv: list[str] | None = None) -> int:
                 rights_note=args.rights_note,
             )
             print(json.dumps({"recording": str(destination), "metadata": str(metadata)}, indent=2))
+        elif args.command == "inaturalist":
+            if args.inaturalist_command == "sound":
+                destination, metadata, record = download_inaturalist_sound(
+                    args.observation_id,
+                    args.song,
+                    args.role,
+                    sound_id=args.sound_id,
+                    note=args.note,
+                    **({"user_agent": args.user_agent} if args.user_agent else {}),
+                )
+                print(json.dumps({
+                    "reference": str(destination),
+                    "metadata": str(metadata),
+                    "observation_url": record["source"]["url"],
+                    "sound_id": record["sound"]["id"],
+                    "license_code": record["sound"]["license_code"],
+                    "publication_status": record["rights"]["publication_status"],
+                }, indent=2))
+            elif args.inaturalist_command == "study":
+                manifest, record = study_inaturalist_sound(
+                    args.source,
+                    args.song,
+                    args.role,
+                    key=args.key,
+                    scale=args.scale,
+                    note=args.note,
+                    tempo_bpm=args.tempo_bpm,
+                )
+                print(json.dumps({
+                    "study": str(manifest),
+                    "study_id": record["study_id"],
+                    "observation_id": record["source"]["iNaturalist"].get("observation_id"),
+                    "sound_id": record["source"]["iNaturalist"].get("sound_id"),
+                    "creative_domains": sorted(record["creative_map"]),
+                }, indent=2))
+            elif args.inaturalist_command == "models":
+                print(json.dumps(bioacoustic_model_catalog(), indent=2))
         elif args.command == "request":
             if args.request_command == "add":
                 print(create_production_request(args.spec, args.song))

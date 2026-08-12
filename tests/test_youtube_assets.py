@@ -20,6 +20,7 @@ from eprs.youtube_assets import (
     review_youtube_asset_bundle,
     verify_youtube_asset_bundle,
 )
+from tests.test_delivery import _ffmpeg_has_filter
 
 
 def _tone(path: Path, seconds: float = 31.2) -> None:
@@ -90,7 +91,10 @@ def _thumbnail(path: Path) -> None:
     ], check=True)
 
 
-@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg required")
+@unittest.skipUnless(
+    shutil.which("ffmpeg") and shutil.which("ffprobe") and _ffmpeg_has_filter("drawtext"),
+    "FFmpeg with drawtext required for title-card fixtures",
+)
 class YouTubeAssetTests(unittest.TestCase):
     def test_reviewed_assets_flow_through_final_and_offline_handoff(self):
         with tempfile.TemporaryDirectory() as folder:

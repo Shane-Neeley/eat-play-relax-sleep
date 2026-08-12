@@ -84,6 +84,16 @@ This repository is a creative production system, not a scratch directory. Work f
    completed work run into an experiment only when you can state one musical
    hypothesis. Preserve the request and evidence; do not turn research
    references into instructions to copy another artist.
+   When an organism sound is musically useful, use the iNaturalist sound path
+   as first-class found-sound evidence: `eprs inaturalist sound` freezes the
+   exact bytes outside `recordings/raw/`, keeps observation/sound IDs,
+   attribution, and the sound license, and leaves the source reference-only
+   until its terms are cleared. Follow it with `eprs inaturalist study` to make
+   separate beat, noise, lyric, vocal, and tone hypotheses. Model-assisted
+   classification or generation stays separate evidence and is never treated
+   as animal-language translation; `eprs inaturalist models` lists current
+   optional tools and their boundaries.
+   unless its terms are explicitly suitable for the intended release.
    Normalize lyric work with `eprs lyrics add`, preserve meaningful alternatives,
    and record variant decisions only after reading or singing them in context.
 4. State the musical idea in player language before implementation coordinates.
@@ -171,7 +181,12 @@ This repository is a creative production system, not a scratch directory. Work f
     FINAL. Its authorization flags remain false. Only after explicit current-user
     authorization may a separate platform tool perform the external action;
     record its returned ID, URL, visibility, actor, and timestamps with an
-    append-only `publication receipt`. Never edit FINAL to claim external state.
+    append-only `publication receipt`. In a skill-aware host, prefer the
+    `youtube-channel` skill for the authorized external operation, but treat the
+    skill as operating guidance rather than authority or EPRS provenance. Keep
+    real channel/account identifiers in ignored operator state, never in public
+    examples or shared adapter profiles. Never edit FINAL to claim external
+    state.
 17. For Spotify or Apple Music, use `eprs.distribution/v1` to package the
     approved master, square artwork, metadata, credits, and public-rights
     evidence. This prepares distributor inputs; it never submits or distributes.
@@ -511,4 +526,4 @@ scripts/eprs visual-render visuals/presets/garage-signal-bloom.json --audio /tmp
 make test
 ```
 
-The vendored skills in `.agents/skills/` are available to agents working in this repository. Prefer the relevant skill's workflow over improvising an unsafe media or system operation.
+The vendored skills in `.agents/skills/` are available to agents working in this repository. Prefer the relevant skill's workflow over improvising an unsafe media or system operation. Environment-provided skills such as `youtube-channel` may operate a separately authorized external handoff, but they do not expand EPRS authority and must not copy private account identity into this public repository.

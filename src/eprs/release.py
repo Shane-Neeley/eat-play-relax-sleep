@@ -13,7 +13,7 @@ from .clearance import (
     verify_recording_clearance,
 )
 from .delivery import verify_youtube_provenance
-from .lineage import trace_audio_lineage
+from .lineage import trace_audio_lineage, validate_external_audio_visibility
 from .master import verify_master_provenance
 from .system import load_song_manifest, sha256, slugify, utc_now
 from .youtube_assets import verify_youtube_asset_bundle
@@ -147,6 +147,7 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     _verify_youtube_text(youtube_title, description, tags)
 
     lineage = trace_audio_lineage(song_path, master)
+    validate_external_audio_visibility(lineage, visibility, "release")
     raw_paths = {record["path"] for record in lineage["raw_recordings"]}
     session_matches = recording_session_matches(song_path, raw_paths)
     clearance_records = _clearances(score.get("clearances"), song_path)

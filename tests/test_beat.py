@@ -1,10 +1,11 @@
 from pathlib import Path
+from array import array
 import math
 import tempfile
 import unittest
 import wave
 
-from eprs.audio import SAMPLE_RATE, render
+from eprs.audio import SAMPLE_RATE, _load_sample, render
 from eprs.beat import dumps, load, mutate, parse, track_active
 from eprs.visualize import svg
 
@@ -76,6 +77,48 @@ class BeatTests(unittest.TestCase):
             with wave.open(str(target), "rb") as wav:
                 self.assertEqual(wav.getframerate(), SAMPLE_RATE)
                 self.assertGreater(wav.getnframes(), 0)
+
+    def test_sample_rms_leveling_matches_sources_and_honors_peak_ceiling(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            samples = []
+            for name, amplitude in (("quiet.wav", 0.18), ("loud.wav", 0.72)):
+                path = root / name
+                values = [
+                    amplitude * math.sin(2 * math.pi * 220 * frame / SAMPLE_RATE)
+                    for frame in range(SAMPLE_RATE // 10)
+                ]
+                with wave.open(str(path), "wb") as wav:
+                    wav.setnchannels(1)
+                    wav.setsampwidth(2)
+                    wav.setframerate(SAMPLE_RATE)
+                    wav.writeframes(bytes().join(
+                        int(value * 32767).to_bytes(2, "little", signed=True)
+                        for value in values
+                    ))
+                samples.append(_load_sample(path, {
+                    "sample_level": "rms",
+                    "sample_target_rms": "0.16",
+                    "sample_peak_ceiling": "0.88",
+                })[0])
+            rms_values = [
+                math.sqrt(sum(value * value for value in values) / len(values))
+                for values in samples
+            ]
+            self.assertAlmostEqual(rms_values[0], rms_values[1], places=3)
+            self.assertLessEqual(max(abs(value) for value in samples[0]), 0.88)
+            self.assertLessEqual(max(abs(value) for value in samples[1]), 0.88)
+
+    def test_quiet_render_is_raised_to_safe_peak(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "quiet.wav"
+            quiet = parse(BEAT.replace("gain=0.7", "gain=0.08"))
+            render(quiet, target)
+            with wave.open(str(target), "rb") as wav:
+                payload = wav.readframes(wav.getnframes())
+            values = array("h")
+            values.frombytes(payload)
+            self.assertGreater(max(abs(value) for value in values) / 32767, 0.85)
 
     def test_visualization_contains_tracks(self):
         with tempfile.TemporaryDirectory() as folder:

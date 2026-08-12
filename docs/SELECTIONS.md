@@ -27,6 +27,11 @@ The raw take is never edited or moved. The output keeps the source sample rate,
 channel layout, and PCM bit depth when the input is PCM WAV. Compressed input is
 decoded once into lossless PCM working audio.
 
+An iNaturalist sound can be selected after its separate rights review. The
+downloaded reference remains outside `recordings/raw/` and its sidecar follows
+the selected audio through lineage; do not treat research-grade identification
+or a public sound URL as permission to release the sample.
+
 ## Repeat a performed phrase
 
 ```bash

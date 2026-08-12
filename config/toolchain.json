@@ -9,7 +9,7 @@
       "commands": [
         {"name": "python3", "version_args": ["--version"]}
       ],
-      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "recording_clearance", "research_records", "lyric_development", "agent_dispatch", "render_evidence_binding", "renderer_neutral_picture_capture", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"],
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "recording_clearance", "research_records", "lyric_development", "agent_dispatch", "render_evidence_binding", "renderer_neutral_picture_capture", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff", "inaturalist_sound_reference", "bioacoustic_sound_study", "creative_sound_mapping"],
       "install_hints": {
         "Darwin": "Install Python 3.11 or newer from python.org or with pyenv.",
         "Linux": "Install Python 3.11 or newer with your distribution package manager."
@@ -175,9 +175,17 @@
       "required": false,
       "platforms": ["Darwin"],
       "paths": ["/Applications/Sonic Pi.app"],
-      "capabilities": ["live_coding", "local_osc"],
+      "capabilities": [
+        "live_coding",
+        "sample_playback",
+        "audio_recording",
+        "midi_io",
+        "ableton_link",
+        "session_recording",
+        "local_osc"
+      ],
       "install_hints": {
-        "Darwin": "Install Sonic Pi if live coding, MIDI, or local OSC performance is wanted."
+        "Darwin": "Install Sonic Pi if coded synthesis, samples, MIDI, Ableton Link, local OSC, or session recording is wanted."
       }
     }
   ],
@@ -211,6 +219,12 @@
       "label": "Optional local voice generation",
       "description": "Generate bounded original speech or character voice cues locally, optionally apply declared formant-aware pitch treatment, then preserve raw audio, exact model, prompt, seed, controls, output, and rights evidence.",
       "capabilities": ["local_voice_generation"]
+    },
+    {
+      "id": "inaturalist-to-creative",
+      "label": "iNaturalist sound to creative study",
+      "description": "Freeze a licensed iNaturalist sound reference, measure its acoustic contour, and expose separate beat, noise, lyric, vocal, and tone prompts with provenance and interpretation limits.",
+      "capabilities": ["inaturalist_sound_reference", "bioacoustic_sound_study", "creative_sound_mapping", "media_analysis"]
     },
     {
       "id": "source-to-master",

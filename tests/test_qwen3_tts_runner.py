@@ -7,6 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "scripts" / "qwen3_tts_voice.py"
+BARK_RUNNER = ROOT / "scripts" / "bark_singer_voice.py"
 
 
 class Qwen3TTSRunnerTests(unittest.TestCase):
@@ -34,6 +35,25 @@ class Qwen3TTSRunnerTests(unittest.TestCase):
         self.assertEqual(profile["provider"], provider["id"])
         self.assertTrue(set(profile["capabilities"]).issubset(provider["capabilities"]))
         self.assertIn("local-voice-collaboration", {item["id"] for item in registry["workflows"]})
+
+
+class BarkSingerVoiceRunnerTests(unittest.TestCase):
+    def test_runner_has_safe_help_and_version_without_model_import(self):
+        help_run = subprocess.run(
+            [sys.executable, str(BARK_RUNNER), "--help"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        version_run = subprocess.run(
+            [sys.executable, str(BARK_RUNNER), "--version"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertIn("Bark", help_run.stdout)
+        self.assertIn("autotune-preset", help_run.stdout)
+        self.assertIn("bark-singer-voice 0.1", version_run.stdout)
 
 
 if __name__ == "__main__":

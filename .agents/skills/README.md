@@ -14,3 +14,11 @@ extend these workflows without changing the core application.
   prompts, recordings, beats, arrangement, visuals, review, and local release
   handoffs. The folder is self-contained so Codex, Claude Code, OpenCode, and
   other skill-aware agents can be pointed at it from a public checkout.
+
+## Complementary host skills
+
+- `youtube-channel` — when supplied by the agent host, operate an explicitly
+  authorized YouTube publication handoff and return verified receipt fields.
+  EPRS intentionally does not vendor account state, credentials, browser
+  profiles, or destination-channel identity. Follow `docs/PUBLICATION.md` and
+  keep those details in ignored operator configuration.

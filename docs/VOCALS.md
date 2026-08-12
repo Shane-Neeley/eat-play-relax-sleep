@@ -141,6 +141,24 @@ batch manifest points to each per-cue autotune sidecar. Advanced controls remain
 available through standalone `eprs autotune`, so an agent can make several
 treatments from one immutable synthetic performance without rerunning TTS.
 
+## Try Bark for less robotic hook vocals
+
+For fast experiments where the request is "make it feel more like a singer,"
+EPRS can use Hugging Face `suno/bark-small` as a lightweight performance-voice
+source before autotune:
+
+```bash
+PATH=.eprs-local/qwen3-tts/bin:$PATH PYTHONPATH=src scripts/bark_singer_voice.py \
+  --model suno/bark-small --voice-preset v2/en_speaker_6 --device cpu \
+  --text "Wake up, eat up, play, relax, sleep. Gorilla schedule with a banger beat." \
+  --out-dir songs/gorilla-schedule/audio/bark-singer-v1 --prefix gorilla-singer \
+  --autotune-preset tight --autotune-key C --autotune-scale minor-pentatonic
+```
+
+Bark is not a score-conditioned singing synthesizer, so use it for short hooks
+and chants rather than long lyric sheets. Preserve its raw cue, tuned cue, and
+manifest exactly like the Qwen path. Do not prompt it to imitate a real singer.
+
 ## Listening rules
 
 Speech-first TTS is not a singing synthesizer. A short cue with sustained vowels
