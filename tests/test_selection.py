@@ -69,7 +69,8 @@ class SelectionTests(unittest.TestCase):
             self.assertFalse(metadata["processing"]["time_stretch"])
             self.assertIn("asetpts=PTS-STARTPTS[out]", metadata["processing"]["filter"])
             self.assertIn("atrim=start_sample=480:end_sample=2400", metadata["processing"]["filter"])
-            self.assertIn("acrossfade=nb_samples=240", metadata["processing"]["filter"])
+            self.assertIn("afade=t=in", metadata["processing"]["filter"])
+            self.assertIn("amix=inputs=3", metadata["processing"]["filter"])
             self.assertEqual(metadata["output"]["sha256"], sha256(selected))
             raw = [
                 path for path in (song / "recordings" / "raw").rglob("*")
