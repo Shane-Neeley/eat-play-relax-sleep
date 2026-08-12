@@ -62,8 +62,19 @@ def _lossless_wav_codec(stream: dict) -> str:
     return "pcm_s24le"
 
 
-def _selection_filter(start: float, duration: float, repeat: int, crossfade: float) -> str:
-    trim = f"[0:a:0]atrim=start={start:.12g}:duration={duration:.12g},asetpts=PTS-STARTPTS"
+def _selection_filter(
+    start: float,
+    duration: float,
+    repeat: int,
+    crossfade: float,
+    sample_rate: int,
+) -> str:
+    start_sample = round(start * sample_rate)
+    duration_samples = round(duration * sample_rate)
+    trim = (
+        f"[0:a:0]atrim=start_sample={start_sample}:"
+        f"end_sample={start_sample + duration_samples},asetpts=PTS-STARTPTS"
+    )
     if repeat == 1:
         return f"{trim}[out]"
     branches = "".join(f"[part{index}]" for index in range(repeat))
@@ -74,10 +85,12 @@ def _selection_filter(start: float, duration: float, repeat: int, crossfade: flo
         pieces.append("[joined]asetpts=PTS-STARTPTS[out]")
         return ";".join(pieces)
     previous = "part0"
+    crossfade_samples = max(1, round(crossfade * sample_rate))
     for index in range(1, repeat):
         output = f"joined{index}"
         pieces.append(
-            f"[{previous}][part{index}]acrossfade=d={crossfade:.12g}:c1=tri:c2=tri[{output}]"
+            f"[{previous}][part{index}]acrossfade=nb_samples={crossfade_samples}:"
+            f"c1=tri:c2=tri[{output}]"
         )
         previous = output
     # Some FFmpeg builds preserve a negative PTS from acrossfade. Reset the
@@ -180,7 +193,7 @@ def select_audio(
 
     codec = _lossless_wav_codec(stream)
     sample_rate = int(stream.get("sample_rate") or 48_000)
-    filter_graph = _selection_filter(start, duration, repeat, crossfade)
+    filter_graph = _selection_filter(start, duration, repeat, crossfade, sample_rate)
     command = [
         ffmpeg,
         "-nostdin",
