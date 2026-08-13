@@ -261,7 +261,7 @@ def _source_creative_fingerprint(
                     },
                     **(
                         {"source_start_seconds": placement.get("source_start_seconds")}
-                        if placement.get("source_start_seconds") not in {None, 0, 0.0}
+                        if placement.get("source_start_seconds") not in {None, 0}
                         else {}
                     ),
                 }

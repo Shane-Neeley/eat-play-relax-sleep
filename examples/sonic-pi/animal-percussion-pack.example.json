@@ -1,0 +1,68 @@
+{
+  "schema": "eprs.sonic-pi-animal-percussion-pack/v1",
+  "reviewed_at": "2026-08-12",
+  "intent": "Five contrasting animal recordings prepared as a Sonic Pi percussion ensemble; musical roles are authored interpretations, not claims about animal intent.",
+  "sources": [
+    {
+      "role": "bullfrog-low",
+      "filename": "bullfrog-low.wav",
+      "taxon": "Lithobates catesbeianus",
+      "common_name": "American Bullfrog",
+      "observation_id": 285488865,
+      "sound_id": 1495281,
+      "license_code": "cc0",
+      "attribution": "no rights reserved",
+      "observation_url": "https://www.inaturalist.org/observations/285488865",
+      "measured_use": "Sparse attacks; 0.54 second median spacing suggested a roughly 111 BPM low-punctuation experiment."
+    },
+    {
+      "role": "woodpecker-roll",
+      "filename": "woodpecker-roll.wav",
+      "taxon": "Dryocopus pileatus",
+      "common_name": "Pileated Woodpecker",
+      "observation_id": 154194637,
+      "sound_id": 637789,
+      "license_code": "cc-by",
+      "attribution": "(c) Arctic Vuk, some rights reserved (CC BY)",
+      "observation_url": "https://www.inaturalist.org/observations/154194637",
+      "measured_use": "Dense attacks near 5.68-6.83 seconds suggested wooden fills and rolls; retain full source for onset selection."
+    },
+    {
+      "role": "cricket-frog-rim",
+      "filename": "cricket-frog-rim.wav",
+      "taxon": "Acris blanchardi",
+      "common_name": "Blanchard's Cricket Frog",
+      "observation_id": 217814974,
+      "sound_id": 1055439,
+      "license_code": "cc-by",
+      "attribution": "(c) Chris Hartley, some rights reserved (CC BY)",
+      "observation_url": "https://www.inaturalist.org/observations/217814974",
+      "measured_use": "High transient density supports short wet-rim answers; vary onset index instead of repeating one click."
+    },
+    {
+      "role": "katydid-ratchet",
+      "filename": "katydid-ratchet.wav",
+      "taxon": "Pterophylla camellifolia",
+      "common_name": "Common True Katydid",
+      "observation_id": 239091991,
+      "sound_id": 1190475,
+      "license_code": "cc-by",
+      "attribution": "(c) Chris Angell, some rights reserved (CC BY)",
+      "observation_url": "https://www.inaturalist.org/observations/239091991",
+      "measured_use": "No discrete attacks were detected, so the carrier is rhythmically gated rather than falsely treated as isolated hits."
+    },
+    {
+      "role": "cicada-carrier",
+      "filename": "cicada-carrier.wav",
+      "taxon": "Neotibicen canicularis",
+      "common_name": "Northern Dog-day Cicada",
+      "observation_id": 14421458,
+      "sound_id": 24255,
+      "license_code": "cc0",
+      "attribution": "no rights reserved",
+      "observation_url": "https://www.inaturalist.org/observations/14421458",
+      "measured_use": "Bright/noisy carrier around 4.8-7.8 seconds supports gated lift texture; tempo candidates were roughly 69/138 BPM."
+    }
+  ],
+  "rights_boundary": "Keep each downloaded source and its EPRS provenance sidecar immutable. CC BY sources require attribution; the observation license does not replace the sound license."
+}

@@ -312,11 +312,21 @@ def doctor(
                 if not isinstance(command_record, dict) or not isinstance(command_record.get("name"), str):
                     raise ValueError(f"toolchain command for {tool_id} requires a name")
                 name = command_record["name"]
-                found = shutil.which(name)
+                if tool_id == "python" and name == "python3" and sys.version_info >= (3, 11):
+                    # The shell launcher may select a versioned interpreter
+                    # even when the first python3 on PATH is too old. Report
+                    # the interpreter actually running EPRS for this one
+                    # declared command without bypassing any other requirement.
+                    found = sys.executable
+                else:
+                    found = shutil.which(name)
                 commands[name] = found
                 if found:
                     located.append(found)
-                    version = _command_version(found, command_record.get("version_args", []))
+                    if tool_id == "python" and name == "python3" and found == sys.executable:
+                        version = f"Python {platform.python_version()}"
+                    else:
+                        version = _command_version(found, command_record.get("version_args", []))
                     if version:
                         versions[name] = version
             available = len(located) == len(command_records)

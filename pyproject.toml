@@ -19,3 +19,50 @@ where = ["src"]
 [tool.setuptools.data-files]
 "share/eprs" = ["config/toolchain.json"]
 "share/eprs/adapters" = ["config/adapters/*.json"]
+
+[tool.ruff]
+required-version = ">=0.16.2"
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B"]
+# Most EPRS zip calls intentionally compare a sequence with its one-item
+# offset. Requiring a strictness marker on every call adds noise here.
+ignore = ["B905"]
+
+[tool.ty.src]
+# Start with production modules whose boundaries are explicit enough to make
+# type checking useful. Expand this list as dynamic JSON records gain declared
+# shapes instead of silencing diagnostics globally.
+include = [
+    "scripts/check_public_repo.py",
+    "scripts/note_aware_melody.py",
+    "src/eprs/__init__.py",
+    "src/eprs/audio.py",
+    "src/eprs/beat.py",
+    "src/eprs/cli.py",
+    "src/eprs/delivery.py",
+    "src/eprs/inaturalist_audio.py",
+    "src/eprs/inaturalist_photo.py",
+    "src/eprs/inaturalist_study.py",
+    "src/eprs/interchange.py",
+    "src/eprs/lineage.py",
+    "src/eprs/master.py",
+    "src/eprs/production_map.py",
+    "src/eprs/runtime.py",
+    "src/eprs/selection.py",
+    "src/eprs/session.py",
+    "src/eprs/sonic_pi_catalog.py",
+    "src/eprs/visualize.py",
+    "src/eprs/visuals.py",
+]
+
+[tool.ty.terminal]
+error-on-warning = true
+output-format = "concise"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.2",
+    "ty>=0.0.71",
+]

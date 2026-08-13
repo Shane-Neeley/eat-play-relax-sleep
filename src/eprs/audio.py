@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from array import array
-from dataclasses import dataclass
 import math
 from pathlib import Path
 import random
 import wave
 
-from .beat import Beat, Track, expanded_steps, track_active
+from .beat import Beat, expanded_steps, track_active
 
 
 SAMPLE_RATE = 48_000

@@ -28,6 +28,33 @@ Three built-in worlds are intentionally orthogonal:
 - `ribbons`: flow, tape, wave, smear, midrange motion.
 - `constellation`: sparse nodes, relationships, silence, high-frequency detail.
 
+## Optional natural-history photographs
+
+A relevant iNaturalist photograph is a good source choice when a real species,
+texture, or habitat is more truthful to the song than stock footage or generic
+model imagery. It is never inserted automatically. First freeze an exact photo
+with `eprs inaturalist photo`, then add up to four references to the visual
+score, using paths relative to that score:
+
+```json
+"photographs": [
+  {
+    "path": "../references/inaturalist-photos/marsh-texture/observation-390608319-photo-715632441-large.jpg",
+    "opacity": 0.3,
+    "treatment": "soft-light"
+  }
+]
+```
+
+The renderer verifies each adjacent `eprs.inaturalist-photo/v1` sidecar and
+checksum, refuses licenses outside CC0/CC BY for this public-ready path, stages
+only the verified local bytes, and records every source in the render sidecar.
+Photos crossfade slowly over the existing signal world with a restrained
+credit overlay; they do not become location claims or “go here” pins. Use
+`normal`, `soft-light`, or `screen` treatment and 0.05–0.85 opacity. A photo is
+source material, not creative approval: still capture and review the complete
+picture through the ordinary picture workflow.
+
 ## Preview and render
 
 ```bash
@@ -79,6 +106,8 @@ final delivery takes audio only from the approved master.
 - `reactivity` weights bass, mids, and highs independently.
 - `texture` controls grain, scanlines, and bloom.
 - `typography` controls whether and where the title transmits.
+- `photographs` optionally layers up to four frozen, attributed iNaturalist
+  references over the authored signal world.
 - `avoid` carries negative intent and should be checked during visual review.
 
 Audio-reactivity is not musical intelligence. FFT bands are useful control signals, but the brief decides why bass opens a door, why a guitar bends tape, or why silence removes particles.

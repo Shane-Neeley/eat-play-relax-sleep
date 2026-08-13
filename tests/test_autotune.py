@@ -56,6 +56,16 @@ class AutotuneControlTests(unittest.TestCase):
             [round(value, 6) for value in source],
         )
 
+    def test_unvoiced_frames_preserve_pitch_track_alignment(self):
+        source = [60.0, None, 60.5, None]
+        targets = [60.0, None, 60.0, None]
+        corrected = corrected_midi_track(
+            source, targets, correction_strength=1, retune_ms=0, frame_period_ms=5,
+        )
+        self.assertEqual(len(corrected), len(source))
+        self.assertIsNone(corrected[1])
+        self.assertIsNone(corrected[3])
+
     def test_presets_are_bounded_and_cli_is_agent_addressable(self):
         settings = settings_for(
             "gloopy", key="A", scale="major-pentatonic",

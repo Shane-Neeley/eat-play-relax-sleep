@@ -26,6 +26,7 @@ Choose a few: drift, breathe, snap, smear, orbit, fold, recoil, bloom, fracture,
 ## Material and palette
 
 - Materials: glass, dust, tape, metal, ink, fog, phosphor, cloth, water, scanned paper, garage textures…
+- Natural-history source option: a relevant, reusable iNaturalist photo when real species or habitat specificity serves the song better than stock or generic imagery.
 - Four-color palette:
 - Black/white behavior:
 - Texture and imperfection:

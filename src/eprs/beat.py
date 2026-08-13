@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import math
 from pathlib import Path
 import random
@@ -151,12 +151,30 @@ def validate(beat: Beat) -> None:
             start_bar = int(track.options.get("start_bar", "1"))
             end_bar = int(track.options.get("end_bar", str(beat.bars)))
             every_bars = int(track.options.get("every_bars", "1"))
-            float(track.options.get("offset_ms", "0"))
-            float(track.options.get("gain", "0.65"))
-            float(track.options.get("pan", "0"))
-            float(track.options.get("humanize_ms", "0"))
+            offset_ms = float(track.options.get("offset_ms", "0"))
+            gain = float(track.options.get("gain", "0.65"))
+            pan = float(track.options.get("pan", "0"))
+            humanize_ms = float(track.options.get("humanize_ms", "0"))
+            length = float(track.options.get("length", "1.8"))
         except ValueError as exc:
             raise ValueError(f"track {track.name!r} has an invalid arrangement option") from exc
+        for option, value in {
+            "offset_ms": offset_ms,
+            "gain": gain,
+            "pan": pan,
+            "humanize_ms": humanize_ms,
+            "length": length,
+        }.items():
+            if not math.isfinite(value):
+                raise ValueError(f"track {track.name!r} {option} must be finite")
+        if not 0 <= gain <= 4:
+            raise ValueError(f"track {track.name!r} gain must be between 0 and 4")
+        if not -1 <= pan <= 1:
+            raise ValueError(f"track {track.name!r} pan must be between -1 and 1")
+        if humanize_ms < 0:
+            raise ValueError(f"track {track.name!r} humanize_ms must not be negative")
+        if length <= 0:
+            raise ValueError(f"track {track.name!r} length must be positive")
         if not 1 <= start_bar <= end_bar <= beat.bars:
             raise ValueError(
                 f"track {track.name!r} bar range must satisfy 1 <= start_bar <= end_bar <= bars"
@@ -221,7 +239,7 @@ def mutate(beat: Beat, seed: int, amount: float = 0.08) -> Beat:
     if not 0 <= amount <= 0.5:
         raise ValueError("mutation amount must be between 0 and 0.5")
     rng = random.Random(seed)
-    copy = Beat(**{**beat.__dict__, "seed": seed, "tracks": []})
+    copy = replace(beat, seed=seed, tracks=[])
     for track in beat.tracks:
         steps = list(track.steps)
         if track.kind != "notes":

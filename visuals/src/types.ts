@@ -1,12 +1,38 @@
 export type VisualWorld = "portal" | "ribbons" | "constellation";
 
+const VISUAL_MOTIFS = [
+  "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae",
+  "paper-score", "rare-signal-atlas",
+] as const;
+
+export type VisualMotif = typeof VISUAL_MOTIFS[number];
+
+export type AtlasCard = {
+  label: string;
+  region: string;
+  note: string;
+  accent?: string;
+};
+
+export type NaturalHistoryPhotograph = {
+  file: string;
+  opacity: number;
+  treatment: "soft-light" | "screen" | "normal";
+  attribution: string;
+  licenseCode: string;
+  sourceUrl: string;
+  label: string;
+};
+
 export type VisualSpec = {
   schema: "eprs.visual/v1";
   title: string;
   subtitle: string;
   prompt: string;
   world: VisualWorld;
-  motif?: "octopus-ink" | "pillow-fight";
+  motif?: VisualMotif;
+  cards?: AtlasCard[];
+  photographs?: NaturalHistoryPhotograph[];
   seed: number;
   palette: [string, string, string, string];
   background: string;
@@ -55,7 +81,28 @@ export const normalizeSpec = (candidate: Partial<VisualSpec>): VisualSpec => {
     prompt: candidate.prompt || "A patient signal growing in a dark room",
     world: ["portal", "ribbons", "constellation"].includes(candidate.world || "")
       ? candidate.world as VisualWorld : "portal",
-    motif: candidate.motif === "octopus-ink" || candidate.motif === "pillow-fight" ? candidate.motif : undefined,
+    motif: VISUAL_MOTIFS.includes(candidate.motif as VisualMotif)
+      ? candidate.motif as VisualMotif
+      : undefined,
+    cards: Array.isArray(candidate.cards)
+      ? candidate.cards.filter((card): card is AtlasCard => Boolean(card && typeof card.label === "string" && typeof card.region === "string" && typeof card.note === "string")).slice(0, 8)
+      : undefined,
+    photographs: Array.isArray(candidate.photographs)
+      ? candidate.photographs.filter((photo): photo is NaturalHistoryPhotograph => Boolean(
+        photo
+        && typeof photo.file === "string"
+        && typeof photo.attribution === "string"
+        && typeof photo.licenseCode === "string"
+        && typeof photo.sourceUrl === "string"
+        && typeof photo.label === "string"
+      )).slice(0, 4).map((photo) => ({
+        ...photo,
+        opacity: numberIn(photo.opacity, 0.34, 0.05, 0.85),
+        treatment: ["soft-light", "screen", "normal"].includes(photo.treatment)
+          ? photo.treatment
+          : "soft-light",
+      }))
+      : undefined,
     seed: Number.isInteger(candidate.seed) ? candidate.seed as number : 1,
     palette,
     background: candidate.background || "#090b10",

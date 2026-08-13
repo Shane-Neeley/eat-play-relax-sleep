@@ -306,7 +306,9 @@ def verify_master_provenance(
     if not source_path.is_file() or source.get("sha256") != sha256(source_path):
         raise ValueError("master source is missing or changed")
     provenance = source.get("provenance") if isinstance(source, dict) else None
-    provenance_value = provenance.get("path") if isinstance(provenance, dict) else None
+    if not isinstance(provenance, dict):
+        raise ValueError("master source provenance has an unsafe path")
+    provenance_value = provenance.get("path")
     provenance_path = (song_path / provenance_value).resolve() if isinstance(provenance_value, str) else None
     try:
         if provenance_path is None:

@@ -6,6 +6,25 @@ reviewed renderer-neutral picture whose guide audio is discarded and replaced
 with the master. It never accepts a working mix, overwrites an existing render,
 copies to `FINAL/`, uploads, or publishes.
 
+## Optional public YouTube analysis with agy
+
+For a public YouTube reference video, use the host's Antigravity CLI (`agy`)
+when semantic video understanding is useful: timestamped scene/shot structure,
+pacing, visual motifs, performance, format, or channel context. Gemini can read
+the public URL directly, which complements local frame inspection and technical
+media analysis:
+
+```bash
+agy -p 'Analyze https://youtu.be/VIDEO_ID for concise timestamped observations about shot structure, pacing, visual motifs, and performance. Describe patterns without copying distinctive imagery.'
+```
+
+Use the host Gemini bridge's `youtube` mode when it is the available wrapper.
+Use local tools and EPRS review for local files, exact frame/audio properties,
+sync, and approval. Keep agy limited to public videos; do not use it for
+private, unlisted, or login-walled content. Record the URL, date,
+command/model, question, concise findings, and timestamps in the song's
+research notes, and do not treat model observations as creative approval.
+
 ## Render from a versioned recipe
 
 ```bash

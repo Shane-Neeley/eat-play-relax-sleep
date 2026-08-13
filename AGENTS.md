@@ -97,6 +97,12 @@ This repository is a creative production system, not a scratch directory. Work f
    Normalize lyric work with `eprs lyrics add`, preserve meaningful alternatives,
    and record variant decisions only after reading or singing them in context.
 4. State the musical idea in player language before implementation coordinates.
+   Prefer Sonic Pi for new programmed beats, generative composition, synthesis,
+   sample experiments, and live-coded musical ideas whenever it can express the
+   intent. Use BeatScript when its smaller format is materially useful for a
+   compact drummer-readable score, deterministic headless audition, mutation,
+   visualization, or interchange. Keep Sonic Pi programs finite and seeded for
+   repeatable renders unless live interaction is the explicit experiment.
 5. For a performed beat idea, run `scripts/eprs rhythm` and discuss its timing
    evidence before translating anything to a grid. Create the smallest audible
    or inspectable experiment that answers one hypothesis.
@@ -194,6 +200,34 @@ This repository is a creative production system, not a scratch directory. Work f
     version, run `eprs expose` so `_LISTEN.*`, `_WATCH.*`, `_CHANGE_ME.md`, and
     `_CURRENT.json` at song root point to that exact canonical media. Never
     replace a non-link user file or treat a root pointer as release approval.
+
+## Optional Gemini/Antigravity YouTube research
+
+When lyric or video analysis needs semantic understanding of a public YouTube
+video, timestamped observations, channel/format context, or a second creative
+opinion, a host agent may use Google-grounded Gemini through the Antigravity CLI
+(`agy`). Gemini has native public-YouTube understanding that can complement a
+transcript-only pass.
+
+Use this selectively and keep the evidence boundary clear:
+
+- Put the public YouTube URL directly in the prompt, for example:
+  `agy -p 'Analyze https://youtu.be/VIDEO_ID for concise timestamped observations about its lyric delivery, structure, and visual pacing. Paraphrase; do not reproduce lyrics or imitate the work.'`
+- If the host provides the Gemini bridge wrapper, prefer its YouTube mode (for
+  example `run-gemini.sh youtube "URL question"`); it handles the current
+  Gemini model and authentication route.
+- For lyric work, use agy for high-level themes, delivery, section/hook timing,
+  performance, and public context. For video work, use it for scene/shot
+  structure, pacing, visual motifs, and timestamped creative observations.
+- Use local transcript tools for exact captions and EPRS tools plus listening
+  for local-media measurements. Never request or paste full lyrics, full
+  transcripts, melodies, or distinctive visual descriptions for copying.
+- Record the URL, date, exact command or wrapper mode, model when available,
+  question, concise findings, and timestamps in the song's research/notes; add
+  the source with `eprs research add` when it materially shapes the work.
+- `agy` is for public videos only, not private, unlisted, or login-walled
+  content. If it is unavailable or unauthenticated, use the local research
+  path and record the limitation; do not retry it in a loop.
 
 ## Music and remix theory for agents
 

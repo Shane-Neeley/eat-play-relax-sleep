@@ -12,6 +12,7 @@ import re
 import shutil
 
 from .delivery import verify_youtube_provenance
+from .inaturalist_photo import INATURALIST_PHOTO_SCHEMA, verify_inaturalist_photo
 from .system import load_song_manifest, probe, sha256, slugify, utc_now
 
 
@@ -150,6 +151,27 @@ def _thumbnail(song: Path, value: object) -> tuple[dict, Path, dict]:
         "platform_checks": checks,
         "mobile_size_compatible": size <= 2_000_000,
     }
+    source_sidecar = path.with_suffix(path.suffix + ".json")
+    if source_sidecar.is_file():
+        try:
+            candidate = json.loads(source_sidecar.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            candidate = None
+        if isinstance(candidate, dict) and candidate.get("schema") == INATURALIST_PHOTO_SCHEMA:
+            _, verified_sidecar, record = verify_inaturalist_photo(
+                path, require_publication_compatible=True
+            )
+            photo = record["photo"]
+            source = record["source"]
+            normalized["iNaturalist_source"] = {
+                "observation_id": source["observation_id"],
+                "observation_url": source["url"],
+                "photo_id": photo["id"],
+                "license_code": photo["license_code"],
+                "attribution": photo["attribution"],
+                "metadata_path": str(verified_sidecar.relative_to(song.resolve())),
+                "metadata_sha256": sha256(verified_sidecar),
+            }
     return normalized, path, media_probe
 
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use iNaturalist with EPRS"
+  short_description: "Find and freeze licensed nature media for EPRS"
+  default_prompt: "Use $inaturalist-api to find and freeze attributed iNaturalist photos or sounds for an EPRS project."

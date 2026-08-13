@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import time
 
+from .inaturalist_photo import verify_inaturalist_photo
 from .system import sha256, slugify, utc_now
 
 
@@ -54,7 +55,7 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
         phrase in lowered
         for phrase in ("no text", "without text", "no title", "instrumental visual only")
     )
-    return {
+    score = {
         "schema": "eprs.visual/v1", "title": title,
         "subtitle": "EAT · PLAY · RELAX · SLEEP", "prompt": prompt,
         "world": world, "seed": seed, "palette": PALETTES[palette_name],
@@ -65,6 +66,11 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
         "typography": {"show": show_typography, "position": "center"},
         "avoid": ["faces", "stock footage", "generic AI imagery", "literal equalizer bars", "constant motion"],
     }
+    if "pull me in" in lowered or "pull-in" in lowered or "invitation" in lowered:
+        score["motif"] = "pull-me-in"
+    elif any(word in lowered for word in ("jamaica", "jamaican", "reggae", "dancehall")):
+        score["motif"] = "jamaica-reggae"
+    return score
 
 
 def write_prompt_score(prompt: str, title: str, seed: int, output: str | Path) -> Path:
@@ -79,12 +85,103 @@ def validate_spec(candidate: dict) -> dict:
         raise ValueError("visual score must use schema eprs.visual/v1")
     if candidate.get("world") not in {"portal", "ribbons", "constellation"}:
         raise ValueError("visual world must be portal, ribbons, or constellation")
+    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas"}:
+        raise ValueError("visual motif is not supported by the renderer")
+    cards = candidate.get("cards")
+    if cards is not None:
+        valid_cards = (
+            isinstance(cards, list)
+            and len(cards) <= 8
+            and all(
+                isinstance(card, dict)
+                and all(isinstance(card.get(field), str) and card[field].strip() for field in ("label", "region", "note"))
+                and ("accent" not in card or isinstance(card["accent"], str))
+                for card in cards
+            )
+        )
+        if not valid_cards:
+            raise ValueError("visual cards must contain at most eight labeled region and note records")
+    photographs = candidate.get("photographs")
+    if photographs is not None:
+        valid_photographs = (
+            isinstance(photographs, list)
+            and len(photographs) <= 4
+            and all(
+                isinstance(photo, dict)
+                and isinstance(photo.get("path"), str)
+                and bool(photo["path"].strip())
+                and not Path(photo["path"]).is_absolute()
+                and (
+                    "opacity" not in photo
+                    or (
+                        isinstance(photo["opacity"], (int, float))
+                        and not isinstance(photo["opacity"], bool)
+                        and math.isfinite(photo["opacity"])
+                        and 0.05 <= photo["opacity"] <= 0.85
+                    )
+                )
+                and photo.get("treatment", "soft-light") in {"soft-light", "screen", "normal"}
+                for photo in photographs
+            )
+        )
+        if not valid_photographs:
+            raise ValueError(
+                "visual photographs must contain at most four relative iNaturalist photo references"
+            )
     palette = candidate.get("palette")
     if not isinstance(palette, list) or len(palette) != 4 or not all(isinstance(color, str) and color.startswith("#") for color in palette):
         raise ValueError("visual palette must contain four hex colors")
     if not isinstance(candidate.get("seed"), int):
         raise ValueError("visual seed must be an integer")
     return candidate
+
+
+def _stage_inaturalist_photographs(
+    spec: dict,
+    spec_file: Path,
+    media_dir: Path,
+) -> tuple[dict, list[dict]]:
+    """Verify and stage release-compatible iNaturalist photos for Remotion."""
+    render_spec = json.loads(json.dumps(spec))
+    staged = []
+    provenance = []
+    for item in spec.get("photographs") or []:
+        source = (spec_file.parent / item["path"]).resolve()
+        path, sidecar, record = verify_inaturalist_photo(
+            source, require_publication_compatible=True
+        )
+        digest = sha256(path)
+        cached = media_dir / f"inat-{digest[:16]}{path.suffix.lower()}"
+        if not cached.exists():
+            shutil.copy2(path, cached)
+        photo = record["photo"]
+        source_record = record["source"]
+        taxon = source_record.get("taxon") if isinstance(source_record.get("taxon"), dict) else {}
+        staged.append({
+            "file": f"media/{cached.name}",
+            "opacity": float(item.get("opacity", 0.34)),
+            "treatment": item.get("treatment", "soft-light"),
+            "attribution": photo["attribution"],
+            "licenseCode": photo["license_code"].upper(),
+            "sourceUrl": source_record["url"],
+            "label": taxon.get("common_name") or taxon.get("scientific_name") or "iNaturalist observation",
+        })
+        provenance.append({
+            "path": item["path"],
+            "sha256": digest,
+            "metadata_path": str(
+                Path(item["path"]).with_suffix(Path(item["path"]).suffix + ".json")
+            ),
+            "metadata_sha256": sha256(sidecar),
+            "observation_id": source_record["observation_id"],
+            "observation_url": source_record["url"],
+            "photo_id": photo["id"],
+            "license_code": photo["license_code"],
+            "attribution": photo["attribution"],
+            "publication_status": record["rights"]["publication_status"],
+        })
+    render_spec["photographs"] = staged
+    return render_spec, provenance
 
 
 def _duration(path: Path) -> float:
@@ -182,11 +279,18 @@ def render_visual(spec_path: str | Path, audio_path: str | Path, output: str | P
     cached_audio = media_dir / f"{audio_hash[:16]}{audio_file.suffix.lower()}"
     if not cached_audio.exists():
         shutil.copy2(audio_file, cached_audio)
-    props = {"audioFile": f"media/{cached_audio.name}", "durationInFrames": duration_frames, "spec": spec}
+    render_spec, photograph_provenance = _stage_inaturalist_photographs(
+        spec, spec_file, media_dir
+    )
+    props = {
+        "audioFile": f"media/{cached_audio.name}",
+        "durationInFrames": duration_frames,
+        "spec": render_spec,
+    }
     build_dir = REPO_ROOT / "build" / "visuals"
     build_dir.mkdir(parents=True, exist_ok=True)
     name = slugify(spec.get("title", spec_file.stem))
-    props_file = build_dir / f"{name}-{audio_hash[:8]}.props.json"
+    props_file = build_dir / f"{name}-{audio_hash[:8]}-{sha256(spec_file)[:8]}.props.json"
     props_file.write_text(json.dumps(props, indent=2) + "\n")
     remotion = VISUALS_ROOT / "node_modules" / ".bin" / "remotion"
     if not remotion.is_file():
@@ -216,6 +320,14 @@ def render_visual(spec_path: str | Path, audio_path: str | Path, output: str | P
         "output": destination.name, "output_sha256": sha256(destination),
         "visual_score": spec_file.name, "visual_score_sha256": sha256(spec_file),
         "audio": audio_file.name, "audio_sha256": audio_hash,
+        "photographs": photograph_provenance,
+        "visual_rights": {
+            "release_ready": all(
+                item["publication_status"] == "commercial-compatible-subject-to-attribution"
+                for item in photograph_provenance
+            ),
+            "attribution_embedded": bool(photograph_provenance),
+        },
         "duration_seconds": duration, "duration_frames": duration_frames, "fps": fps,
         "quality": quality, "renderer": "Remotion 4.0.504 + custom EPRS SVG engine",
         "performance": {

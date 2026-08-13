@@ -19,6 +19,8 @@ receipt boundary documented in [AGENT_RUNNERS.md](docs/AGENT_RUNNERS.md).
 ## Start in five minutes
 
 ```bash
+uv sync --locked --dev
+make quality            # Ruff lint + focused ty checks
 ./scripts/eprs doctor
 ./scripts/eprs doctor --workflow source-to-master --strict
 ./scripts/eprs doctor --workflow daw-handoff --strict
@@ -38,6 +40,15 @@ make visual-studio      # interactive Remotion preview
 ```
 
 Generated demos land in ignored `build/demos/`; source compositions remain small text files in Git.
+
+Development commands run through the checked-in uv lockfile. `make quality`
+checks the lock, runs the repository's basic Ruff rules, and type-checks the
+production modules listed in `pyproject.toml`. The ty list is intentionally
+incremental: add a module after its dynamic input records have explicit,
+useful shapes rather than suppressing errors across the whole codebase. Ruff's
+formatter is available through `uv run ruff format`, but formatting is kept out
+of the default gate so feature changes do not trigger repository-wide style
+churn.
 
 `doctor` reads the versioned [`config/toolchain.json`](config/toolchain.json)
 registry and reports resolved tools, versions, capabilities, and installation
@@ -161,6 +172,28 @@ spacing, energy, rough pitch, and a brightness proxy, then keeps independent
 creative prompts for beats, noises, lyrics, vocals, and tones. See the
 [2026 animal-sound AI brief](docs/ANIMAL_SOUND_AI_2026.md) for the research
 trail and the limits on calling model pattern discovery “translation.”
+
+### Freeze an iNaturalist photo reference
+
+When a real organism or habitat gives the visual direction more specificity
+than stock or generic generated imagery, freeze one licensed observation photo:
+
+```bash
+./scripts/eprs inaturalist photo 390608319 \
+  --song songs/signal-garden \
+  --role "marsh texture" \
+  --photo-id 715632441 \
+  --size large \
+  --note "Use as a quiet natural-history layer, not as a sighting promise."
+```
+
+The image and sidecar live under `references/inaturalist-photos/`. The sidecar
+keeps the observation and photo IDs, public evidence link, taxon, exact bytes,
+license, and attribution without copying a precise place. Photos with no
+reusable Creative Commons license are refused. Reference-only licenses can be
+studied locally, while the built-in visual and thumbnail paths accept only CC0
+or CC BY sources suitable for flexible public/commercial treatment with the
+recorded attribution. See [promptable visuals](docs/VISUALS.md).
 
 ```bash
 ./scripts/eprs new "Signal Garden"
@@ -776,6 +809,7 @@ examples/songs/       deliberately publishable project examples
 src/eprs/             dependency-free production CLI
 studio/               interactive Web Audio Beat Lab
 visuals/              Remotion + custom TypeScript visual renderer
+albums/<name>/         local album workspaces; ignored by Git
 templates/            briefs and experiment contracts
 songs/<name>/         local creative work; ignored by Git
   README.md           song entry point and current handoff map
@@ -789,9 +823,11 @@ songs/<name>/         local creative work; ignored by Git
 
 Open `songs/<name>/README.md` first. For video, `video/README.md` identifies
 the source visual, reviewed picture candidates, delivery renders, and previews.
+Open `albums/<name>/README.md` for the album track list; album track folders
+link back to the canonical song workspaces under `songs/`.
 ```
 
-Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [isolated agent runners](docs/AGENT_RUNNERS.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
+Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [engagement principles](docs/ENGAGEMENT.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [isolated agent runners](docs/AGENT_RUNNERS.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
 
 ## Tool philosophy
 

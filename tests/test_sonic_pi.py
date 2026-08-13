@@ -12,10 +12,18 @@ from eprs.system import load_toolchain
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / "examples" / "sonic-pi" / "eprs-gentle-groove-v5.rb"
 PULL_IN_EXAMPLE = ROOT / "examples" / "sonic-pi" / "eprs-pull-me-in-v1.rb"
+WILD_EXAMPLES = tuple(
+    ROOT / "examples" / "sonic-pi" / name
+    for name in (
+        "gravity-switchyard-v1.rb",
+        "moth-court-radio-v1.rb",
+        "neon-bone-machine-v1.rb",
+    )
+)
 GUIDE = ROOT / "docs" / "SONIC_PI.md"
 VISUAL_CUES = ROOT / "visuals" / "adapters" / "sonic-pi-visual-cues.rb"
-PERCUSSIVE_NOTE = GUIDE
 PERCUSSIVE_SOURCE = ROOT / "examples" / "sonic-pi" / "percussive-animal-custom-sample-test.rb"
+PERCUSSIVE_GUIDE = ROOT / "examples" / "sonic-pi" / "ANIMAL_PERCUSSION.md"
 
 
 class SonicPiContractTests(unittest.TestCase):
@@ -87,6 +95,16 @@ class SonicPiContractTests(unittest.TestCase):
         self.assertNotIn("use_osc", source)
         self.assertNotRegex(source, r"(?:/Users/|/private/|https?://)")
 
+    def test_wild_examples_are_bounded_seeded_and_local(self):
+        for example in WILD_EXAMPLES:
+            with self.subTest(example=example.name):
+                source = example.read_text()
+                self.assertRegex(source, r"use_random_seed\s+\d+")
+                self.assertRegex(source, r"set_volume!\s+0\.[0-6]\d*")
+                self.assertNotRegex(source, r"(?m)^\s*live_loop\b")
+                self.assertNotRegex(source, r"(?m)^\s*use_osc\b")
+                self.assertNotRegex(source, r"(?:/Users/|/private/|https?://)")
+
     def test_visual_cue_source_is_local_only(self):
         source = VISUAL_CUES.read_text()
         self.assertIn('use_osc "127.0.0.1", 57121', source)
@@ -110,11 +128,35 @@ class SonicPiContractTests(unittest.TestCase):
 
     def test_custom_percussive_samples_are_documented(self):
         source = PERCUSSIVE_SOURCE.read_text()
-        note = PERCUSSIVE_NOTE.read_text()
-        for marker in ("sample SAMPLE_PATH", "start:", "finish:", "rate:", "amp:"):
+        guide = PERCUSSIVE_GUIDE.read_text()
+        for marker in (
+            "PACK_DIR",
+            'raise "Set PACK_DIR before running"',
+            "load_samples animal_sources",
+            "sample BULLFROG",
+            "sample WOODPECKER",
+            "sample CRICKET_FROG",
+            "sample KATYDID",
+            "sample CICADA",
+            "onset:",
+            "start:",
+            "finish:",
+            "rate:",
+            "amp:",
+        ):
             self.assertIn(marker, source)
-        for marker in ("custom WAV", "A local Sonic Pi 5 parameterized audition completed", "no runtime error", "Pileated Woodpecker", "Blanchard's Cricket Frog"):
-            self.assertIn(marker, note)
+        for marker in (
+            "animal-percussion-pack.example.json",
+            "never overwrite",
+            "bullfrog-low.wav",
+            "woodpecker-roll.wav",
+            "cricket-frog-rim.wav",
+            "katydid-ratchet.wav",
+            "cicada-carrier.wav",
+            "immutable bytes",
+            "Public availability is not reuse permission",
+        ):
+            self.assertIn(marker, guide)
 
     @unittest.skipUnless(shutil.which("ruby"), "Ruby is not installed")
     def test_gentle_example_has_valid_ruby_syntax(self):
@@ -135,6 +177,18 @@ class SonicPiContractTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+
+    @unittest.skipUnless(shutil.which("ruby"), "Ruby is not installed")
+    def test_wild_examples_have_valid_ruby_syntax(self):
+        for example in WILD_EXAMPLES:
+            with self.subTest(example=example.name):
+                result = subprocess.run(
+                    ["ruby", "-c", str(example)],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
 
 
 if __name__ == "__main__":

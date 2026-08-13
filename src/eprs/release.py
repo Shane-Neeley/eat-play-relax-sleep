@@ -357,10 +357,18 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                 + (f" ({credit['note']})" if credit["note"] else "")
                 for credit in credits
             )
+            thumbnail_recipe = asset_bundle["recipe"]["thumbnail"]
+            natural_history_source = thumbnail_recipe.get("iNaturalist_source")
+            if isinstance(natural_history_source, dict):
+                photo_credit = (
+                    f"{natural_history_source['attribution']} — iNaturalist photo "
+                    f"({natural_history_source['license_code'].upper()}): "
+                    f"{natural_history_source['observation_url']}"
+                )
+                credit_text = f"{credit_text}\n{photo_credit}" if credit_text else photo_credit
             upload_description = (
                 f"{description.rstrip()}\n\nChapters\n{chapter_text}\n\nCredits\n{credit_text}"
             )
-            thumbnail_recipe = asset_bundle["recipe"]["thumbnail"]
             asset_metadata = {
                 "asset_bundle": {
                     "bundle_id": asset_bundle["bundle_id"],
@@ -373,6 +381,8 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                     "alt_text": thumbnail_recipe["alt_text"],
                     "width": thumbnail_recipe["width"],
                     "height": thumbnail_recipe["height"],
+                    **({"iNaturalist_source": natural_history_source}
+                       if isinstance(natural_history_source, dict) else {}),
                 },
                 "caption_tracks": [
                     {

@@ -28,6 +28,13 @@ visuals/public/media/
 songs/*
 !songs/README.md
 
+# Private album workspaces. Keep only the public workflow guide in the repo.
+albums/*
+!albums/README.md
+
+# Private operator research and temporary production notes.
+notes/
+
 # Machine- and editor-local state
 .DS_Store
 .idea/
@@ -35,12 +42,14 @@ songs/*
 .codex/
 .eprs-local/
 
-# This public repo ships only its self-contained music workflow. Other local
+# This public repo ships only its self-contained project workflows. Other local
 # agent skills may coexist in the checkout without becoming repository scope.
 .agents/skills/*
 !.agents/skills/README.md
 !.agents/skills/produce-music-locally/
 !.agents/skills/produce-music-locally/**
+!.agents/skills/inaturalist-api/
+!.agents/skills/inaturalist-api/**
 develop-eggs/
 dist/
 downloads/

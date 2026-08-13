@@ -9,6 +9,26 @@ Lyric records are private song artifacts by default. They do not grant rights,
 authorize sharing or publication, copy reference writing, or replace what a
 singer reveals through breath, pitch, timing, accent, and group overlap.
 
+## Optional public YouTube analysis with agy
+
+When a lyric reference is a public YouTube video and the question is about
+meaning, delivery, section shape, hook timing, performance, or public context,
+use the host's Antigravity CLI (`agy`) when available. Gemini can understand a
+public YouTube URL directly and return useful timestamped observations beyond
+what captions alone reveal:
+
+```bash
+agy -p 'Analyze https://youtu.be/VIDEO_ID for concise timestamped observations about lyric delivery, sections, and performance. Paraphrase; do not reproduce lyrics or imitate the work.'
+```
+
+Use the host Gemini bridge's `youtube` mode instead when that is the available
+entry point. Keep exact-caption needs on the local transcript path, and keep
+singability, pitch, timing, and musical decisions gated by EPRS context and
+human listening. Do not use agy for private, unlisted, or login-walled videos;
+never ask for full lyrics or transcripts. Record the public URL, command/model,
+date, question, concise findings, and timestamps in the lyric research notes,
+then preserve the source boundary with `eprs research add` when applicable.
+
 ## Create alternatives
 
 ```bash

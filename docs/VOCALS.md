@@ -176,3 +176,37 @@ harmonic material to control. Then compare raw and tuned cues at matched level:
 Keep the raw cue, tuned cue, sidecar, exact TTS manifest, arrangement source,
 and complete listening render. Technical success is not creative approval or
 release clearance.
+
+## Note-aware singing and field-call melodies
+
+The failure mode behind weak earlier autotune passes was architectural: EPRS
+was asking a speech-first TTS cue to become a singer after it had already been
+rendered. WORLD can correct the F0 frames it finds, but it cannot invent a
+stable held note, a new syllable boundary, or a musical phrase envelope.
+
+For a phrase that must sing, render short vowel-led cues, author the target
+MIDI note and hold length in the arrangement, then run:
+
+```bash
+PATH=.eprs-local/qwen3-tts/bin:$PATH \
+  .eprs-local/qwen3-tts/bin/python scripts/note_aware_melody.py \
+  --item "audio/qwen/raw-ah.wav|auto|69|2.0|8.0|-3" \
+  --item "audio/qwen/raw-oh.wav|auto|72|1.5|10.0|-3" \
+  --out audio/vocal-melody.wav \
+  --manifest audio/vocal-melody.wav.json \
+  --total-seconds 24
+```
+
+The renderer estimates `auto` source pitch, uses Rubber Band R3 with formant
+preservation for the declared shift, stretches to the declared duration, and
+places the note on a timeline with tiny anti-click fades. It works for voice,
+birds, frogs, cats, or any other monophonic field cue; the input source and its
+license/provenance remain immutable. It is a composition stage, not a claim
+that an animal recording contains a human-intended melody.
+
+Use `eprs autotune` after this stage only when the result needs a light final
+scale cleanup. Do not use autotune as the primary note generator for a speech
+paragraph. The better long-term singing candidates remain score-conditioned
+singing models such as [SoulX-Singer](https://huggingface.co/Soul-AILab/SoulX-Singer)
+and singing voice conversion such as [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc);
+they need a separate hardware, model-license, and reproducibility evaluation.

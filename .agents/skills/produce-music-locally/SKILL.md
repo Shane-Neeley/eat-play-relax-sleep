@@ -31,6 +31,29 @@ DAW sessions, or other sources when they fit the idea.
 6. Read [references/eprs.md](references/eprs.md) for input routing, the agent
    continuation loop, randomness, and delivery commands.
 
+## Use agy when public YouTube understanding helps
+
+For lyric or video analysis involving a public YouTube reference, consider the
+host's Antigravity CLI (`agy`) when the question is semantic rather than merely
+technical: themes, delivery, song sections, hook timing, scene/shot structure,
+pacing, visual motifs, channel/format context, or timestamped observations.
+Gemini's native public-YouTube understanding is a useful complement to local
+transcript extraction and EPRS listening.
+
+Put the URL in the prompt, for example:
+
+```bash
+agy -p 'Analyze https://youtu.be/VIDEO_ID for concise timestamped observations about lyric delivery and visual pacing. Paraphrase; do not reproduce lyrics or imitate the work.'
+```
+
+If the host exposes a Gemini bridge wrapper, its `youtube` mode is also fine
+(for example `run-gemini.sh youtube "URL question"`). Use local yt-dlp or
+transcript tooling for exact captions, and EPRS analysis/listening for local
+audio/video measurements and approval. Do not use agy for private, unlisted, or
+login-walled videos, and do not request full lyrics, transcripts, melodies, or
+distinctive visual descriptions. Preserve the URL, date, command/model,
+question, concise findings, and timestamps in the EPRS research notes.
+
 ## Keep the creative space open
 
 - Treat genre, tempo, meter, tuning, key, form, instrumentation, timbre, fidelity, and performance feel as creative variables rather than defaults to fill in.

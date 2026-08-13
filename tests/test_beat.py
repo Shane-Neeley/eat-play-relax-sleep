@@ -152,6 +152,20 @@ class BeatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bar range"):
             parse(arranged)
 
+    def test_nonfinite_and_unsafe_arrangement_options_are_rejected(self):
+        for option, value, message in (
+            ("gain", "nan", "gain must be finite"),
+            ("pan", "2", "pan must be between"),
+            ("humanize_ms", "-1", "humanize_ms must not be negative"),
+            ("length", "0", "length must be positive"),
+        ):
+            text = (
+                'title "Unsafe"\ntempo 100\nmeter 4/4\nresolution 16\n'
+                f'bars 1\ntrack kick X... ; {option}={value}\n'
+            )
+            with self.subTest(option=option), self.assertRaisesRegex(ValueError, message):
+                parse(text)
+
 
 class ExampleTests(unittest.TestCase):
     def test_all_examples_parse(self):

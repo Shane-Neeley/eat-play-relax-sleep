@@ -30,6 +30,7 @@ from .groove import create_groove_development, review_groove, verify_groove_deve
 from .harness import create_song_run
 from .interchange import prepare_daw_interchange, verify_daw_interchange
 from .inaturalist_audio import download_inaturalist_sound
+from .inaturalist_photo import download_inaturalist_photo
 from .inaturalist_study import study_inaturalist_sound
 from .master import approve_master, render_master
 from .mix import render_mix, review_mix
@@ -383,7 +384,7 @@ def parser() -> argparse.ArgumentParser:
 
     inaturalist = commands.add_parser(
         "inaturalist",
-        help="Freeze an iNaturalist sound as attributed song-local reference evidence",
+        help="Freeze iNaturalist media as attributed song-local reference evidence",
     )
     inaturalist_commands = inaturalist.add_subparsers(dest="inaturalist_command", required=True)
     inaturalist_sound = inaturalist_commands.add_parser(
@@ -396,6 +397,19 @@ def parser() -> argparse.ArgumentParser:
     inaturalist_sound.add_argument("--sound-id", type=int, help="Required when the observation has multiple sounds")
     inaturalist_sound.add_argument("--note", default="")
     inaturalist_sound.add_argument("--user-agent", default=None)
+    inaturalist_photo = inaturalist_commands.add_parser(
+        "photo",
+        help="Download one reusable observation photo with license and attribution evidence",
+    )
+    inaturalist_photo.add_argument("observation_id", type=int)
+    inaturalist_photo.add_argument("--song", required=True)
+    inaturalist_photo.add_argument("--role", required=True, help="Visual role, such as marsh texture")
+    inaturalist_photo.add_argument("--photo-id", type=int, help="Required when the observation has multiple photos")
+    inaturalist_photo.add_argument(
+        "--size", choices=("small", "medium", "large", "original"), default="large"
+    )
+    inaturalist_photo.add_argument("--note", default="")
+    inaturalist_photo.add_argument("--user-agent", default=None)
     inaturalist_study = inaturalist_commands.add_parser(
         "study",
         help="Measure a frozen iNaturalist sound and map it to creative cues",
@@ -1219,6 +1233,24 @@ def main(argv: list[str] | None = None) -> int:
                     "observation_url": record["source"]["url"],
                     "sound_id": record["sound"]["id"],
                     "license_code": record["sound"]["license_code"],
+                    "publication_status": record["rights"]["publication_status"],
+                }, indent=2))
+            elif args.inaturalist_command == "photo":
+                destination, metadata, record = download_inaturalist_photo(
+                    args.observation_id,
+                    args.song,
+                    args.role,
+                    photo_id=args.photo_id,
+                    size=args.size,
+                    note=args.note,
+                    **({"user_agent": args.user_agent} if args.user_agent else {}),
+                )
+                print(json.dumps({
+                    "reference": str(destination),
+                    "metadata": str(metadata),
+                    "observation_url": record["source"]["url"],
+                    "photo_id": record["photo"]["id"],
+                    "license_code": record["photo"]["license_code"],
                     "publication_status": record["rights"]["publication_status"],
                 }, indent=2))
             elif args.inaturalist_command == "study":

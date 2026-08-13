@@ -1,7 +1,7 @@
 import React from "react";
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from "remotion";
 import {mean, rgba, seeded} from "./math";
-import type {VisualSpec} from "./types";
+import type {AtlasCard, VisualSpec} from "./types";
 
 type Props = {
   spec: VisualSpec;
@@ -114,6 +114,81 @@ const Constellation = ({spec, spectrum}: Props) => {
           <circle cx={x} cy={y} r={1.5 + (spectrum[index % spectrum.length] || 0) * 13} fill={spec.palette[index % 4]} opacity={0.2 + energy * 0.7} />
         </g>;
       })}
+    </svg>
+  </AbsoluteFill>;
+};
+
+const PullMeInOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const barLength = (60 / 112) * 4;
+  const bar = Math.min(31, Math.floor(time / barLength));
+  const section = bar < 4 ? "tease" : bar < 12 ? "pocket" : bar < 16 ? "lift" : bar < 20 ? "drop" : bar < 28 ? "hook" : "final";
+  const barProgress = (time % barLength) / barLength;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const centerX = width * 0.5;
+  const horizon = height * (section === "drop" ? 0.52 : 0.46 - mids * 0.025);
+  const opening = section === "tease" ? 0.13 + barProgress * 0.12 : section === "pocket" ? 0.28 : section === "lift" ? 0.44 + barProgress * 0.10 : section === "drop" ? 0.08 : section === "hook" ? 0.72 + bass * 0.14 : 0.58;
+  const pulse = 1 + bass * (section === "hook" ? 0.18 : 0.08);
+  const floorLines = Array.from({length: 12}, (_, index) => index);
+  const wallLines = Array.from({length: 9}, (_, index) => index);
+  const rays = Array.from({length: section === "hook" || section === "final" ? 28 : 12}, (_, index) => index);
+
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <radialGradient id="pull-core" cx="50%" cy="48%" r="60%">
+          <stop offset="0%" stopColor={spec.palette[2]} stopOpacity={0.22 + opening * 0.25} />
+          <stop offset="42%" stopColor={spec.palette[1]} stopOpacity={0.04 + opening * 0.12} />
+          <stop offset="100%" stopColor={spec.background} stopOpacity={0} />
+        </radialGradient>
+        <filter id="pull-glow"><feGaussianBlur stdDeviation={8 + highs * 16} /></filter>
+      </defs>
+      <rect width={width} height={height} fill="url(#pull-core)" opacity={section === "drop" ? 0.42 : 1} />
+
+      <g opacity={section === "drop" ? 0.34 : 0.62 + mids * 0.16}>
+        {floorLines.map((index) => {
+          const depth = (index + 1) / floorLines.length;
+          const y = horizon + depth * depth * height * 0.58;
+          const spread = width * (0.04 + depth * 0.62) * (0.45 + opening * 0.8);
+          return <line key={`floor-${index}`} x1={centerX - spread} x2={centerX + spread} y1={y} y2={y} stroke={spec.palette[index % 4]} strokeOpacity={0.10 + depth * 0.24} strokeWidth={1 + bass * depth * 2} />;
+        })}
+        {wallLines.map((index) => {
+          const side = index / (wallLines.length - 1) * 2 - 1;
+          return <line key={`wall-${index}`} x1={centerX} x2={centerX + side * width * (0.07 + opening * 0.46)} y1={horizon} y2={height * 0.98} stroke={spec.palette[(index + 1) % 4]} strokeOpacity={0.10 + Math.abs(side) * 0.13} strokeWidth={1.5} />;
+        })}
+      </g>
+
+      {rays.map((index) => {
+        const angle = index / rays.length * Math.PI * 2 + time * 0.18 * spec.motion.speed;
+        const inner = Math.min(width, height) * (0.05 + opening * 0.06);
+        const outer = Math.min(width, height) * (0.20 + opening * 0.48 + bass * 0.12);
+        const x1 = centerX + Math.cos(angle) * inner;
+        const y1 = horizon + Math.sin(angle) * inner * 0.72;
+        const x2 = centerX + Math.cos(angle) * outer;
+        const y2 = horizon + Math.sin(angle) * outer * 0.72;
+        return <line key={`ray-${index}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={spec.palette[index % 4]} strokeOpacity={0.06 + (section === "hook" ? 0.22 : 0.08) + highs * 0.12} strokeWidth={1 + highs * 3} />;
+      })}
+
+      <g transform={`translate(${centerX} ${horizon}) scale(${pulse})`}>
+        <circle r={Math.min(width, height) * (0.05 + opening * 0.14)} fill={spec.palette[1]} opacity={0.10 + bass * 0.14} filter="url(#pull-glow)" />
+        <circle r={Math.min(width, height) * (0.035 + opening * 0.10)} fill={spec.palette[2]} opacity={0.24 + opening * 0.26} />
+        <path d={`M ${-width * (0.02 + opening * 0.12)} ${-height * (0.07 + opening * 0.13)} L ${width * (0.02 + opening * 0.12)} ${-height * (0.07 + opening * 0.13)} L ${width * (0.035 + opening * 0.18)} ${height * (0.07 + opening * 0.12)} L ${-width * (0.035 + opening * 0.18)} ${height * (0.07 + opening * 0.12)} Z`} fill="none" stroke={spec.palette[3]} strokeWidth={2 + bass * 4} strokeOpacity={0.42 + opening * 0.32} />
+        {section === "drop" ? <circle r={Math.min(width, height) * 0.022} fill={spec.palette[3]} opacity={0.56} /> : null}
+      </g>
+
+      {section === "hook" || section === "final" ? <g transform={`translate(${centerX} ${horizon}) rotate(${time * (section === "final" ? 12 : 5)})`}>
+        <rect x={-width * 0.19} y={-height * 0.19} width={width * 0.38} height={height * 0.38} fill="none" stroke={spec.palette[0]} strokeOpacity={0.18 + bass * 0.14} strokeWidth={3 + bass * 5} transform="rotate(45)" />
+        <circle r={Math.min(width, height) * (0.18 + bass * 0.06)} fill="none" stroke={spec.palette[2]} strokeOpacity={0.32 + highs * 0.18} strokeWidth={2 + mids * 3} strokeDasharray={section === "final" ? "8 18" : "2 22"} />
+      </g> : null}
+
+      <g fill={spec.palette[3]} opacity={0.42} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.22em">
+        <text x={width * 0.07} y={height * 0.10}>SIGNAL / {section.toUpperCase()}</text>
+        <text x={width * 0.76} y={height * 0.10}>{String(bar + 1).padStart(2, "0")} / 32</text>
+      </g>
     </svg>
   </AbsoluteFill>;
 };
@@ -233,6 +308,161 @@ const PillowFightOverlay = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const JamaicaReggaeOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const pulse = 1 + bass * 0.08;
+  const flagWidth = width * 0.18;
+  const flagHeight = flagWidth * 0.5;
+  const flag = (x: number, y: number, rotation: number, opacity: number, key: string) => (
+    <g key={key} transform={`translate(${x} ${y}) rotate(${rotation} ${flagWidth / 2} ${flagHeight / 2}) scale(${pulse})`} opacity={opacity}>
+      <rect width={flagWidth} height={flagHeight} rx={10} fill="#009b3a" stroke="#fed100" strokeWidth={3} />
+      <polygon points={`0,0 0,${flagHeight} ${flagWidth / 2},${flagHeight / 2}`} fill="#000000" />
+      <polygon points={`${flagWidth},0 ${flagWidth},${flagHeight} ${flagWidth / 2},${flagHeight / 2}`} fill="#000000" />
+      <line x1="0" y1="0" x2={flagWidth} y2={flagHeight} stroke="#fed100" strokeWidth={flagHeight * 0.17} />
+      <line x1={flagWidth} y1="0" x2="0" y2={flagHeight} stroke="#fed100" strokeWidth={flagHeight * 0.17} />
+      <line x1="0" y1="0" x2={flagWidth} y2={flagHeight} stroke="#fed100" strokeWidth={flagHeight * 0.05} />
+      <line x1={flagWidth} y1="0" x2="0" y2={flagHeight} stroke="#fed100" strokeWidth={flagHeight * 0.05} />
+    </g>
+  );
+  const bars = Array.from({length: 9}, (_, index) => index);
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <filter id="jamaica-glow"><feGaussianBlur stdDeviation={5 + highs * 9} /></filter>
+      </defs>
+      <g filter="url(#jamaica-glow)" opacity={0.2 + mids * 0.3}>
+        <rect x={width * 0.05} y={height * 0.16} width={width * 0.9} height={height * 0.68} fill="none" stroke="#009b3a" strokeWidth={10 + bass * 18} />
+      </g>
+      {flag(width * 0.07, height * 0.1 + Math.sin(time * 0.7) * height * 0.01, -3, 0.58 + mids * 0.18, "flag-left")}
+      {flag(width * 0.75, height * 0.12 + Math.cos(time * 0.65) * height * 0.012, 3, 0.58 + mids * 0.18, "flag-right")}
+      <g opacity={0.22 + bass * 0.32}>
+        {bars.map((index) => {
+          const barHeight = height * (0.08 + ((spectrum[(index * 5) % spectrum.length] || 0) * 0.32));
+          const x = width * 0.23 + index * width * 0.068;
+          return <rect key={index} x={x} y={height * 0.78 - barHeight} width={width * 0.035} height={barHeight} fill={index % 2 ? "#fed100" : "#009b3a"} rx={6} />;
+        })}
+      </g>
+      <g fill="#fed100" opacity={0.55 + highs * 0.2} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.013)} letterSpacing="0.24em">
+        <text x={width * 0.08} y={height * 0.91}>ONE DROP / DUB RESPONSE</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
+const PaperScoreOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const progress = Math.min(1, frame / Math.max(1, durationInFrames - 1));
+  const energy = mean(spectrum);
+  const cards = [
+    {label: "ROOM", x: 0.17, y: 0.24, angle: -5, at: 0.02},
+    {label: "QUESTION", x: 0.68, y: 0.20, angle: 4, at: 0.16},
+    {label: "LATE", x: 0.22, y: 0.66, angle: 3, at: 0.40},
+    {label: "ARRIVAL", x: 0.69, y: 0.67, angle: -4, at: 0.68},
+  ];
+  const cardWidth = width * 0.24;
+  const cardHeight = height * 0.22;
+  const visible = (at: number) => interpolate(progress, [at, at + 0.07], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs><filter id="paper-shadow"><feDropShadow dx="0" dy="18" stdDeviation="16" floodColor="#000" floodOpacity="0.42" /></filter></defs>
+      <g opacity={0.18 + energy * 0.18}>
+        {Array.from({length: 9}, (_, index) => (
+          <line key={`grid-x-${index}`} x1={width * (0.12 + index * 0.095)} x2={width * (0.12 + index * 0.095)} y1={height * 0.12} y2={height * 0.88} stroke={spec.palette[1]} strokeWidth={1} />
+        ))}
+        {Array.from({length: 7}, (_, index) => (
+          <line key={`grid-y-${index}`} x1={width * 0.10} x2={width * 0.90} y1={height * (0.18 + index * 0.11)} y2={height * (0.18 + index * 0.11)} stroke={spec.palette[1]} strokeWidth={1} />
+        ))}
+      </g>
+      {cards.map((card, index) => {
+        const opacity = visible(card.at);
+        const pulse = 1 + (spectrum[(index * 7) % spectrum.length] || 0) * 0.06;
+        return <g key={card.label} transform={`translate(${width * card.x} ${height * card.y}) rotate(${card.angle + Math.sin(time * 0.18 + index) * 0.6}) scale(${pulse})`} opacity={opacity} filter="url(#paper-shadow)">
+          <rect x={-cardWidth / 2} y={-cardHeight / 2} width={cardWidth} height={cardHeight} rx={8} fill={spec.palette[3]} fillOpacity={0.92} stroke={spec.palette[index % 3]} strokeWidth={4} />
+          <path d={`M ${-cardWidth * 0.35} ${-cardHeight * 0.18} Q 0 ${-cardHeight * 0.25} ${cardWidth * 0.34} ${-cardHeight * 0.16}`} fill="none" stroke={spec.palette[1]} strokeWidth={3} opacity={0.65} />
+          <text x={-cardWidth * 0.35} y={cardHeight * 0.16} fill={spec.background} fontFamily="ui-monospace,monospace" fontSize={Math.max(18, width * 0.016)} letterSpacing="0.16em">{card.label}</text>
+          <circle cx={cardWidth * 0.34} cy={-cardHeight * 0.24} r={6 + energy * 10} fill={spec.palette[index % 3]} />
+        </g>;
+      })}
+      <rect x={width * 0.38} y={height * 0.39} width={width * 0.24} height={height * 0.22} fill="none" stroke={spec.palette[0]} strokeWidth={3 + energy * 4} strokeDasharray="12 18" opacity={0.20 + energy * 0.34} transform={`rotate(${Math.sin(time * 0.13) * 2} ${width * 0.5} ${height * 0.5})`} />
+      <g fill={spec.palette[3]} opacity={0.62} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.20em">
+        <text x={width * 0.08} y={height * 0.92}>LEAVE ONE THING UNFINISHED</text>
+        <text x={width * 0.78} y={height * 0.92}>{String(Math.round(progress * 64)).padStart(2, "0")} / 64</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
+const RareSignalAtlasOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const progress = Math.min(1, frame / Math.max(1, durationInFrames - 1));
+  const energy = mean(spectrum);
+  const cards: AtlasCard[] = spec.cards?.length ? spec.cards : [
+    {label: "WILD SIGNAL", region: "FIELD CARD", note: "DORIAN"},
+  ];
+  const cardWidth = width * 0.31;
+  const cardHeight = height * 0.205;
+  const positions = [
+    [0.20, 0.26], [0.80, 0.26], [0.20, 0.72], [0.80, 0.72],
+    [0.50, 0.18], [0.50, 0.82], [0.34, 0.50], [0.66, 0.50],
+  ];
+  const visible = (index: number) => {
+    const revealAt = cards.length <= 1 ? 0 : index * 0.82 / (cards.length - 1);
+    return interpolate(progress, [revealAt, revealAt + 0.08], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+  };
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <filter id="atlas-shadow"><feDropShadow dx="0" dy="16" stdDeviation="15" floodColor="#000" floodOpacity="0.45" /></filter>
+        <radialGradient id="atlas-core" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor={spec.palette[2]} stopOpacity={0.20 + energy * 0.20} />
+          <stop offset="100%" stopColor={spec.background} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <rect width={width} height={height} fill="url(#atlas-core)" />
+      {Array.from({length: 10}, (_, index) => (
+        <line key={`atlas-grid-${index}`} x1={width * 0.08} x2={width * 0.92} y1={height * (0.13 + index * 0.085)} y2={height * (0.13 + index * 0.085)} stroke={spec.palette[1]} strokeOpacity={0.08 + energy * 0.05} />
+      ))}
+      <g transform={`translate(${width * 0.5} ${height * 0.5}) rotate(${time * 3})`}>
+        <circle r={Math.min(width, height) * (0.13 + energy * 0.05)} fill="none" stroke={spec.palette[0]} strokeWidth={3 + energy * 6} strokeDasharray="5 15" opacity={0.52 + energy * 0.18} />
+        <circle r={Math.min(width, height) * (0.20 + energy * 0.04)} fill="none" stroke={spec.palette[2]} strokeWidth={2} strokeDasharray="1 22" opacity={0.46} />
+        <path d={Array.from({length: 33}, (_, index) => {
+          const angle = index / 32 * Math.PI * 2;
+          const radius = Math.min(width, height) * (0.085 + (spectrum[index % spectrum.length] || 0) * 0.05);
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          return `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(" ")} fill="none" stroke={spec.palette[3]} strokeWidth={3 + energy * 5} opacity={0.70} />
+      </g>
+      {cards.map((card, index) => {
+        const [x, y] = positions[index % positions.length];
+        const opacity = visible(index);
+        const pulse = 1 + (spectrum[(index * 9) % spectrum.length] || 0) * 0.08;
+        const accent = card.accent || spec.palette[index % 4];
+        return <g key={`${card.label}-${index}`} transform={`translate(${width * x} ${height * y}) rotate(${index % 2 ? 2.5 : -2.5}) scale(${pulse})`} opacity={opacity} filter="url(#atlas-shadow)">
+          <rect x={-cardWidth / 2} y={-cardHeight / 2} width={cardWidth} height={cardHeight} rx={12} fill={spec.background} fillOpacity={0.88} stroke={accent} strokeWidth={4} />
+          <rect x={-cardWidth / 2} y={-cardHeight / 2} width={cardWidth * 0.035} height={cardHeight} rx={8} fill={accent} />
+          <circle cx={cardWidth * 0.37} cy={-cardHeight * 0.27} r={7 + energy * 10} fill={accent} />
+          <text x={-cardWidth * 0.39} y={-cardHeight * 0.08} fill={spec.palette[3]} fontFamily="ui-monospace,monospace" fontSize={Math.max(17, width * 0.015)} letterSpacing="0.08em">{card.label.toUpperCase()}</text>
+          <text x={-cardWidth * 0.39} y={cardHeight * 0.23} fill={accent} fontFamily="ui-monospace,monospace" fontSize={Math.max(13, width * 0.0105)} letterSpacing="0.12em">{card.region.toUpperCase()} · {card.note.toUpperCase()}</text>
+        </g>;
+      })}
+      <g fill={spec.palette[3]} opacity={0.64} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.20em">
+        <text x={width * 0.08} y={height * 0.095}>RARE SIGNAL ATLAS / REAL CALL → CHORD TONE</text>
+        <text x={width * 0.77} y={height * 0.925}>FIELD STUDY {String(Math.round(progress * 100)).padStart(3, "0")}%</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
 export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -243,8 +473,12 @@ export const SignalWorld = (props: Props) => {
     <AbsoluteFill style={{pointerEvents: "none", opacity: props.spec.texture.scanlines, backgroundImage: "repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(0,0,0,.45) 4px)"}} />
     <AbsoluteFill style={{pointerEvents: "none", opacity: texturePhase * 0.34, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E\")", mixBlendMode: "soft-light"}} />
     <div style={{position: "absolute", inset: 0, boxShadow: "inset 0 0 180px rgba(0,0,0,.72)"}} />
+    {props.spec.motif === "pull-me-in" ? <PullMeInOverlay {...props} /> : null}
     {props.spec.motif === "octopus-ink" ? <OctopusInkOverlay {...props} /> : null}
     {props.spec.motif === "pillow-fight" ? <PillowFightOverlay {...props} /> : null}
+    {props.spec.motif === "jamaica-reggae" ? <JamaicaReggaeOverlay {...props} /> : null}
+    {props.spec.motif === "paper-score" ? <PaperScoreOverlay {...props} /> : null}
+    {props.spec.motif === "rare-signal-atlas" ? <RareSignalAtlasOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };

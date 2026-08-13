@@ -10,6 +10,15 @@ download a page, transcribe media, or grant permission to reuse source material.
 A person or authorized agent performs the research and supplies source metadata
 and, when useful and lawful, a local evidence file.
 
+For semantic analysis of a public YouTube lyric or video reference, the host
+agent may use Antigravity CLI (`agy`) or the host Gemini bridge's `youtube` mode
+before creating the record. Put the public URL in the prompt and ask for
+concise, timestamped, paraphrased observations. Keep exact captions on the
+local transcript path and do not request full lyrics, transcripts, melodies,
+or distinctive imagery. Record the URL, date, command/model, question,
+findings, and timestamps as source-grounded research; `eprs research add`
+still only records the supplied metadata and evidence.
+
 ## Create a record
 
 Start with the editable example:

@@ -18,6 +18,41 @@ a teaser motif, broken pocket, lift, deliberate drop, hook payoff, and final
 turnaround. The motif returns in changed rhythms and registers while the drums,
 bass, harmony, and density evolve.
 
+## Wild beat studies
+
+Prefer Sonic Pi for new coded beats when the musical idea needs behavior that
+BeatScript cannot express clearly. Keep BeatScript for compact sketches,
+headless deterministic auditions, and drummer-readable interchange.
+
+- [`gravity-switchyard-v1.rb`](gravity-switchyard-v1.rb) moves through 4/4,
+  7/8, and 5/8 cells while rotating Euclidean kick and metal patterns around a
+  microtonal industrial bass rail.
+- [`moth-court-radio-v1.rb`](moth-court-radio-v1.rb) is a slow 4/4 triplet beat
+  made from sub thumps, tiny ambient-sample windows, long tails, silence, and
+  gradually drifting pitch.
+- [`neon-bone-machine-v1.rb`](neon-bone-machine-v1.rb) puts 174 BPM footwork
+  motion over half-time weight, then breaks its four-note identity through a
+  vacuum, displaced kick swarms, and an inside-out final bar.
+- [`amen-prism-surgery-v1.rb`](amen-prism-surgery-v1.rb) rebuilds a break from
+  fixed slices, detected onsets, reverse fragments, and section-controlled FX.
+- [`phase-mirror-garden-v1.rb`](phase-mirror-garden-v1.rb) lets an original and
+  inverted melody drift out of phase using Sonic Pi 5's pitch-ring inversion.
+- [`probability-weather-station-v1.rb`](probability-weather-station-v1.rb) uses
+  seeded Perlin motion for slowly changing density, timbre, register, and pan.
+- [`percussive-animal-custom-sample-test.rb`](percussive-animal-custom-sample-test.rb)
+  is a five-animal drum circle with bullfrog low calls, woodpecker rolls,
+  cricket-frog rims, katydid ratchets, and a gated cicada carrier. Prepare its
+  attributed sources with [`ANIMAL_PERCUSSION.md`](ANIMAL_PERCUSSION.md).
+
+These are contrasting source studies, not genre presets or approved releases.
+Each is bounded, seeded, and uses only Sonic Pi's built-in sounds so it can be
+auditioned without downloading samples, except the explicitly provenance-bound
+animal ensemble.
+
+Agents should start with [`AGENT_EXPLORATION.md`](AGENT_EXPLORATION.md) and use
+`./scripts/sonic-pi-catalog` to inspect the exact installed synths, FX, samples,
+functions, and option ranges before authoring a new experiment.
+
 ### Engagement checks
 
 Before calling a bed release-ready, ask:

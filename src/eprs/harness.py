@@ -439,7 +439,7 @@ def create_song_run(
         song_path,
         code_path,
         brief_path,
-        f"Does this first seeded sketch leave a useful pocket for the supplied idea?",
+        "Does this first seeded sketch leave a useful pocket for the supplied idea?",
         run_seed,
         sources=[("visual score", visual_score_path)],
     )

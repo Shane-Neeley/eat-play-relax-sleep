@@ -385,7 +385,10 @@ def prepare_daw_interchange(song: str | Path, mix: str | Path) -> tuple[Path, Pa
         reconstruction = temporary / ".reconstructed-sum.wav"
         command = [ffmpeg, "-nostdin", "-v", "error", "-n"]
         for record in stem_records:
-            command.extend(["-i", str(temporary / record["path"])])
+            relative_path = record.get("path")
+            if not isinstance(relative_path, str):
+                raise RuntimeError("DAW interchange stem record has no valid path")
+            command.extend(["-i", str(temporary / relative_path)])
         if len(stem_records) == 1:
             command.extend(["-map", "0:a:0"])
         else:

@@ -41,6 +41,16 @@ thumbnail is truthful and legible, captions are complete and accurately timed,
 chapter names are useful, and private material has not leaked. Review still
 leaves upload and publication authorization false.
 
+An exact frozen iNaturalist photo may be used as the thumbnail when it also
+passes the platform crop and size checks. If the image has an adjacent
+`eprs.inaturalist-photo/v1` sidecar, the bundle verifies its checksum and
+requires CC0 or CC BY, preserves the observation/photo IDs and attribution, and
+the release package appends that photo credit and public observation link to
+the upload description. A crop, collage, extracted video frame, or other
+derived thumbnail is a new asset: preserve the original photo sidecar as source
+evidence and author the derived asset's credit/rights trail rather than implying
+that adjacency proves its lineage.
+
 ## Current platform assumptions
 
 The versioned platform contract was checked on 2026-08-03 against first-party
