@@ -36,7 +36,6 @@ ignore = ["B905"]
 # shapes instead of silencing diagnostics globally.
 include = [
     "scripts/check_public_repo.py",
-    "scripts/note_aware_melody.py",
     "src/eprs/__init__.py",
     "src/eprs/audio.py",
     "src/eprs/beat.py",
