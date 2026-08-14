@@ -14,7 +14,8 @@ recordings, taste, arrangement, listening, rights review, or the editable mix.
 | Rank | Method | Fit for this project | Main constraint |
 | --- | --- | --- | --- |
 | 1 for voices | **Qwen3-TTS 1.7B / 0.6B** | Best immediate voice upgrade for this Mac: Apache-2.0 models with VoiceDesign, CustomVoice, instruction-level emotion/prosody control, 10 languages, and a documented 3-second cloning path. The v2 song uses CustomVoice with a built-in speaker; VoiceDesign remains available for described synthetic characters. | The model is speech-first, not a singing model; keep cues short and arrange them as authored samples. Voice cloning still requires explicit consent and rights for the reference. |
-| 1 for whole songs | **ACE-Step 1.5** | MIT-licensed whole-song model with text/lyrics, reference audio, cover/repaint/extract/complete modes, 48 kHz variable-length output, and a consumer-GPU-oriented stack. Good future source of arrangement candidates, not a replacement for the EPRS score. | The full environment is large and model output still needs listening, provenance, and rights review. Keep it optional and do not upload private voices. |
+| 1 for whole songs | **ACE-Step 1.5** | MIT-licensed whole-song model with text/lyrics, reference audio, cover/repaint/extract/complete modes, 48 kHz variable-length output, and a consumer-GPU-oriented stack. It now has a real local M4 result: a seeded 20-second E-major instrumental completed through native MLX/MPS in planner-free turbo mode. | The first environment download is large and slow; the tested 8-step render took 35.2s for diffusion plus 10.6s for VAE decode. Output still needs listening, provenance, and rights review. Keep it optional and do not upload private voices. |
+| 2 for singing | **Seed-VC v1 f0-conditioned** | Real local MPS result: zero-shot singing conversion completed on an EPRS vocal at 10 diffusion steps, 44.1 kHz, about 3.5× realtime. It is a useful vocal-layer experiment rather than a song generator. | GPL-3.0; keep it isolated until release-licensing implications are accepted. The Mac path needed a float32 pitch cast and a SoundFile WAV-export workaround. Do not treat a converted synthetic voice as a performer identity. |
 | 2 for singing | **SoulX-Singer** | Apache-2.0 zero-shot singing voice synthesis with melody/F0 or MIDI conditioning; architecturally closer to a controllable sung hook than ordinary TTS. | Separate preprocessing models and a Python 3.10 environment; not installed in this Mac pass. Treat it as an explicit future singing-voice experiment. |
 | 3 for voices | **Fish Audio S2 Pro** | 5B multilingual TTS with inline free-form prosody/emotion tags, multi-speaker/multi-turn support, and streaming-oriented architecture. | Fish Audio Research License permits research/non-commercial use free; commercial use needs a separate license. Do not use it for release-bound voices without that clearance. |
 | research | **UniVoice / X-Voice / PFluxTTS** | Mid-2026 research shows a clear direction toward unified speech+singer models, smaller multilingual cloning, and flow-matching voice synthesis. These are useful design signals for future adapters. | A paper is not an installable, licensed, reproducible project asset. Wait for official code/weights and hardware evidence before adding them to the default path. |
@@ -43,6 +44,22 @@ PATH=.eprs-local/qwen3-tts/bin:$PATH ./scripts/eprs doctor --workflow local-voic
 
 The adapters only describe the boundary. They do not start a server, download
 weights, send recordings, or claim that output is approved.
+
+## 2026-08-13 local model-lab evidence
+
+Two candidates crossed the “actually ran on this 16 GB M4” threshold in an
+isolated cache. ACE-Step 1.5 generated a 20-second, 48 kHz stereo instrumental
+with `acestep-v15-turbo`, native MLX DiT/VAE, 8 steps, seed `4242`, E major,
+102 BPM, and no language-model planner. Seed-VC converted a 14.8-second EPRS
+vocal with the f0-conditioned singing model at 10 steps and wrote a valid
+44.1 kHz mono WAV after a portable float32/SoundFile compatibility fix.
+
+These are evidence artifacts, not release defaults. Keep the environments under
+an isolated model lab, preserve exact settings and checksums, and compare the
+result against an authored EPRS control before adding either model to a public
+song. The ACE-Step planner is not required for the tested instrumental route;
+the partially downloaded planner should not be mistaken for a completed
+planner benchmark.
 
 ## Suno: collaboration, credits, and API reality
 
@@ -116,6 +133,8 @@ clear contribution log.
   and [Qwen3-TTS technical report](https://arxiv.org/abs/2601.15621)
 - [ACE-Step 1.5 project and license](https://github.com/ace-step/ACE-Step-1.5)
   and [ACE-Step 1.5 Hugging Face model card](https://huggingface.co/ACE-Step/Ace-Step1.5)
+- [Seed-VC official repository](https://github.com/Plachtaa/seed-vc)
+  and [Seed-VC GPL-3.0 license](https://github.com/Plachtaa/seed-vc/blob/main/LICENSE)
 - [SoulX-Singer model card](https://huggingface.co/Soul-AILab/SoulX-Singer)
   and [SoulX-Singer paper](https://arxiv.org/abs/2602.07803)
 - [Fish Audio S2 Pro model card](https://huggingface.co/fishaudio/s2-pro)

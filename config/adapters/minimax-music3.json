@@ -1,0 +1,52 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "minimax-music3-cuda-generator",
+  "label": "MiniMax Music 3 CUDA music generator",
+  "summary": "Use MiniMax Music 3 through an explicitly operated CUDA sidecar for complete structured songs, while preserving a local EPRS fallback on unsupported hardware.",
+  "provider": "minimax_music3",
+  "capabilities": ["structured_music_generation", "cuda_music_generation", "remote_music_generation"],
+  "handoffs": [
+    {
+      "id": "structured-song-to-cuda-sidecar",
+      "label": "Generate a structured song through MiniMax Music 3",
+      "intent": "Send tagged lyrics and a Music 3 Structured Caption to a local or remote CUDA sidecar, then return a new lossless WAV and exact provenance.",
+      "capabilities": ["structured_music_generation", "cuda_music_generation", "remote_music_generation"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "Tagged lyrics with section labels such as [Verse], [Chorus], [Bridge], and [Outro]",
+        "A Structured Caption covering metadata, vocals, arrangement, groove, bass, and production",
+        "An explicitly operated CUDA sidecar endpoint, seed, output path, and model license note",
+        "A separate EPRS fallback plan when the sidecar is unavailable"
+      ],
+      "outputs": [
+        "A new 32 kHz stereo WAV from the sidecar",
+        "A manifest recording lyrics, structured caption, endpoint, seed, response probe, checksum, and MiniMax license",
+        "A local EPRS mix/master handoff with the original generated WAV preserved"
+      ],
+      "steps": [
+        "Read the current MiniMax Music 3 model card and Community License; do not download the 32 GB checkpoint on unsupported hardware.",
+        "Start or verify an explicitly operated CUDA sidecar with the official MiniMax Music 3 endpoint contract.",
+        "Run `python3 scripts/minimax_music3_runner.py` with tagged lyrics, instructions, a new WAV path, and a deterministic seed.",
+        "Inspect the returned WAV, preserve the manifest, and bring it into EPRS only as a source stem; do not silently replace local tools.",
+        "Apply EPRS mixing/mastering and retain the required MiniMax-Music3 disclosure for any public machine-generated release."
+      ],
+      "verification": [
+        "Confirm the sidecar response is a non-empty WAV with the expected sample rate, channels, duration, and checksum.",
+        "Confirm the endpoint is intentional and credentials are not present in lyrics, manifests, logs, or public metadata.",
+        "Confirm the exact model license and public disclosure requirement are preserved with the release evidence.",
+        "Compare the MiniMax render against a local EPRS fallback before choosing the final musical direction."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The tagged lyrics, Structured Caption, model revision, seed, endpoint, generated WAV, checksum, and license evidence",
+      "The distinction between sidecar-generated audio and local EPRS authored arrangement, processing, and release decisions"
+    ],
+    "avoid": [
+      "Downloading or attempting to load the full checkpoint on unsupported hardware, exposing API credentials, hiding machine-generation disclosure, or presenting generated audio as a human performance",
+      "Assuming a model license clears lyrics, samples, voices, or other user-supplied material"
+    ]
+  }
+}

@@ -51,6 +51,7 @@ include = [
     "src/eprs/runtime.py",
     "src/eprs/selection.py",
     "src/eprs/session.py",
+    "src/eprs/shotcut.py",
     "src/eprs/sonic_pi_catalog.py",
     "src/eprs/visualize.py",
     "src/eprs/visuals.py",

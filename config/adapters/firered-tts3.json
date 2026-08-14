@@ -1,0 +1,49 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "firered-tts3-space-voice",
+  "label": "FireRedTTS3 Space voice-design adapter",
+  "summary": "Use the linked public FireRedTTS3 Space as an optional reference-free voice-design instrument, preserving the remote revision, prompts, seeds, raw cues, checksums, and any separate EPRS pitch treatment.",
+  "provider": "firered_tts3_space",
+  "capabilities": ["remote_voice_generation", "reference_free_voice_design"],
+  "handoffs": [
+    {
+      "id": "brief-to-remote-voice-cues",
+      "label": "Generate original FireRedTTS3 voice cues",
+      "intent": "Turn a bounded cue list and original character description into song-local speech samples that can be arranged or explicitly pitch-treated without supplying a human reference voice.",
+      "capabilities": ["remote_voice_generation", "reference_free_voice_design"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "A short cue list, original synthetic voice description, seed, CFG, flow steps, and declared output role",
+        "Explicit permission to send the cue text and voice description to the public Hugging Face Space",
+        "For pitch correction: a player-facing reason plus an explicit key, scale, and preset"
+      ],
+      "outputs": [
+        "New song-local PCM WAV cues outside recordings/raw and FINAL",
+        "A manifest with Space/model identity, Space revision, request controls, generated voice plan, checksums, and rights boundary",
+        "When tuning is requested, preserved raw cues plus per-cue EPRS autotune sidecars"
+      ],
+      "steps": [
+        "Inspect the current Space endpoint and model card; do not assume an unchanged API, revision, license, or runtime.",
+        "Run `scripts/firered_tts3_voice.py` in reference-free voice-design mode with the smallest useful cue batch; never put credentials in arguments or manifests.",
+        "If autotune is requested, preserve the raw response and apply only the declared EPRS key, scale, and preset.",
+        "Compare each cue in the full arrangement and promote only a useful candidate through the normal EPRS review gates."
+      ],
+      "verification": [
+        "Confirm the downloaded response is a non-empty PCM WAV with the recorded format, duration, and checksum.",
+        "Confirm the manifest contains the exact Space revision when available, prompt, per-cue seed, inference controls, voice plan, and no token value.",
+        "Confirm no human reference audio was uploaded, the voice is represented as synthetic, and altered-content disclosure is carried into publication metadata."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Every generated raw cue, processed alternative, request parameter, revision, voice plan, checksum, and rights/disclosure note",
+      "The distinction between public-Space remote processing, local EPRS pitch processing, and creative or release approval"
+    ],
+    "avoid": [
+      "Uploading private voice recordings, cloning or imitating an identifiable person, sending secrets, retrying rate limits in a loop, or hiding failed outputs",
+      "Treating public availability or Apache-2.0 as blanket clearance for user inputs, person likeness, generated content, or downstream publication"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "seed-vc-singing-converter",
+  "label": "Seed-VC singing conversion",
+  "summary": "Optional zero-shot singing conversion for replacing or coloring a preserved vocal while retaining the source and exact conversion settings.",
+  "provider": "seed_vc",
+  "capabilities": ["singing_voice_conversion", "local_voice_conversion", "reference_voice_conversion"],
+  "handoffs": [{
+    "id": "convert-vocal-candidate",
+    "label": "Convert a vocal candidate",
+    "intent": "Compare an original vocal with one locally converted candidate in a reversible song experiment.",
+    "capabilities": ["singing_voice_conversion", "local_voice_conversion", "reference_voice_conversion"],
+    "automation": "cli",
+    "requires_user_operation": true,
+    "inputs": ["An immutable source vocal and explicit target voice direction", "Model, step count, backend, seed, and consent/rights record"],
+    "outputs": ["A new lossless converted candidate and provenance sidecar"],
+    "steps": ["Run in the isolated Seed-VC environment", "Keep raw and converted audio side by side", "Audition before any mix or release decision"],
+    "verification": ["Check duration, sample rate, clipping, checksum, and audible artifacts", "Confirm the source was not overwritten and the target identity is permitted"]
+  }],
+  "safety": {"preserve": ["Source vocal, conversion settings, model identity, and rights evidence"], "avoid": ["Living-artist imitation by name, in-place conversion, and presenting a test candidate as approved"]}
+}

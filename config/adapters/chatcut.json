@@ -1,0 +1,104 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "chatcut-visual-handoff",
+  "label": "ChatCut visual handoff adapter",
+  "summary": "Prepare disposable EPRS derivatives for an explicitly operated ChatCut visual pass and return only an untrusted picture candidate for local review.",
+  "provider": "chatcut_bridge",
+  "capabilities": [
+    "chatcut_asset_handoff",
+    "chatcut_review_return"
+  ],
+  "handoffs": [
+    {
+      "id": "prepare-disposable-preview",
+      "label": "Prepare a disposable ChatCut package",
+      "intent": "Create a bounded preview, optional guide audio, and exact prompt/asset manifest without uploading or changing the EPRS source of truth.",
+      "capabilities": [
+        "chatcut_asset_handoff"
+      ],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "An EPRS song workspace and a reviewed song-relative picture candidate",
+        "An optional guide/master audio, captions, thumbnail, and visual brief"
+      ],
+      "outputs": [
+        "A local chatcut/disposable-preview package with derived media, checksums, and handoff.json",
+        "An exact prompt and a bounded list of assets for the operator to inspect"
+      ],
+      "steps": [
+        "Run eprs chatcut prepare with only song-relative non-raw inputs; inspect the generated package before any remote action.",
+        "Watch the complete preview and verify that the derivative contains no private desktop, source-domain, credential, or raw-recording material.",
+        "If using ChatCut, manually authenticate and submit only the exact assets and prompt named in handoff.json."
+      ],
+      "verification": [
+        "Confirm upload_performed is false and all authority flags remain false before the operator acts.",
+        "Confirm the local master, provenance, rights records, and prior renders remain unchanged."
+      ]
+    },
+    {
+      "id": "operate-codex-mcp",
+      "label": "Operate the ChatCut Codex surface manually",
+      "intent": "Use ChatCut's hosted Codex/MCP surface only as a deliberate, user-operated visual editing step with a bounded disposable package.",
+      "capabilities": [
+        "chatcut_asset_handoff"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "An inspected handoff.json and its listed disposable assets",
+        "An authenticated ChatCut account and explicit approval to upload this package"
+      ],
+      "outputs": [
+        "An editable ChatCut timeline or visual draft",
+        "A returned export or XML/timeline handoff for local EPRS verification"
+      ],
+      "steps": [
+        "Use the current ChatCut Codex/MCP integration only after checking its current documentation and account scope.",
+        "Do not add the full EPRS repository, raw takes, masters, private recordings, credentials, or unlisted personal metadata.",
+        "Keep all remote edits provisional; do not let ChatCut publish, replace, or become the release source of truth."
+      ],
+      "verification": [
+        "Record the exact assets, prompt, account surface, and export returned by the operator.",
+        "Run local media inspection and EPRS picture review on every returned export before release assembly."
+      ]
+    },
+    {
+      "id": "return-picture-candidate",
+      "label": "Return a ChatCut picture candidate",
+      "intent": "Bring a returned visual export back into the local EPRS review path without treating remote output as approved media.",
+      "capabilities": [
+        "chatcut_review_return"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A returned ChatCut export and its editable handoff if available",
+        "The local EPRS master, source manifest, and intended picture duration"
+      ],
+      "outputs": [
+        "A new song-local picture candidate with source URL/checksum and return notes",
+        "A complete local technical and creative review record"
+      ],
+      "steps": [
+        "Save the returned file as a new candidate; never overwrite the original preview, master, or FINAL package.",
+        "Inspect duration, dimensions, codecs, audio mapping, captions, visible text, and unexpected private content locally.",
+        "Cross the normal EPRS picture-review, release, and publication gates before any YouTube action."
+      ],
+      "verification": [
+        "Confirm the candidate starts at master time zero and preserves the approved audio relationship.",
+        "Confirm provenance, rights, and privacy notes are complete and that technical checks do not imply creative approval."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "EPRS masters, raw-material boundaries, provenance, rights evidence, captions, local picture review, and YouTube publishing control",
+      "A reversible local package with exact asset checksums, prompt text, and explicit remote-operation state"
+    ],
+    "avoid": [
+      "Uploading the full EPRS repository, raw takes, masters, credentials, private recordings, or identifiable personal source text",
+      "Silent authentication, hidden uploads, remote publication, overwriting local truth, or treating a ChatCut render as approved"
+    ]
+  }
+}

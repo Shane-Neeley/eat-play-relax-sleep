@@ -118,6 +118,48 @@ const Constellation = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const MagneticDustOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const progress = frame / Math.max(1, durationInFrames - 1);
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const collapse = progress > 0.60 && progress < 0.70;
+  const cx = width * (0.5 + Math.sin(time * 0.17) * 0.035);
+  const cy = height * (0.5 + Math.cos(time * 0.13) * 0.025);
+  const particles = Array.from({length: 68}, (_, index) => {
+    const phase = seeded(spec.seed + 22, index) * Math.PI * 2;
+    const orbit = phase + time * (0.08 + seeded(spec.seed + 31, index) * 0.16) * spec.motion.speed;
+    const radius = Math.min(width, height) * (0.05 + seeded(spec.seed + 42, index) * 0.36);
+    const split = 1 + (index % 3) * 0.12 + mids * 0.06;
+    return {
+      x: cx + Math.cos(orbit) * radius * split * (collapse ? 0.55 : 1),
+      y: cy + Math.sin(orbit) * radius * 0.66 * (collapse ? 0.55 : 1),
+      r: 2 + seeded(spec.seed + 54, index) * 6 + highs * 9,
+      color: spec.palette[index % 3],
+    };
+  });
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs><filter id="magnetic-glow"><feGaussianBlur stdDeviation={8 + highs * 12} /></filter></defs>
+      <circle cx={cx} cy={cy} r={Math.min(width, height) * (0.18 + bass * 0.05)} fill={rgba(spec.palette[2], collapse ? 0.02 : 0.10 + bass * 0.08)} filter="url(#magnetic-glow)" />
+      {Array.from({length: 5}, (_, index) => {
+        const radius = Math.min(width, height) * (0.10 + index * 0.07 + bass * 0.02);
+        return <ellipse key={`orbit-${index}`} cx={cx} cy={cy} rx={radius * 1.45} ry={radius * 0.66} fill="none" stroke={spec.palette[index % 3]} strokeWidth={1.5 + bass * 2} opacity={collapse ? 0.06 : 0.14 + highs * 0.12} transform={`rotate(${time * (4 + index) + index * 19} ${cx} ${cy})`} />;
+      })}
+      {particles.map((particle, index) => <circle key={`dust-${index}`} cx={particle.x} cy={particle.y} r={particle.r} fill={particle.color} opacity={collapse ? 0.16 : 0.38 + highs * 0.45} />)}
+      <circle cx={cx} cy={cy} r={10 + bass * 24} fill={spec.palette[0]} opacity={collapse ? 0.18 : 0.70} />
+      <circle cx={cx} cy={cy} r={3 + highs * 7} fill={spec.palette[1]} opacity={collapse ? 0.24 : 0.96} />
+      <g fill={spec.palette[1]} opacity={collapse ? 0.18 : 0.58} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.20em">
+        <text x={width * 0.07} y={height * 0.10}>ATTRACTOR / {collapse ? "LOW FIELD" : "LIVE"}</text>
+        <text x={width * 0.76} y={height * 0.10}>{String(Math.floor(progress * 40) + 1).padStart(2, "0")} / 40</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
 const PullMeInOverlay = ({spec, spectrum}: Props) => {
   const frame = useCurrentFrame();
   const {width, height, fps} = useVideoConfig();
@@ -463,6 +505,52 @@ const RareSignalAtlasOverlay = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const FivePaneDoorOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const barSeconds = (60 / 108) * 5;
+  const bar = Math.floor(time / barSeconds);
+  const barProgress = (time % barSeconds) / barSeconds;
+  const section = bar < 8 ? "HINGE" : bar < 24 ? "ASSEMBLE" : bar < 40 ? "TURN" : bar < 44 ? "BLACK SPACE" : "RETURN";
+  const drop = section === "BLACK SPACE";
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const cx = width * 0.5;
+  const cy = height * 0.52;
+  const opening = drop ? 0.10 : section === "HINGE" ? 0.22 + barProgress * 0.12 : section === "ASSEMBLE" ? 0.38 + (bar - 8) / 16 * 0.18 : section === "TURN" ? 0.64 + Math.sin(barProgress * Math.PI) * 0.08 : 0.82;
+  const rotation = (section === "TURN" ? 1 : -1) * (time * 5.5 + (bar >= 24 ? 12 : 0)) * spec.motion.rotation;
+  const panes = Array.from({length: 5}, (_, index) => index);
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs><filter id="door-glow"><feGaussianBlur stdDeviation={7 + highs * 14} /></filter></defs>
+      <g opacity={drop ? 0.18 : 0.24 + mids * 0.18}>
+        {Array.from({length: 12}, (_, index) => <line key={`grid-${index}`} x1={width * 0.08} x2={width * 0.92} y1={height * (0.14 + index * 0.066)} y2={height * (0.14 + index * 0.066)} stroke={spec.palette[1]} strokeWidth={1} />)}
+        {Array.from({length: 16}, (_, index) => <line key={`grid-v-${index}`} x1={width * (0.08 + index * 0.056)} x2={width * (0.08 + index * 0.056)} y1={height * 0.14} y2={height * 0.86} stroke={spec.palette[1]} strokeWidth={1} />)}
+      </g>
+      <g transform={`translate(${cx} ${cy}) rotate(${rotation})`}>
+        <rect x={-width * 0.20 * opening} y={-height * 0.26 * opening} width={width * 0.40 * opening} height={height * 0.52 * opening} fill={drop ? "none" : rgba(spec.palette[2], 0.05 + bass * 0.07)} stroke={spec.palette[2]} strokeWidth={2 + bass * 5} opacity={0.35 + opening * 0.45} filter={drop ? undefined : "url(#door-glow)"} />
+        {panes.map((index) => {
+          const angle = -0.62 + index * 0.31 + (section === "TURN" ? Math.sin(time * 0.7 + index) * 0.045 : 0);
+          const paneW = width * (0.052 + opening * 0.026);
+          const paneH = height * (0.24 + opening * 0.16);
+          const x = (index - 2) * width * (0.066 + opening * 0.018);
+          const color = spec.palette[index % 4];
+          return <g key={`pane-${index}`} transform={`translate(${x} 0) rotate(${angle * 40})`} opacity={drop ? 0.12 : 0.48 + (index === (bar % 5) ? 0.24 : 0) + highs * 0.14}>
+            <rect x={-paneW / 2} y={-paneH / 2} width={paneW} height={paneH} fill={rgba(color, 0.10 + mids * 0.08)} stroke={color} strokeWidth={2 + highs * 3} />
+            <line x1={-paneW / 2} x2={paneW / 2} y1={0} y2={0} stroke={spec.palette[3]} strokeOpacity={0.35} />
+          </g>;
+        })}
+      </g>
+      <g fill={spec.palette[3]} opacity={drop ? 0.55 : 0.7} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.20em">
+        <text x={width * 0.08} y={height * 0.10}>DOORWAY / {section}</text>
+        <text x={width * 0.78} y={height * 0.10}>5 COUNT · {String((bar % 5) + 1).padStart(2, "0")}</text>
+      </g>
+    </svg>
+  </AbsoluteFill>;
+};
+
 export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -479,6 +567,8 @@ export const SignalWorld = (props: Props) => {
     {props.spec.motif === "jamaica-reggae" ? <JamaicaReggaeOverlay {...props} /> : null}
     {props.spec.motif === "paper-score" ? <PaperScoreOverlay {...props} /> : null}
     {props.spec.motif === "rare-signal-atlas" ? <RareSignalAtlasOverlay {...props} /> : null}
+    {props.spec.motif === "five-pane-door" ? <FivePaneDoorOverlay {...props} /> : null}
+    {props.spec.motif === "magnetic-dust" ? <MagneticDustOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };

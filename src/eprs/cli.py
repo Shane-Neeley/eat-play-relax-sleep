@@ -15,6 +15,7 @@ from .beat import dumps, load, mutate
 from .bioacoustic_models import bioacoustic_model_catalog
 from .context import build_agent_context, render_agent_context_markdown, write_agent_context
 from .clearance import create_recording_clearance, load_recording_clearance
+from .chatcut import prepare_chatcut_handoff
 from .comp import render_comp, review_comp
 from .delivery import approve_youtube_video, render_youtube
 from .distribution import package_distribution
@@ -62,6 +63,12 @@ from .request import (
 from .selection import select_audio
 from .rhythm import observe_rhythm
 from .session import create_recording_session, load_recording_session
+from .shotcut import (
+    compile_shotcut_project,
+    open_shotcut_project,
+    prepare_shotcut_project,
+    render_shotcut_project,
+)
 from .source_sketch import create_source_sketch
 from .system import (
     analyze,
@@ -98,6 +105,17 @@ def source_spec(value: str) -> tuple[str, str]:
     if not separator or not role.strip() or not path.strip():
         raise argparse.ArgumentTypeError("source must use ROLE=PATH, for example 'family voices=take.wav'")
     return role.strip(), path.strip()
+
+
+def json_object(value: str) -> dict:
+    """Parse one repeatable JSON object used by structured CLI handoffs."""
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise argparse.ArgumentTypeError(f"expected JSON object: {exc.msg}") from exc
+    if not isinstance(parsed, dict):
+        raise argparse.ArgumentTypeError("expected a JSON object")
+    return parsed
 
 
 def parser() -> argparse.ArgumentParser:
@@ -183,6 +201,71 @@ def parser() -> argparse.ArgumentParser:
         action="append",
         help="Add one private adapter-profile directory; repeat as needed",
     )
+
+    chatcut = commands.add_parser(
+        "chatcut",
+        help="Prepare a local disposable handoff for an explicitly operated ChatCut visual pass",
+    )
+    chatcut_commands = chatcut.add_subparsers(dest="chatcut_command", required=True)
+    chatcut_prepare = chatcut_commands.add_parser(
+        "prepare",
+        help="Create a derived preview, guide assets, and a reviewable ChatCut manifest",
+    )
+    chatcut_prepare.add_argument("song", help="EPRS song workspace containing song.json")
+    chatcut_prepare.add_argument("--video", required=True, help="Song-relative video candidate")
+    chatcut_prepare.add_argument("--audio", help="Optional song-relative guide/master audio")
+    chatcut_prepare.add_argument("--captions", help="Optional song-relative captions file")
+    chatcut_prepare.add_argument("--thumbnail", help="Optional song-relative thumbnail")
+    chatcut_prepare.add_argument("--prompt", help="Exact visual-editing prompt for the operator")
+    chatcut_prepare.add_argument("--seconds", type=int, default=30)
+    chatcut_prepare.add_argument("--resolution", type=int, choices=(480, 720, 1080), default=720)
+    chatcut_prepare.add_argument("--out", help="Optional output directory inside the song workspace")
+
+    shotcut = commands.add_parser(
+        "shotcut",
+        help="Create a local, editable Shotcut/MLT project from derived EPRS media",
+    )
+    shotcut_commands = shotcut.add_subparsers(dest="shotcut_command", required=True)
+    shotcut_prepare = shotcut_commands.add_parser(
+        "prepare",
+        help="Create a beat-mapped MLT project, title layer, asset package, and timeline record",
+    )
+    shotcut_prepare.add_argument("song", help="EPRS song workspace")
+    shotcut_prepare.add_argument("--title", required=True, help="Project title")
+    shotcut_prepare.add_argument(
+        "--segment", action="append", type=json_object, required=True,
+        help='Video segment JSON, e.g. \'{"video":"video/candidate.mp4","start_seconds":0,"duration_seconds":4}\'',
+    )
+    shotcut_prepare.add_argument("--audio", required=True, help="Guide/master WAV inside the repository")
+    shotcut_prepare.add_argument(
+        "--title-cue", action="append", type=json_object, default=[],
+        help='Optional title cue JSON, e.g. \'{"start_seconds":0,"duration_seconds":2,"text":"HOOK"}\'',
+    )
+    shotcut_prepare.add_argument(
+        "--marker", action="append", type=json_object, default=[],
+        help='Optional musical marker JSON, e.g. \'{"time_seconds":0,"label":"INTRO"}\'',
+    )
+    shotcut_prepare.add_argument("--out", help="Optional output directory inside the song workspace")
+    shotcut_compile = shotcut_commands.add_parser(
+        "compile",
+        help="Compile an eprs.shotcut-project/v1 score into validated editable MLT XML",
+    )
+    shotcut_compile.add_argument("spec")
+    shotcut_compile.add_argument("--song", required=True)
+    shotcut_render = shotcut_commands.add_parser(
+        "render",
+        help="Render one prepared MLT project through Shotcut's bundled melt",
+    )
+    shotcut_render.add_argument("project")
+    shotcut_render.add_argument("--song", required=True)
+    shotcut_render.add_argument("--out", required=True)
+    shotcut_render.add_argument("--quality", choices=("draft", "full"), default="full")
+    shotcut_open = shotcut_commands.add_parser(
+        "open",
+        help="Open one prepared MLT project in isolated local Shotcut app data",
+    )
+    shotcut_open.add_argument("project")
+    shotcut_open.add_argument("--song", required=True)
 
     new = commands.add_parser("new", help="Create a safe local song workspace (Git-ignored by default)")
     new.add_argument("title")
@@ -1087,6 +1170,41 @@ def main(argv: list[str] | None = None) -> int:
                     additional_directories=args.profile_dir,
                     toolchain_extensions=args.toolchain_extension,
                 ), indent=2))
+        elif args.command == "chatcut":
+            if args.chatcut_command == "prepare":
+                print(json.dumps(prepare_chatcut_handoff(
+                    args.song,
+                    video=args.video,
+                    audio=args.audio,
+                    captions=args.captions,
+                    thumbnail=args.thumbnail,
+                    prompt=args.prompt,
+                    seconds=args.seconds,
+                    resolution=args.resolution,
+                    out=args.out,
+                ), indent=2))
+        elif args.command == "shotcut":
+            if args.shotcut_command == "prepare":
+                print(json.dumps(prepare_shotcut_project(
+                    args.song,
+                    title=args.title,
+                    video_segments=args.segment,
+                    audio=args.audio,
+                    title_cues=args.title_cue,
+                    markers=args.marker,
+                    out=args.out,
+                ), indent=2))
+            elif args.shotcut_command == "compile":
+                print(json.dumps(compile_shotcut_project(args.spec, args.song), indent=2))
+            elif args.shotcut_command == "render":
+                print(json.dumps(render_shotcut_project(
+                    args.project,
+                    args.song,
+                    out=args.out,
+                    quality=args.quality,
+                ), indent=2))
+            elif args.shotcut_command == "open":
+                print(json.dumps(open_shotcut_project(args.project, args.song), indent=2))
         elif args.command == "new":
             print(new_song(args.root, args.title))
         elif args.command == "make-song":

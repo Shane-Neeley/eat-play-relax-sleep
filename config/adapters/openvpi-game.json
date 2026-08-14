@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "openvpi-game-animal-melody",
+  "label": "OpenVPI GAME animal melody analysis",
+  "summary": "Optional audio-to-MIDI analysis for turning a preserved animal or vocal contour into a measurable musical hypothesis.",
+  "provider": "openvpi_game",
+  "capabilities": ["audio_to_midi", "singing_midi_extraction", "animal_pitch_extraction"],
+  "handoffs": [{
+    "id": "call-to-melody-study",
+    "label": "Analyze a call as melody",
+    "intent": "Extract notes and pitch movement for a response arrangement without replacing the raw call.",
+    "capabilities": ["audio_to_midi", "singing_midi_extraction", "animal_pitch_extraction"],
+    "automation": "cli",
+    "requires_user_operation": true,
+    "inputs": ["A checksummed animal or vocal recording", "Target key, chord window, quantization policy, and analysis version"],
+    "outputs": ["MIDI or note-curve candidate, analysis report, and a human-listening decision"],
+    "steps": ["Analyze one source at a time", "Keep the raw call first in the arrangement", "Use the extracted contour only as an optional response or guide"],
+    "verification": ["Compare extracted notes with the source by ear", "Record confidence, pitch errors, silence handling, and source checksum"]
+  }],
+  "safety": {"preserve": ["Raw field recording, source provenance, and analysis output"], "avoid": ["Treating uncertain pitch as ground truth, deleting the source, or implying an animal performed MIDI"]}
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "amphion-vevo15-singing-converter",
+  "label": "Amphion Vevo1.5 singing conversion",
+  "summary": "Optional high-upside speech and singing conversion lane with controllable prosody and timbre, kept as an isolated probe until hardware and licensing are verified.",
+  "provider": "amphion_vevo15",
+  "capabilities": ["zero_shot_singing_conversion", "prosody_transfer", "timbre_transfer"],
+  "handoffs": [{
+    "id": "probe-prosody-transfer",
+    "label": "Probe a prosody transfer",
+    "intent": "Evaluate whether a permitted reference performance improves musical expression without making the model a core dependency.",
+    "capabilities": ["zero_shot_singing_conversion", "prosody_transfer", "timbre_transfer"],
+    "automation": "hybrid",
+    "requires_user_operation": true,
+    "inputs": ["Owned source and permitted reference performance", "Exact model snapshot, hardware, and voice-use record"],
+    "outputs": ["Short converted candidate and technical/creative evaluation"],
+    "steps": ["Run only when the local project path is explicitly installed", "Test a short phrase first", "Keep successful output as an optional candidate beside simpler lanes"],
+    "verification": ["Check source immutability, output integrity, identity consent, and artifacts", "Record whether the result improves musical intent rather than merely changing timbre"]
+  }],
+  "safety": {"preserve": ["Reference consent, source files, model snapshot, and experiment decision"], "avoid": ["Unconsented voice cloning, silent model downloads, and hiding hardware or quality limits"]}
+}

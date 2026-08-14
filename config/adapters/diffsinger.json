@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "diffsinger-note-controlled-voice",
+  "label": "DiffSinger note-controlled voice",
+  "summary": "Optional phoneme- and note-controlled singing synthesis for an explicitly licensed experimental vocal lane.",
+  "provider": "diffsinger",
+  "capabilities": ["note_controlled_singing", "singing_voice_synthesis", "phoneme_controlled_vocals"],
+  "handoffs": [{
+    "id": "notes-to-singer",
+    "label": "Render a controlled singer candidate",
+    "intent": "Test lyric, phoneme, note length, vibrato, and expression controls without locking EPRS to one singer model.",
+    "capabilities": ["note_controlled_singing", "singing_voice_synthesis", "phoneme_controlled_vocals"],
+    "automation": "hybrid",
+    "requires_user_operation": true,
+    "inputs": ["Original lyrics, phonemes, notes, and expression controls", "Exact singer/vocoder model files and license record"],
+    "outputs": ["A lossless vocal candidate and reproducibility manifest"],
+    "steps": ["Verify model and vocoder licenses first", "Render a short phrase before a full song", "Compare with Qwen and Seed-VC candidates"],
+    "verification": ["Check pronunciation, timing, pitch, noise, clipping, and checksum", "Block public release until exact model rights are cleared"]
+  }],
+  "safety": {"preserve": ["Lyrics, note data, model files, licenses, and raw candidate renders"], "avoid": ["Uncleared vocoder weights, living-artist imitation, and automatic public publishing"]}
+}

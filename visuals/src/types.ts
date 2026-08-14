@@ -2,7 +2,7 @@ export type VisualWorld = "portal" | "ribbons" | "constellation";
 
 const VISUAL_MOTIFS = [
   "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae",
-  "paper-score", "rare-signal-atlas",
+  "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust",
 ] as const;
 
 export type VisualMotif = typeof VISUAL_MOTIFS[number];

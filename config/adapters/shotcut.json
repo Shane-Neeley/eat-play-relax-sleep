@@ -1,0 +1,120 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "shotcut-open-editor",
+  "label": "Shotcut open-source editor",
+  "summary": "Use the installed Shotcut application for local timeline editing, captions, manual picture review, and editable MLT projects without a hosted account or cloud upload.",
+  "provider": "shotcut",
+  "capabilities": [
+    "local_visual_editing",
+    "timeline_editing",
+    "caption_editing",
+    "mlt_project",
+    "mlt_project_generation",
+    "beat_markers",
+    "beat_sync",
+    "keyframe_editing",
+    "manual_visual_review"
+  ],
+  "handoffs": [
+    {
+      "id": "prepare-local-project",
+      "label": "Prepare a local Shotcut project package",
+      "intent": "Bring a reviewed, disposable EPRS picture candidate and guide audio into a local open-source timeline-editing session without changing the source of truth.",
+      "capabilities": [
+        "local_visual_editing",
+        "timeline_editing",
+        "mlt_project_generation",
+        "beat_markers",
+        "beat_sync"
+      ],
+      "automation": "cli",
+      "requires_user_operation": false,
+      "inputs": [
+        "An eprs.shotcut-project/v1 score and song-relative reviewed picture candidate",
+        "A song-relative guide/master audio file, beat map, and visual brief"
+      ],
+      "outputs": [
+        "A validated editable Shotcut MLT project and checksum manifest",
+        "A non-overwriting melt render candidate and technical sidecar"
+      ],
+      "steps": [
+        "Compile the structured score with eprs shotcut compile; the command rejects raw and outside-workspace inputs and validates the MLT graph with a null render.",
+        "Render a new candidate with eprs shotcut render and preserve the exact project, original-media references, service inventory, checksums, and stream facts.",
+        "Optionally run eprs shotcut open for a subjective GUI pass; never save over a master or prior candidate."
+      ],
+      "verification": [
+        "Confirm the generated MLT has Shotcut annotations, a main bin, black background, named tracks, original resources, and a successful melt null render.",
+        "Confirm the source master and raw-material boundaries are unchanged and ffprobe verifies the new render before picture review."
+      ]
+    },
+    {
+      "id": "edit-captions-and-timeline",
+      "label": "Edit local timeline and captions",
+      "intent": "Make subjective pacing, caption, crop, and visual-structure decisions in a local human-reviewed timeline while preserving the musical edit as the source of truth.",
+      "capabilities": [
+        "timeline_editing",
+        "caption_editing",
+        "beat_sync",
+        "keyframe_editing",
+        "manual_visual_review"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A local MLT project and disposable media package",
+        "A musical cue map, beat markers, captions, or visual brief"
+      ],
+      "outputs": [
+        "A revised local MLT project",
+        "An exported picture candidate with captions and visual decisions recorded"
+      ],
+      "steps": [
+        "Use the beat map and timestamp notes to align cuts, captions, and visual changes with identity, pocket, contrast, hook, and turnaround.",
+        "Inspect the full timeline at normal speed; do not treat a technically valid export as creative approval.",
+        "Export to a new candidate path and leave the MLT project available for later revision."
+      ],
+      "verification": [
+        "Check duration, frame size, frame rate, audio mapping, caption readability, and sync with ffprobe and local playback.",
+        "Check for accidental private text, source-domain identifiers, unlicensed media, and unexpected overlays."
+      ]
+    },
+    {
+      "id": "return-picture-candidate",
+      "label": "Return a Shotcut picture candidate",
+      "intent": "Bring a locally exported Shotcut render back into the normal EPRS picture-review and release path.",
+      "capabilities": [
+        "local_visual_editing",
+        "manual_visual_review"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A new local Shotcut export and its MLT project",
+        "The approved EPRS master, source manifest, and intended picture duration"
+      ],
+      "outputs": [
+        "A song-local picture candidate with checksums and review notes",
+        "A reproducible local edit handoff"
+      ],
+      "steps": [
+        "Save the export as a new candidate; never overwrite the master, raw material, or FINAL package.",
+        "Run the normal EPRS picture review, rights, privacy, and technical checks.",
+        "Rebuild any release package from the local approved master and reviewed picture only."
+      ],
+      "verification": [
+        "Confirm the candidate starts at master time zero and preserves the intended audio relationship.",
+        "Confirm MLT, export, captions, provenance, and rights notes are retained together before publication."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "EPRS masters, raw-material boundaries, provenance, rights evidence, captions, local picture review, and YouTube publishing control",
+      "A reversible local MLT project with its exact media references and edit notes"
+    ],
+    "avoid": [
+      "Cloud uploads, account authentication, remote publication, in-place edits, raw/private source material, and unlicensed stock media",
+      "Treating a Shotcut export as approved without local technical and creative review"
+    ]
+  }
+}

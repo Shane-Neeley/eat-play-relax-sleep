@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "basic-pitch-contour-analysis",
+  "label": "Basic Pitch contour analysis",
+  "summary": "Optional lightweight pitch and pitch-bend extraction for single instruments, vocals, or exploratory animal-call studies.",
+  "provider": "basic_pitch",
+  "capabilities": ["polyphonic_pitch_extraction", "pitch_bend_extraction", "audio_to_midi"],
+  "handoffs": [{
+    "id": "audio-to-contour",
+    "label": "Extract a pitch contour",
+    "intent": "Turn one source into an editable hypothesis for melody, guitar, or animal-response arrangement.",
+    "capabilities": ["polyphonic_pitch_extraction", "pitch_bend_extraction", "audio_to_midi"],
+    "automation": "cli",
+    "requires_user_operation": true,
+    "inputs": ["One isolated or mostly isolated source recording", "Key, target instrument, and quantization/retuning policy"],
+    "outputs": ["MIDI with pitch bends and an analysis note"],
+    "steps": ["Analyze one source at a time", "Inspect bends and false notes", "Use as a guide for a new response rather than a replacement performance"],
+    "verification": ["Compare MIDI to source audio", "Record confidence, timing policy, source checksum, and any manual edits"]
+  }],
+  "safety": {"preserve": ["Source audio, extracted MIDI, pitch bends, and manual corrections"], "avoid": ["Assuming polyphonic extraction is clean, overwriting source audio, or skipping listening review"]}
+}

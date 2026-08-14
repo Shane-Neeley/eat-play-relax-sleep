@@ -1,0 +1,16 @@
+{
+  "schema": "eprs.visual/v1",
+  "title": "Five Past the Door",
+  "subtitle": "A KINETIC BLUEPRINT",
+  "prompt": "Original geometric motion design, not a waveform: a luminous doorway made from five translucent glass panes and thin architectural lines. Cold-open on one bright offset frame, assemble panes in a five-count, rotate the accent grouping halfway through, then collapse into near-black during the silence-led drop before rebuilding with brighter chartreuse edges. End on the initial offset frame so the film can loop. No people, faces, rooms, stock footage, logos, private artifacts, or text-heavy UI.",
+  "world": "constellation",
+  "motif": "five-pane-door",
+  "seed": 26081301,
+  "palette": ["#171326", "#7b5cff", "#c7ff3d", "#dce8ff"],
+  "background": "#08080d",
+  "motion": {"speed": 0.82, "feedback": 0.26, "rotation": 0.48, "turbulence": 0.18},
+  "reactivity": {"bass": 1.18, "mids": 1.3, "highs": 1.12},
+  "texture": {"grain": 0.08, "scanlines": 0.02, "bloom": 0.38},
+  "typography": {"show": true, "position": "lower-left"},
+  "avoid": ["faces", "people", "real places", "stock media", "logos", "literal equalizer bars", "generic AI imagery", "personal details"]
+}

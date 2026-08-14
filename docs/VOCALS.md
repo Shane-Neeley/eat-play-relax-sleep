@@ -141,6 +141,31 @@ batch manifest points to each per-cue autotune sidecar. Advanced controls remain
 available through standalone `eprs autotune`, so an agent can make several
 treatments from one immutable synthetic performance without rerunning TTS.
 
+## Use FireRedTTS3 as an optional remote voice-design lane
+
+The public [FireRedTTS3 Space](https://huggingface.co/spaces/hugging-apps/firered-tts3)
+exposes the Apache-2.0 FireRedTTS3 Instruct model's reference-free Voice Design
+endpoint. This is useful when local model memory is tight and the cue text and
+voice description are safe to send to Hugging Face. The EPRS runner does not
+expose voice cloning: its default path sends no human reference recording.
+
+```bash
+PATH=.eprs-local/qwen3-tts/bin:$PATH PYTHONPATH=src \
+  scripts/firered_tts3_voice.py \
+  --instruct "Original adult electro-ranger voice; playful, punchy, rhythmic, no real-person imitation." \
+  --text "Wild signal. Turn it up." \
+  --out-dir songs/wild-signal/audio/firered-v1 --prefix wild-signal \
+  --seed 20260814 --inference-cfg 1.2 --timesteps 10 \
+  --autotune-preset hard-step --autotune-key E --autotune-scale minor-pentatonic
+```
+
+Each cue uses its own deterministic seed. The manifest records the Space/model,
+current Space revision when retrievable, CFG, flow steps, text-normalization
+choice, generated voice plan, raw/tuned checksums, and whether an `HF_TOKEN` was
+used without ever storing the token. A 429 is surfaced once and is not retried in
+a loop. Remote render success is still not a listening, rights, release, or
+publication approval; disclose the synthetic voice in upload metadata.
+
 ## Try Bark for less robotic hook vocals
 
 For fast experiments where the request is "make it feel more like a singer,"

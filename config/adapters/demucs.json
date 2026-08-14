@@ -1,0 +1,21 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "demucs-stem-laboratory",
+  "label": "Demucs stem laboratory",
+  "summary": "Optional reversible stem-separation lane for bass, drums, vocals, guitar, and other-part repair experiments.",
+  "provider": "demucs",
+  "capabilities": ["stem_separation", "bass_isolation", "vocal_isolation", "guitar_isolation"],
+  "handoffs": [{
+    "id": "mix-to-tentative-stems",
+    "label": "Separate tentative stems",
+    "intent": "Create editable repair candidates from a checksummed parent mix while preserving bleed and model artifacts as evidence.",
+    "capabilities": ["stem_separation", "bass_isolation", "vocal_isolation", "guitar_isolation"],
+    "automation": "cli",
+    "requires_user_operation": true,
+    "inputs": ["A checksummed parent mix and requested repair question", "Exact Demucs model, device, and output directory outside the parent"],
+    "outputs": ["Common-start lossless tentative stems and reconstruction note"],
+    "steps": ["Preserve the parent mix byte-for-byte", "Separate only for a declared question", "Audition stems together and against the parent before editing"],
+    "verification": ["Check alignment, duration, bleed, artifacts, reconstruction behavior, and checksums", "Keep the parent as the release reference until a new mix is approved"]
+  }],
+  "safety": {"preserve": ["Parent mix, stems, model/version, separation settings, and artifact notes"], "avoid": ["Destructive stem replacement, claims of clean isolation, and silent normalization or limiting"]}
+}

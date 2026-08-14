@@ -9,7 +9,7 @@
       "commands": [
         {"name": "python3", "version_args": ["--version"]}
       ],
-      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "recording_clearance", "research_records", "lyric_development", "agent_dispatch", "render_evidence_binding", "renderer_neutral_picture_capture", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff", "inaturalist_sound_reference", "bioacoustic_sound_study", "creative_sound_mapping"],
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "recording_clearance", "research_records", "lyric_development", "agent_dispatch", "render_evidence_binding", "renderer_neutral_picture_capture", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff", "inaturalist_sound_reference", "bioacoustic_sound_study", "creative_sound_mapping", "note_aware_melody"],
       "install_hints": {
         "Darwin": "Install Python 3.11 or newer from python.org or with pyenv.",
         "Linux": "Install Python 3.11 or newer with your distribution package manager."
@@ -129,6 +129,39 @@
       }
     },
     {
+      "id": "chatcut_bridge",
+      "label": "ChatCut-safe local handoff bridge",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["scripts/chatcut_handoff.py"],
+      "capabilities": ["chatcut_asset_handoff", "chatcut_review_return"],
+      "install_hints": {
+        "default": "Use `./scripts/eprs chatcut prepare ...` to build a disposable local package. ChatCut sign-in and remote submission remain explicitly user-operated."
+      }
+    },
+    {
+      "id": "shotcut",
+      "label": "Shotcut open-source local video editor",
+      "kind": "application",
+      "required": false,
+      "platforms": ["Darwin"],
+      "paths": ["/Applications/Shotcut.app"],
+      "capabilities": [
+        "local_visual_editing",
+        "timeline_editing",
+        "caption_editing",
+        "mlt_project",
+        "mlt_project_generation",
+        "beat_markers",
+        "beat_sync",
+        "keyframe_editing",
+        "manual_visual_review"
+      ],
+      "install_hints": {
+        "Darwin": "Install Shotcut from shotcut.org for account-free local timeline editing."
+      }
+    },
+    {
       "id": "ace_step",
       "label": "ACE-Step 1.5 local music generator",
       "kind": "command-set",
@@ -154,6 +187,96 @@
       "install_hints": {
         "Darwin": "Create an isolated Python 3.11+ environment and install `qwen-tts`; add `pyworld` for optional formant-aware pitch processing; use the project runner for local voice design or custom-voice generation.",
         "Linux": "Create an isolated Python 3.11+ environment and install `qwen-tts`; add `pyworld` for optional formant-aware pitch processing; use the project runner for local voice design or custom-voice generation."
+      }
+    },
+    {
+      "id": "firered_tts3_space",
+      "label": "FireRedTTS3 Hugging Face Space",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["scripts/firered_tts3_voice.py"],
+      "capabilities": ["remote_voice_generation", "reference_free_voice_design"],
+      "install_hints": {
+        "default": "Use the project runner with explicit permission for remote processing; the reference-free Voice Design lane needs no local model install or human voice upload."
+      }
+    },
+    {
+      "id": "minimax_music3",
+      "label": "MiniMax Music 3 CUDA sidecar",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["scripts/minimax_music3_runner.py"],
+      "capabilities": ["structured_music_generation", "cuda_music_generation", "remote_music_generation"],
+      "install_hints": {
+        "Darwin": "This Mac cannot run the official CUDA checkpoint locally; operate a separate CUDA sidecar and set EPRS_MINIMAX_MUSIC3_URL.",
+        "Linux": "Use the official MiniMax Music 3 CUDA/SGLang-Omni setup after checking GPU memory, disk, license, and output disclosure requirements."
+      }
+    },
+    {
+      "id": "seed_vc",
+      "label": "Seed-VC local singing conversion",
+      "kind": "command-set",
+      "required": false,
+      "commands": [{"name": "seed-vc"}],
+      "capabilities": ["singing_voice_conversion", "local_voice_conversion", "reference_voice_conversion"],
+      "install_hints": {
+        "Darwin": "Use an isolated Seed-VC environment on Apple Silicon; keep source vocals immutable and record model, steps, backend, and rights.",
+        "Linux": "Use the official Seed-VC environment after checking accelerator, model, and output-rights requirements."
+      }
+    },
+    {
+      "id": "openvpi_game",
+      "label": "OpenVPI GAME audio-to-MIDI analysis",
+      "kind": "command-set",
+      "required": false,
+      "commands": [{"name": "game-infer"}],
+      "capabilities": ["audio_to_midi", "singing_midi_extraction", "animal_pitch_extraction"],
+      "install_hints": {
+        "default": "Install OpenVPI dataset-tools or GAME in an isolated environment only when a note-extraction experiment is explicitly requested."
+      }
+    },
+    {
+      "id": "diffsinger",
+      "label": "OpenVPI DiffSinger singing synthesis",
+      "kind": "command-set",
+      "required": false,
+      "commands": [{"name": "diffsinger"}],
+      "capabilities": ["note_controlled_singing", "singing_voice_synthesis", "phoneme_controlled_vocals"],
+      "install_hints": {
+        "default": "Install an explicitly selected DiffSinger model and vocoder in isolation; verify each model license before any public or monetized release."
+      }
+    },
+    {
+      "id": "amphion_vevo15",
+      "label": "Amphion Vevo1.5 singing conversion",
+      "kind": "project-path",
+      "required": false,
+      "paths": [".eprs-local/amphion-vevo15"],
+      "capabilities": ["zero_shot_singing_conversion", "prosody_transfer", "timbre_transfer"],
+      "install_hints": {
+        "default": "Keep Vevo1.5 as an opt-in experimental project; its model stack is large and must be tested on the available hardware before use."
+      }
+    },
+    {
+      "id": "basic_pitch",
+      "label": "Spotify Basic Pitch audio-to-MIDI",
+      "kind": "command-set",
+      "required": false,
+      "commands": [{"name": "basic-pitch"}],
+      "capabilities": ["polyphonic_pitch_extraction", "pitch_bend_extraction", "audio_to_midi"],
+      "install_hints": {
+        "default": "Install Basic Pitch in an isolated environment for one-instrument or animal-call pitch studies; do not treat MIDI extraction as a finished arrangement."
+      }
+    },
+    {
+      "id": "demucs",
+      "label": "Demucs stem separator",
+      "kind": "command-set",
+      "required": false,
+      "commands": [{"name": "demucs"}],
+      "capabilities": ["stem_separation", "bass_isolation", "vocal_isolation", "guitar_isolation"],
+      "install_hints": {
+        "default": "Install Demucs only for reversible stem experiments; preserve the parent mix and record bleed, artifacts, model, and license."
       }
     },
     {
@@ -221,6 +344,36 @@
       "capabilities": ["local_voice_generation"]
     },
     {
+      "id": "remote-voice-collaboration",
+      "label": "Optional remote reference-free voice generation",
+      "description": "Generate bounded original speech cues through an explicitly authorized remote voice-design service, preserve request and revision evidence, and optionally apply declared local EPRS pitch treatment without uploading a human reference voice.",
+      "capabilities": ["remote_voice_generation", "reference_free_voice_design"]
+    },
+    {
+      "id": "minimax-music3-cuda-collaboration",
+      "label": "Optional MiniMax Music 3 CUDA collaboration",
+      "description": "Generate a structured song through an explicitly operated MiniMax Music 3 CUDA sidecar, then return the source WAV and license-aware provenance to EPRS.",
+      "capabilities": ["structured_music_generation", "cuda_music_generation", "remote_music_generation"]
+    },
+    {
+      "id": "animal-to-melody-lab",
+      "label": "Optional animal-to-melody study",
+      "description": "Analyze a preserved animal call with an available pitch-to-MIDI tool, compare the raw call with a chord-aware musical response, and keep analysis separate from release audio.",
+      "capabilities": ["media_analysis", "animal_pitch_extraction", "audio_to_midi", "note_aware_melody"]
+    },
+    {
+      "id": "singing-voice-lab",
+      "label": "Optional singing voice laboratory",
+      "description": "Compare local singing conversion and note-controlled synthesis candidates while preserving the source vocal, model provenance, and rights evidence.",
+      "capabilities": ["singing_voice_conversion", "note_controlled_singing", "local_voice_conversion"]
+    },
+    {
+      "id": "stem-repair-lab",
+      "label": "Optional stem repair laboratory",
+      "description": "Separate a checksummed parent mix into tentative stems for repair or alternate arrangement without treating model isolation as clean or destructive editing.",
+      "capabilities": ["stem_separation", "bass_isolation", "vocal_isolation"]
+    },
+    {
       "id": "inaturalist-to-creative",
       "label": "iNaturalist sound to creative study",
       "description": "Freeze a licensed iNaturalist sound reference, measure its acoustic contour, and expose separate beat, noise, lyric, vocal, and tone prompts with provenance and interpretation limits.",
@@ -243,6 +396,18 @@
       "label": "Promptable visual production",
       "description": "Develop and render local promptable visuals, then preserve renderer-neutral picture candidates for review.",
       "capabilities": ["media_analysis", "visual_development", "promptable_visuals", "renderer_neutral_picture_capture", "picture_stream_assembly"]
+    },
+    {
+      "id": "chatcut-visual-handoff",
+      "label": "Optional ChatCut visual handoff",
+      "description": "Prepare disposable derivatives and an exact prompt/asset manifest for an explicitly operated ChatCut visual pass, then return only an untrusted picture candidate for local EPRS review.",
+      "capabilities": ["chatcut_asset_handoff", "chatcut_review_return"]
+    },
+    {
+      "id": "open-source-visual-editing",
+      "label": "Optional open-source local visual editing",
+      "description": "Use an installed open-source timeline editor for local rough cuts, captions, manual review, and editable project files without an account or cloud upload.",
+      "capabilities": ["local_visual_editing", "timeline_editing", "caption_editing", "mlt_project", "mlt_project_generation", "beat_markers", "beat_sync", "keyframe_editing", "manual_visual_review"]
     },
     {
       "id": "youtube-release",
