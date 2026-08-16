@@ -1481,7 +1481,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
                     # Local import avoids a module cycle: research intake uses
                     # song and checksum primitives from this module.
                     from .research import verify_research_record
-                    _, research = verify_research_record(song_path, manifest_path)
+                    _, research = verify_research_record(song_path, manifest_path.resolve())
                     recipe = research["recipe"]
                     sources = research["sources"]
                     findings = recipe["findings"]

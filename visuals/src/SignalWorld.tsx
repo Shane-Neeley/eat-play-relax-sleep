@@ -93,6 +93,38 @@ const Ribbons = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const CloudBraidOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const progress = frame / Math.max(1, durationInFrames - 1);
+  const energy = mean(spectrum);
+  const bridge = progress > 0.50 && progress < 0.625;
+  const returnPhase = progress > 0.625 ? 1 : 0;
+  const strands = Array.from({length: 7}, (_, index) => index);
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <filter id="cloud-braid-soft"><feGaussianBlur stdDeviation={3 + spec.texture.bloom * 4} /></filter>
+      </defs>
+      {strands.map((index) => {
+        const missing = bridge && index === 2;
+        const baseY = height * (0.22 + index * 0.082) + (index % 2 ? height * 0.025 : -height * 0.012);
+        const path = Array.from({length: 49}, (_, point) => {
+          const x = width * (point / 48);
+          const braid = Math.sin(point * 0.34 + time * (0.72 + index * 0.035) * spec.motion.speed + index * 0.81) * (height * (0.045 + energy * 0.06));
+          const diagonal = (index - 3) * width * 0.014 + Math.sin(time * 0.16 + index) * width * 0.025;
+          const turn = returnPhase ? Math.sin(point * 0.18 + index) * height * 0.028 : 0;
+          const y = baseY + braid + diagonal + turn;
+          return `${point ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(" ");
+        return <path key={`cloud-strand-${index}`} d={path} fill="none" stroke={spec.palette[index % 4]} strokeWidth={missing ? 0 : 11 + energy * 15 + (index % 3) * 3} strokeLinecap="round" opacity={missing ? 0 : 0.45 + (index % 2) * 0.10} filter={index === 0 ? "url(#cloud-braid-soft)" : undefined} />;
+      })}
+      <path d={`M ${width * 0.08} ${height * 0.86} Q ${width * 0.34} ${height * (0.80 - energy * 0.08)} ${width * 0.62} ${height * 0.86} T ${width * 0.94} ${height * 0.82}`} fill="none" stroke={spec.palette[3]} strokeWidth={3} opacity={0.26} />
+    </svg>
+  </AbsoluteFill>;
+};
+
 const Constellation = ({spec, spectrum}: Props) => {
   const frame = useCurrentFrame();
   const {width, height, fps} = useVideoConfig();
@@ -551,6 +583,136 @@ const FivePaneDoorOverlay = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const ScreenPrintCountOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const barSeconds = (60 / 92) * 4;
+  const bar = Math.min(47, Math.floor(time / barSeconds));
+  const scene = Math.min(7, Math.floor(bar / 6));
+  const sceneProgress = (time % (barSeconds * 6)) / (barSeconds * 6);
+  const numerals = ["1", "2", "3", "4", "5", "6", "8?", "7"];
+  const numeral = numerals[scene];
+  const energy = mean(spectrum);
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const enter = interpolate(sceneProgress, [0, 0.12, 0.88, 1], [-0.12, 0, 0, 0.12], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const x = width * (0.47 + enter + Math.sin(time * 0.42 + scene) * 0.012);
+  const y = height * (0.64 + Math.cos(time * 0.31 + scene) * 0.018);
+  const scale = 1 + energy * 0.06 + (scene === 7 ? 0.08 : 0);
+  const stopFade = interpolate(frame, [durationInFrames - fps * 0.35, durationInFrames - 1], [1, 0], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const commas = Array.from({length: scene + 2}, (_, index) => {
+    const side = index % 2 ? 1 : -1;
+    const baseX = side < 0 ? width * (0.07 + index * 0.035) : width * (0.93 - index * 0.035);
+    const drift = Math.sin(time * (0.36 + index * 0.025) + index) * width * 0.018;
+    return {x: baseX + drift, y: height * (0.18 + ((index * 0.137 + scene * 0.071) % 0.64)), side};
+  });
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden", opacity: stopFade}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <pattern id="screenprint-dots" width="18" height="18" patternUnits="userSpaceOnUse">
+          <circle cx="4" cy="4" r={1.5 + highs * 1.2} fill={spec.palette[3]} opacity={0.13} />
+        </pattern>
+        <filter id="ink-rough"><feTurbulence baseFrequency="0.018" numOctaves="2" seed={spec.seed + scene} result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="5" /></filter>
+      </defs>
+      <rect width={width} height={height} fill={spec.background} />
+      <rect width={width} height={height} fill="url(#screenprint-dots)" />
+      <g transform={`translate(${x} ${y}) scale(${scale})`} filter="url(#ink-rough)">
+        <text x={-width * 0.016} y={height * 0.018} textAnchor="middle" fill={spec.palette[2]} opacity={0.62} fontFamily="Arial Black,Impact,sans-serif" fontSize={height * 0.82} fontWeight={900}>{numeral}</text>
+        <text x={width * 0.012} y={-height * 0.010} textAnchor="middle" fill={spec.palette[0]} opacity={0.76} fontFamily="Arial Black,Impact,sans-serif" fontSize={height * 0.82} fontWeight={900}>{numeral}</text>
+        <text x="0" y="0" textAnchor="middle" fill={spec.palette[3]} fontFamily="Arial Black,Impact,sans-serif" fontSize={height * 0.82} fontWeight={900}>{numeral}</text>
+      </g>
+      {commas.map((comma, index) => (
+        <g key={`comma-${index}`} transform={`translate(${comma.x} ${comma.y}) rotate(${comma.side * (12 + index * 7)})`} opacity={0.52 + energy * 0.22}>
+          <ellipse rx={width * 0.032} ry={height * 0.022} fill={spec.palette[(index + 1) % 3]} />
+          <path d={`M 0 ${height * 0.010} Q ${comma.side * width * 0.030} ${height * 0.052} ${comma.side * width * 0.006} ${height * 0.080}`} fill={spec.palette[(index + 1) % 3]} />
+        </g>
+      ))}
+      <g transform={`translate(${width * 0.17} ${height * 0.89}) rotate(-90)`} fill={spec.palette[3]} opacity={0.72} fontFamily="Arial,sans-serif" letterSpacing="0.22em">
+        <text fontSize={Math.max(15, width * 0.011)}>CLOUDS LEARN TO COUNT</text>
+      </g>
+      <text x={width * 0.77} y={height * 0.91} textAnchor="middle" fill={scene === 6 ? spec.palette[2] : spec.palette[1]} fontFamily="Arial Black,Impact,sans-serif" fontSize={Math.max(18, width * 0.022)} opacity={0.75}>
+        {scene === 6 ? "MISCOUNT" : scene === 7 ? "CORRECTION" : "OVERHEAD"}
+      </text>
+    </svg>
+  </AbsoluteFill>;
+};
+
+const SquirrelPinesOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps, durationInFrames} = useVideoConfig();
+  const time = frame / fps;
+  const progress = frame / Math.max(1, durationInFrames - 1);
+  const barSeconds = (60 / 112) * 4;
+  const bar = Math.floor(time / barSeconds);
+  const section = bar < 4 ? "DAWN" : bar < 16 ? "FORAGE" : bar < 20 ? "CLIMB" : bar < 28 ? "HOOK" : bar < 32 ? "CHASE" : bar < 44 ? "FORAGE" : bar < 48 ? "DROP" : bar < 60 ? "HOOK" : "HOME";
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const centerX = width * (0.50 + Math.sin(time * 0.21) * 0.025);
+  const groundY = height * 0.76;
+  const leap = section === "CHASE" ? Math.sin(time * 2.4) * height * 0.065 : section === "DROP" ? 0 : Math.sin(time * 0.65) * height * 0.018;
+  const squirrelX = centerX + Math.sin(time * 0.52) * width * 0.14;
+  const squirrelY = groundY - height * 0.10 + leap;
+  const scale = 1 + bass * 0.10;
+  const cones = Array.from({length: 11}, (_, index) => {
+    const phase = seeded(spec.seed + 30, index) * Math.PI * 2;
+    const drift = (time * (0.08 + seeded(spec.seed + 42, index) * 0.06) + seeded(spec.seed + 50, index)) % 1;
+    return {
+      x: width * (0.08 + ((index * 0.097 + drift * 0.24) % 0.84)),
+      y: height * (0.18 + ((index * 0.071 + Math.sin(time * 0.4 + phase) * 0.025 + 0.42) % 0.48)),
+      rotate: Math.sin(time * 0.7 + phase) * 24,
+      size: height * (0.018 + (index % 3) * 0.004 + highs * 0.004),
+    };
+  });
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <linearGradient id="pine-sky" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={rgba(spec.palette[1], 0.20 + highs * 0.07)} />
+          <stop offset="68%" stopColor={rgba(spec.palette[2], 0.06 + mids * 0.04)} />
+          <stop offset="100%" stopColor={spec.background} />
+        </linearGradient>
+        <filter id="pine-glow"><feGaussianBlur stdDeviation={8 + spec.texture.bloom * 8} /></filter>
+      </defs>
+      <rect width={width} height={height} fill="url(#pine-sky)" />
+      <circle cx={width * 0.78} cy={height * 0.23} r={height * (0.08 + bass * 0.025)} fill={spec.palette[2]} opacity={0.12 + bass * 0.10} filter="url(#pine-glow)" />
+      {Array.from({length: 7}, (_, index) => {
+        const x = width * (0.08 + index * 0.145);
+        const top = height * (0.30 + (index % 3) * 0.06);
+        const sway = Math.sin(time * 0.30 + index) * width * 0.012;
+        return <g key={`pine-${index}`} opacity={0.22 + (index % 2) * 0.08}>
+          <path d={`M ${x} ${groundY + height * 0.07} L ${x + sway} ${top} M ${x + sway} ${top + height * 0.10} L ${x - width * 0.06} ${top + height * 0.22} M ${x + sway} ${top + height * 0.16} L ${x + width * 0.06} ${top + height * 0.28}`} stroke={spec.palette[1]} strokeWidth={3 + mids * 2} fill="none" strokeLinecap="round" />
+          <path d={`M ${x - width * 0.07} ${top + height * 0.22} Q ${x} ${top + height * 0.13} ${x + width * 0.07} ${top + height * 0.22}`} stroke={spec.palette[2]} strokeWidth={2} fill="none" opacity={0.65} />
+        </g>;
+      })}
+      <path d={`M 0 ${groundY + height * 0.09} Q ${width * 0.25} ${groundY - height * 0.03} ${width * 0.50} ${groundY + height * 0.05} T ${width} ${groundY}`} fill="none" stroke={spec.palette[3]} strokeOpacity={0.30} strokeWidth={3 + bass * 2} />
+      {cones.map((cone, index) => <g key={`cone-${index}`} transform={`translate(${cone.x} ${cone.y}) rotate(${cone.rotate})`} opacity={0.52 + highs * 0.26}>
+        <path d={`M 0 ${-cone.size} L ${cone.size * 0.72} ${cone.size * 0.64} Q 0 ${cone.size * 1.08} ${-cone.size * 0.72} ${cone.size * 0.64} Z`} fill={spec.palette[index % 2 === 0 ? 2 : 0]} stroke={spec.palette[3]} strokeWidth={1.5} />
+        <path d={`M ${-cone.size * 0.38} ${-cone.size * 0.18} L ${cone.size * 0.38} ${-cone.size * 0.18} M ${-cone.size * 0.46} ${cone.size * 0.18} L ${cone.size * 0.46} ${cone.size * 0.18}`} stroke={spec.palette[3]} strokeOpacity={0.55} strokeWidth={1.2} />
+      </g>)}
+      <g transform={`translate(${squirrelX} ${squirrelY}) scale(${scale})`}>
+        <path d={`M ${-width * 0.045} ${height * 0.005} C ${-width * 0.17} ${-height * 0.10} ${-width * 0.16} ${-height * 0.25} ${-width * 0.07} ${-height * 0.21} C ${-width * 0.01} ${-height * 0.18} ${width * 0.005} ${-height * 0.10} ${width * 0.01} ${-height * 0.04}`} fill="none" stroke={spec.palette[0]} strokeWidth={height * 0.045} strokeLinecap="round" opacity={0.82} />
+        <ellipse cx={0} cy={0} rx={width * 0.055} ry={height * 0.060} fill={spec.palette[0]} opacity={0.94} />
+        <circle cx={width * 0.055} cy={-height * 0.048} r={height * 0.037} fill={spec.palette[2]} stroke={spec.palette[0]} strokeWidth={3} />
+        <path d={`M ${width * 0.041} ${-height * 0.078} L ${width * 0.050} ${-height * 0.112} L ${width * 0.068} ${-height * 0.078} M ${width * 0.067} ${-height * 0.073} L ${width * 0.079} ${-height * 0.103} L ${width * 0.091} ${-height * 0.068}`} fill={spec.palette[2]} stroke={spec.palette[0]} strokeWidth={2} />
+        <circle cx={width * 0.072} cy={-height * 0.053} r={height * 0.006} fill={spec.background} />
+        <path d={`M ${width * 0.074} ${-height * 0.027} Q ${width * 0.098} ${-height * 0.018} ${width * 0.112} ${-height * 0.028}`} fill="none" stroke={spec.palette[3]} strokeWidth={2} strokeLinecap="round" />
+        <path d={`M ${-width * 0.018} ${height * 0.040} L ${-width * 0.044} ${height * 0.082} M ${width * 0.024} ${height * 0.040} L ${width * 0.048} ${height * 0.078}`} stroke={spec.palette[0]} strokeWidth={height * 0.014} strokeLinecap="round" />
+      </g>
+      <g fill={spec.palette[3]} opacity={0.64} fontFamily="ui-monospace,monospace" fontSize={Math.max(14, width * 0.012)} letterSpacing="0.18em">
+        <text x={width * 0.07} y={height * 0.10}>PINECONE FREE / {section}</text>
+        <text x={width * 0.70} y={height * 0.10}>WANT · NEED · RUN</text>
+      </g>
+      <text x={width * 0.08} y={height * 0.91} fill={spec.palette[2]} opacity={0.72} fontFamily="Georgia,serif" fontSize={Math.max(22, width * 0.026)}>find the stash / feel the beat / be free</text>
+      <path d={`M ${width * 0.07} ${height * 0.94} Q ${width * 0.50} ${height * (0.90 - progress * 0.02)} ${width * 0.93} ${height * 0.94}`} fill="none" stroke={spec.palette[1]} strokeOpacity={0.18 + mids * 0.12} strokeWidth={2} />
+    </svg>
+  </AbsoluteFill>;
+};
+
 export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -569,6 +731,9 @@ export const SignalWorld = (props: Props) => {
     {props.spec.motif === "rare-signal-atlas" ? <RareSignalAtlasOverlay {...props} /> : null}
     {props.spec.motif === "five-pane-door" ? <FivePaneDoorOverlay {...props} /> : null}
     {props.spec.motif === "magnetic-dust" ? <MagneticDustOverlay {...props} /> : null}
+    {props.spec.motif === "cloud-braid" ? <CloudBraidOverlay {...props} /> : null}
+    {props.spec.motif === "screenprint-count" ? <ScreenPrintCountOverlay {...props} /> : null}
+    {props.spec.motif === "squirrel-pines" ? <SquirrelPinesOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };

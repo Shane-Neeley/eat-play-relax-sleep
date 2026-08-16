@@ -85,7 +85,7 @@ def validate_spec(candidate: dict) -> dict:
         raise ValueError("visual score must use schema eprs.visual/v1")
     if candidate.get("world") not in {"portal", "ribbons", "constellation"}:
         raise ValueError("visual world must be portal, ribbons, or constellation")
-    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust"}:
+    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid", "screenprint-count", "squirrel-pines"}:
         raise ValueError("visual motif is not supported by the renderer")
     cards = candidate.get("cards")
     if cards is not None:

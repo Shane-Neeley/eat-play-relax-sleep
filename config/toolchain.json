@@ -213,6 +213,17 @@
       }
     },
     {
+      "id": "midashenglm_gen",
+      "label": "MiDashengLM-Gen hosted audio-scene generator",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["config/adapters/midashenglm-gen.json"],
+      "capabilities": ["unified_audio_scene_generation", "structured_audio_prompting", "speech_music_sfx_environment_sketches"],
+      "install_hints": {
+        "default": "Use the public Hugging Face Space or an explicitly operated sidecar for one bounded sketch; quota, model revision, and output evidence must be recorded before local mixing."
+      }
+    },
+    {
       "id": "seed_vc",
       "label": "Seed-VC local singing conversion",
       "kind": "command-set",

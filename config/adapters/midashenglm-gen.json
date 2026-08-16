@@ -1,0 +1,81 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "midashenglm-gen-scene-generator",
+  "label": "MiDashengLM-Gen unified audio-scene generator",
+  "summary": "Optional hosted or explicitly operated sidecar for short audio-scene sketches that combine speech, music, effects, and environment; it is not the EPRS groove or mastering engine.",
+  "provider": "midashenglm_gen",
+  "capabilities": [
+    "unified_audio_scene_generation",
+    "structured_audio_prompting",
+    "speech_music_sfx_environment_sketches"
+  ],
+  "handoffs": [
+    {
+      "id": "scene-brief-to-sketch",
+      "label": "Generate a bounded audio-scene sketch",
+      "intent": "Explore one scene, hook, transition, or vocal/animal-response idea, then return it to EPRS as an unapproved source stem.",
+      "capabilities": [
+        "unified_audio_scene_generation",
+        "structured_audio_prompting"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A structured prompt using caption, asr, speech, music, sfx, and env fields",
+        "A declared Space or sidecar endpoint, model revision, seed, and quota/auth state",
+        "A local EPRS fallback plan for unsupported hardware or unavailable remote compute"
+      ],
+      "outputs": [
+        "A new 16 kHz mono WAV sketch with the returned status and checksum",
+        "A provenance sidecar recording endpoint, model, prompt, settings, seed, and license evidence",
+        "A local mix handoff that preserves the sketch as a source stem rather than a finished song"
+      ],
+      "steps": [
+        "Check the official paper, model card, repository, license, endpoint health, and current quota before sending a prompt.",
+        "Use the smallest useful prompt and one bounded generation; do not retry quota failures in a loop.",
+        "Resample and mix locally only after preserving the original 16 kHz mono output and exact prompt.",
+        "Keep Sonic Pi or BeatScript responsible for groove, form, and player-facing timing; keep Shotcut responsible for local picture assembly."
+      ],
+      "verification": [
+        "Confirm the returned file is non-empty, opens, has the declared sample rate/channels, and has a checksum.",
+        "Distinguish a real generated sketch from a local fallback or prompt-inspired arrangement in the manifest and public notes.",
+        "Do not publish until rights, privacy, quality, and any synthetic-media disclosure requirements are separately checked."
+      ]
+    },
+    {
+      "id": "scene-grammar-to-local-arrangement",
+      "label": "Translate scene grammar into a local EPRS arrangement",
+      "intent": "Use MiDashengLM's structured scene vocabulary as an optional planning layer while retaining arbitrary EPRS tools, meters, genres, and human performances.",
+      "capabilities": ["structured_audio_prompting"],
+      "automation": "hybrid",
+      "requires_user_operation": false,
+      "inputs": [
+        "A scene brief with independent music, speech, sfx, and environment roles",
+        "Any available local beat, voice, animal, guitar, or visual sources"
+      ],
+      "outputs": [
+        "A local arrangement map and optional source-stem plan",
+        "A clear record of which tool actually rendered each layer"
+      ],
+      "steps": [
+        "Treat the special-token vocabulary as a compositional map, not a mandatory EPRS format.",
+        "Build the early identity, withheld pocket, lift, drop, hook, animal response, and turnaround with the best available local tools.",
+        "Keep weird beats and future tools welcome; never collapse the project around this model's prompt grammar."
+      ],
+      "verification": [
+        "Record whether MiDashengLM actually rendered audio or only informed the local arrangement.",
+        "Preserve the local source chain, rights evidence, and final mastering authority."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The exact structured prompt, model revision, endpoint, seed, settings, returned WAV, checksum, and license evidence",
+      "The distinction between hosted model output, local EPRS composition, human performance, animal source audio, and final release"
+    ],
+    "avoid": [
+      "Claiming the model rendered when the Space quota or hardware blocked it, uploading private recordings without explicit clearance, or treating a short scene sketch as a finished song",
+      "Unbounded quota retries, hidden cloud processing, public personal/source identifiers, or replacing Sonic Pi, Shotcut, or future tools with one fixed model path"
+    ]
+  }
+}
