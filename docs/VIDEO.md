@@ -99,3 +99,21 @@ For audio-reactive, promptable films rather than a title card, use the
 [visual system](VISUALS.md), then capture its output through the renderer-neutral
 picture contract. Remotion renders and external editor exports remain candidates
 until picture review and final assembled picture-and-sync review are recorded.
+
+## Share a frozen control source across audio and picture
+
+When a song and its film should feel causally related, freeze a small,
+song-local control manifest (for example, bar, level, pan, attack, and decay
+events) and bind both the BeatScript arrangement and the visual renderer to
+that manifest. The audio still needs its own BeatScript and mix/master review;
+the film still needs picture review and packet-level sync checks. The shared
+manifest is an evidence bridge, not a substitute for either approval. It also
+makes a useful orthogonality move: a 2:1 or other intentional picture ratio can
+be chosen from the concept rather than inherited from the default renderer,
+then presented truthfully in the thumbnail assets.
+
+For a Studio upload that has become stale after a native file-picker handoff,
+keep the video ID and reopen the exact `/video/<id>/edit` route in a fresh
+authenticated tab. Re-derive controls from a fresh UI snapshot, resume at the
+remaining gate, and verify the public watch page before recording the EPRS
+receipt. This preserves the approved FINAL bytes while avoiding a second upload.
