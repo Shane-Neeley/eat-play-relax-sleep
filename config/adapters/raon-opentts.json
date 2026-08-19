@@ -1,0 +1,54 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "raon-opentts-local-voice",
+  "label": "Raon-OpenTTS-1B local reference-conditioned speech adapter",
+  "summary": "Use the official Raon-OpenTTS-1B checkpoint locally to make short English speech cues in an explicitly consented reference voice; it is speech-first, not a singing synthesizer, and the model card is CC-BY-NC-4.0.",
+  "provider": "raon_opentts",
+  "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+  "handoffs": [
+    {
+      "id": "consented-reference-to-speech-cues",
+      "label": "Generate bounded speech cues from a consented reference voice",
+      "intent": "Use one owned or explicitly consented reference recording to create short speech cues that can be arranged as an authored vocal texture or passed through a separate, declared pitch treatment.",
+      "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "An owned or explicitly consented reference WAV and the exact words spoken in it",
+        "An explicit consent/rights note for reference-voice cloning and intended use",
+        "A pinned Raon-OpenTTS model revision, checkpoint, config, vocoder, seed, and output role",
+        "Short cue text; Raon-OpenTTS is speech-first and does not accept this handoff as singing synthesis",
+        "For pitch treatment: an explicit musical intent, key, scale, preset, and separate raw-output path"
+      ],
+      "outputs": [
+        "New 16 kHz lossless WAV speech cues outside recordings/raw and FINAL",
+        "A manifest with reference checksum/transcript/consent note, model/checkpoint/config/vocoder identity, license, seed, settings, and output checksums",
+        "When tuning is requested, preserved raw cues plus per-cue EPRS autotune sidecars"
+      ],
+      "steps": [
+        "Create or activate the isolated `.eprs-local/raon-opentts-env` environment, clone the official KRAFTON checkout under `.eprs-local/raon-opentts`, install its dependencies, and obtain the 1B checkpoint plus 16 kHz HiFi-GAN vocoder without adding paths or credentials to public artifacts.",
+        "Verify the exact model revision and CC-BY-NC-4.0 terms; keep the reference audio local and do not send it to Hugging Face or another service.",
+        "Run `scripts/raon_opentts_voice.py` with the reference audio, exact reference transcript, required consent note, short cues, and a new song-local output directory.",
+        "If a cue needs musical pitch, prefer an authored target-note path or use `eprs autotune` only as a declared, reversible treatment; do not claim that speech TTS invented a sung melody.",
+        "Compare raw and processed cues in the complete arrangement, then promote only a listened candidate through the normal EPRS experiment and release gates."
+      ],
+      "verification": [
+        "Confirm the reference checksum, transcript, consent note, model revision, checkpoint/config/vocoder checksums, seed, settings, and CC-BY-NC-4.0 license are recorded without embedding the reference audio.",
+        "Confirm every generated cue is a non-empty 16 kHz PCM WAV, opens cleanly, is not clipped or truncated, and has a matching output checksum.",
+        "For tuning, confirm voiced-frame coverage and target notes, then compare raw and tuned cues at matched level in stereo and mono.",
+        "Confirm the result is disclosed as a consented synthetic/reference-conditioned speech cue and is not presented as a human recording, singing model, creative approval, or release clearance."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The immutable reference recording, exact transcript, consent/rights note, model revision, checkpoint/config/vocoder identity, seeds, generated raw cues, processed alternatives, and checksums",
+      "The distinction between a consented reference-conditioned synthetic speech cue, an actual human vocal performance, and a musical pitch-treatment experiment"
+    ],
+    "avoid": [
+      "Uploading a private reference voice, cloning or imitating anyone without explicit consent, using the model for a child or identifiable third party without permission, or hiding model/license details",
+      "Treating the CC-BY-NC-4.0 model license as clearance for a reference speaker, generated output, commercial release, or platform upload",
+      "Calling speech-first TTS singing synthesis or using autotune as a substitute for authored melody"
+    ]
+  }
+}

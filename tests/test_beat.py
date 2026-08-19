@@ -1,11 +1,12 @@
 from pathlib import Path
 from array import array
 import math
+import random
 import tempfile
 import unittest
 import wave
 
-from eprs.audio import SAMPLE_RATE, _load_sample, render
+from eprs.audio import SAMPLE_RATE, _hit, _load_sample, render
 from eprs.beat import dumps, load, mutate, parse, track_active
 from eprs.visualize import svg
 
@@ -54,6 +55,28 @@ class BeatTests(unittest.TestCase):
                 self.assertEqual(wav.getframerate(), SAMPLE_RATE)
                 self.assertEqual(wav.getnchannels(), 2)
                 self.assertGreater(wav.getnframes(), beat.duration * SAMPLE_RATE)
+
+    def test_synthetic_drum_hits_are_damped_not_wire_bright(self):
+        """Guard the human-ear fix against reintroducing full-band scratch."""
+        for kind in ("hat", "snare", "clap", "stick"):
+            with self.subTest(kind=kind):
+                hit = _hit(kind, 0.15, random.Random(42))
+                zero_crossing_rate = sum(
+                    1 for left, right in zip(hit, hit[1:]) if (left < 0) != (right < 0)
+                ) / len(hit)
+                self.assertLess(zero_crossing_rate, 0.20)
+
+    def test_pluck_voice_is_rounded_and_decays(self):
+        """Keep guitar-like chord hits from becoming triangle-wave fuzz."""
+        hit = _hit("pluck", 0.34, random.Random(42), 164.81)
+        zero_crossing_rate = sum(
+            1 for left, right in zip(hit, hit[1:]) if (left < 0) != (right < 0)
+        ) / len(hit)
+        self.assertLess(zero_crossing_rate, 0.025)
+        early = math.sqrt(sum(value * value for value in hit[:SAMPLE_RATE // 20]) / (SAMPLE_RATE // 20))
+        late_start = len(hit) - SAMPLE_RATE // 20
+        late = math.sqrt(sum(value * value for value in hit[late_start:]) / (len(hit) - late_start))
+        self.assertGreater(early, late * 1.8)
 
     def test_render_accepts_lossless_24_bit_voice_samples(self):
         with tempfile.TemporaryDirectory() as folder:

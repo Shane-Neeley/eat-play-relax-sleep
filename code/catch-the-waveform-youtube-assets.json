@@ -1,0 +1,52 @@
+{
+  "schema": "eprs.youtube-assets/v1",
+  "title": "Catch the Waveform publishing assets",
+  "intent": "Prepare the reviewed educational thumbnail, authored English captions, useful chapters, and accessibility context for the exact public YouTube video.",
+  "approved_video": "video/catch-the-waveform-surf-educational-master-draft.mp4",
+  "accessibility_note": "The video is a dark editorial lesson with a four-step BUILD/HEAR/TWEAK/LOCK state rail, progressive Sonic Pi code cards, a beat map, streaming lyric card, waveform-responsive ribbons, and a visible COMPLETE footer. State names, code, lyrics, and meaningful teaching cues are repeated in captions; active states are not conveyed by color alone.",
+  "thumbnail": {
+    "path": "visuals/catch-the-waveform-thumbnail-v1.png",
+    "alt_text": "A dark editorial music-video frame titled Catch the Waveform with a BUILD, HEAR, TWEAK, LOCK state rail, Sonic Pi code cards, a beat map, and a live lyric card.",
+    "review_question": "Is the state rail, Sonic Pi lesson, lyric card, and surf-rock identity truthful to the exact public video, legible at small sizes, and free of accidental private material?"
+  },
+  "captions": [
+    {
+      "language": "en",
+      "label": "English",
+      "completeness_note": "Authored against the exact master-bound public video; cues cover the sung lyric, state changes, Sonic Pi teaching, and meaningful transitions.",
+      "cues": [
+        {"start_seconds":0.0,"end_seconds":4.0,"text":"BUILD — set the shoreline clock"},
+        {"start_seconds":4.1,"end_seconds":9.1,"text":"Sonic Pi: use_bpm 104 · use_random_seed 20260817 · sleep 192"},
+        {"start_seconds":9.2,"end_seconds":13.4,"text":"HEAR — Set the kick like a lighthouse, four beats in a row"},
+        {"start_seconds":13.45,"end_seconds":17.45,"text":"Let the snare hit the shoreline, then the low tide flows"},
+        {"start_seconds":17.5,"end_seconds":21.15,"text":"Pick a little guitar, let the tremolo sway"},
+        {"start_seconds":21.2,"end_seconds":27.95,"text":"Leave a gap for the ocean, let the backbeat play"},
+        {"start_seconds":28.0,"end_seconds":31.1,"text":"Write one line, hear it ring"},
+        {"start_seconds":31.15,"end_seconds":36.8,"text":"Change one thing, feel the spring — hear the relationship before adding more."},
+        {"start_seconds":36.9,"end_seconds":41.95,"text":"TWEAK — catch the wave; the chorus is a shared clock with different colors."},
+        {"start_seconds":42.0,"end_seconds":46.7,"text":"Code a little motion, feel it in your soul"},
+        {"start_seconds":46.75,"end_seconds":50.05,"text":"Kick and snare, guitar in the air"},
+        {"start_seconds":50.1,"end_seconds":55.4,"text":"Tune the voice, ride the line, surf it everywhere"},
+        {"start_seconds":55.45,"end_seconds":59.35,"text":"Use a pluck on the guitar, spring it left to right"},
+        {"start_seconds":59.4,"end_seconds":63.45,"text":"Short delay behind the pick makes the daylight bright"},
+        {"start_seconds":63.5,"end_seconds":67.55,"text":"Bass can trace the root, then answer off the beat"},
+        {"start_seconds":67.6,"end_seconds":73.7,"text":"Toms can climb the shoreline when the chorus finds its feet"},
+        {"start_seconds":73.8,"end_seconds":78.0,"text":"LOCK — pull it back to open water; subtraction makes the return feel larger."},
+        {"start_seconds":78.05,"end_seconds":83.2,"text":"Bring the tremolo back in time, that's the surf you made"},
+        {"start_seconds":83.25,"end_seconds":88.0,"text":"COMPLETE — hard-step pitch maps the sung voice to E major while the take stays musical."},
+        {"start_seconds":88.05,"end_seconds":93.9,"text":"Catch the wave, catch the wave, let the waveform roll"},
+        {"start_seconds":93.95,"end_seconds":98.15,"text":"Code a little motion, feel it in your soul"},
+        {"start_seconds":98.2,"end_seconds":103.0,"text":"Kick and snare, guitar in the air"},
+        {"start_seconds":103.05,"end_seconds":107.1,"text":"Tune the voice, ride the line, surf it everywhere"},
+        {"start_seconds":107.15,"end_seconds":110.5,"text":"Catch the wave, catch the wave — catch the wave, ride it home"}
+      ]
+    }
+  ],
+  "chapters": [
+    {"start_seconds":0,"title":"BUILD — Set the shoreline clock"},
+    {"start_seconds":10,"title":"HEAR — Make the backbeat land"},
+    {"start_seconds":37,"title":"TWEAK — Spring guitar and tune the voice"},
+    {"start_seconds":74,"title":"LOCK — Open water → return"},
+    {"start_seconds":99,"title":"COMPLETE — Ride the wave home"}
+  ]
+}

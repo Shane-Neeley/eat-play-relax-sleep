@@ -190,6 +190,18 @@
       }
     },
     {
+      "id": "raon_opentts",
+      "label": "Raon-OpenTTS-1B local reference-conditioned speech voice",
+      "kind": "project-path",
+      "required": false,
+      "paths": [".eprs-local/raon-opentts-env/bin/python"],
+      "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+      "install_hints": {
+        "Darwin": "Use an isolated Python 3.10+ environment under `.eprs-local/raon-opentts-env`, clone the official Raon-OpenTTS checkout under `.eprs-local/raon-opentts`, install its dependencies, download the 1B checkpoint and 16 kHz HiFi-GAN vocoder, and review the CC-BY-NC-4.0 model terms before use.",
+        "Linux": "Use the official isolated Raon-OpenTTS environment after checking accelerator memory, checkpoint/vocoder disk space, reference-voice consent, and the CC-BY-NC-4.0 model terms."
+      }
+    },
+    {
       "id": "firered_tts3_space",
       "label": "FireRedTTS3 Hugging Face Space",
       "kind": "project-path",
@@ -353,6 +365,12 @@
       "label": "Optional local voice generation",
       "description": "Generate bounded original speech or character voice cues locally, optionally apply declared formant-aware pitch treatment, then preserve raw audio, exact model, prompt, seed, controls, output, and rights evidence.",
       "capabilities": ["local_voice_generation"]
+    },
+    {
+      "id": "local-reference-voice-collaboration",
+      "label": "Optional consented local reference-voice speech generation",
+      "description": "Generate short English speech cues from an explicitly consented reference voice with a local Raon-OpenTTS checkpoint; preserve the reference transcript, consent note, model/license evidence, and separate pitch treatment. This workflow does not claim singing synthesis.",
+      "capabilities": ["local_voice_generation", "reference_voice_cloning"]
     },
     {
       "id": "remote-voice-collaboration",

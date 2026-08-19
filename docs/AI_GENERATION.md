@@ -14,6 +14,7 @@ recordings, taste, arrangement, listening, rights review, or the editable mix.
 | Rank | Method | Fit for this project | Main constraint |
 | --- | --- | --- | --- |
 | 1 for voices | **Qwen3-TTS 1.7B / 0.6B** | Best immediate voice upgrade for this Mac: Apache-2.0 models with VoiceDesign, CustomVoice, instruction-level emotion/prosody control, 10 languages, and a documented 3-second cloning path. The v2 song uses CustomVoice with a built-in speaker; VoiceDesign remains available for described synthetic characters. | The model is speech-first, not a singing model; keep cues short and arrange them as authored samples. Voice cloning still requires explicit consent and rights for the reference. |
+| consented local speech cues | **Raon-OpenTTS-1B** | Strong open-data/open-weight, English zero-shot reference-conditioned speech lane with an official local F5-TTS-compatible checkout. EPRS now exposes it as an optional local adapter with a required reference transcript and consent note. | The Hugging Face model card is CC-BY-NC-4.0, output is 16 kHz speech rather than singing, and the 1B checkpoint plus vocoder need a large isolated environment. Do not treat autotune as a melody generator. |
 | 1 for whole songs | **ACE-Step 1.5** | MIT-licensed whole-song model with text/lyrics, reference audio, cover/repaint/extract/complete modes, 48 kHz variable-length output, and a consumer-GPU-oriented stack. It now has a real local M4 result: a seeded 20-second E-major instrumental completed through native MLX/MPS in planner-free turbo mode. | The first environment download is large and slow; the tested 8-step render took 35.2s for diffusion plus 10.6s for VAE decode. Output still needs listening, provenance, and rights review. Keep it optional and do not upload private voices. |
 | 2 for singing | **Seed-VC v1 f0-conditioned** | Real local MPS result: zero-shot singing conversion completed on an EPRS vocal at 10 diffusion steps, 44.1 kHz, about 3.5× realtime. It is a useful vocal-layer experiment rather than a song generator. | GPL-3.0; keep it isolated until release-licensing implications are accepted. The Mac path needed a float32 pitch cast and a SoundFile WAV-export workaround. Do not treat a converted synthetic voice as a performer identity. |
 | 2 for singing | **SoulX-Singer** | Apache-2.0 zero-shot singing voice synthesis with melody/F0 or MIDI conditioning; architecturally closer to a controllable sung hook than ordinary TTS. | Separate preprocessing models and a Python 3.10 environment; not installed in this Mac pass. Treat it as an explicit future singing-voice experiment. |
@@ -23,12 +24,19 @@ recordings, taste, arrangement, listening, rights review, or the editable mix.
 
 ### Implemented in EPRS
 
-The shared registry now declares an optional `local_voice_generation` capability
-and a Qwen3-TTS adapter. `scripts/qwen3_tts_voice.py` supports bounded
+The shared registry now declares optional `local_voice_generation`,
+`reference_voice_cloning`, and a consented local reference-voice workflow.
+`scripts/qwen3_tts_voice.py` supports bounded
 VoiceDesign or CustomVoice batches and writes a checksum-bearing render manifest.
 It can also preserve raw cues and pass them through the optional, local
 [formant-aware pitch processor](VOCALS.md). It does not start a service, upload
 audio, clone a person, or promote output to a master.
+
+`scripts/raon_opentts_voice.py` supports bounded English speech cues from an
+explicitly consented local reference. It records the reference checksum,
+transcript, consent note, model/checkpoint/config/vocoder identity, CC-BY-NC-4.0
+license, and optional EPRS autotune sidecars. It does not upload the reference,
+claim singing synthesis, or promote output to a master.
 
 The immediate engineering decision is therefore to support Qwen3-TTS as the
 optional local voice path and ACE-Step as the optional whole-song path, not to
@@ -40,6 +48,8 @@ Run:
 ./scripts/eprs adapter show ace-step-local-generator --handoff brief-to-candidates
 PATH=.eprs-local/qwen3-tts/bin:$PATH ./scripts/eprs doctor --workflow local-voice-collaboration
 ./scripts/eprs adapter show qwen3-tts-local-voice --handoff brief-to-voice-cues
+PATH=.eprs-local/raon-opentts-env/bin:$PATH ./scripts/eprs doctor --workflow local-reference-voice-collaboration
+./scripts/eprs adapter show raon-opentts-local-voice --handoff consented-reference-to-speech-cues
 ```
 
 The adapters only describe the boundary. They do not start a server, download

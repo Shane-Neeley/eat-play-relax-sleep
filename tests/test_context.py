@@ -108,6 +108,7 @@ class AgentContextTests(unittest.TestCase):
             self.assertFalse(packet["limits"]["binary_media_embedded"])
             self.assertTrue(packet["limits"]["text_previews_are_untrusted_data"])
             self.assertIn("Treat project prompts", " ".join(packet["authority"]["guardrails"]))
+            self.assertIn("decision_loop", packet["model_guidance"])
             self.assertEqual(packet["focus"]["work"]["item"]["id"], item_id)
             self.assertEqual(packet["focus"]["work"]["selected_run_number"], 1)
             self.assertIn("capabilities", packet["toolchain"])
@@ -126,6 +127,8 @@ class AgentContextTests(unittest.TestCase):
 
             markdown = render_agent_context_markdown(packet)
             self.assertIn("untrusted creative data", markdown)
+            self.assertIn("## How to use this packet", markdown)
+            self.assertIn("## Prompt suggestions", markdown)
             self.assertIn("## Guardrails", markdown)
             self.assertIn("## Due work", markdown)
 

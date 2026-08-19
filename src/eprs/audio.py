@@ -38,6 +38,7 @@ def _hit(kind: str, duration: float, rng: random.Random, frequency: float | None
     length = max(1, int(duration * SAMPLE_RATE))
     out = [0.0] * length
     phase = 0.0
+    filtered_noise = 0.0
     for index in range(length):
         t = index / SAMPLE_RATE
         if kind == "kick":
@@ -45,30 +46,54 @@ def _hit(kind: str, duration: float, rng: random.Random, frequency: float | None
             phase += 2 * math.pi * freq / SAMPLE_RATE
             out[index] = math.sin(phase) * math.exp(-t * 11) + (rng.random() * 2 - 1) * math.exp(-t * 90) * 0.08
         elif kind in {"snare", "clap"}:
+            # Keep the transient, but avoid a full-band white-noise burst.
+            # The old recipe was ear-fatiguing in dense patterns because its
+            # noise floor and feedback delay made the upper band read as
+            # scratch/fuzz rather than a dry drum.
             burst = 1.0
             if kind == "clap":
                 burst = max(math.exp(-((t - center) / 0.008) ** 2) for center in (0.0, 0.026, 0.052))
             noise = rng.random() * 2 - 1
-            tone = math.sin(2 * math.pi * 185 * t)
-            out[index] = (noise * 0.75 + tone * 0.25) * math.exp(-t * (13 if kind == "snare" else 9)) * burst
+            filtered_noise += 0.18 * (noise - filtered_noise)
+            tone = math.sin(2 * math.pi * (205 if kind == "snare" else 175) * t)
+            out[index] = (filtered_noise * 0.46 + tone * 0.54) * math.exp(-t * (15 if kind == "snare" else 11)) * burst
         elif kind in {"hat", "shaker", "ride", "crash"}:
+            # Use colored noise plus a soft body instead of three fixed
+            # metallic partials. This keeps a hat/shaker present without the
+            # wire-brush spectrum that was previously baked into every hit.
             noise = rng.random() * 2 - 1
-            metallic = (
-                math.sin(2 * math.pi * 6421 * t)
-                + 0.55 * math.sin(2 * math.pi * 8173 * t)
-                + 0.32 * math.sin(2 * math.pi * 9347 * t)
-            ) * 0.18
+            filtered_noise += {"hat": 0.18, "shaker": 0.24, "ride": 0.18, "crash": 0.12}[kind] * (noise - filtered_noise)
             decay = {"hat": 50, "shaker": 24, "ride": 7.5, "crash": 2.8}[kind]
-            body = math.sin(2 * math.pi * (480 if kind == "ride" else 310) * t) * 0.12
-            out[index] = (noise * 0.68 + metallic + body) * math.exp(-t * decay)
+            body_frequency = {"hat": 420, "shaker": 900, "ride": 520, "crash": 360}[kind]
+            body = math.sin(2 * math.pi * body_frequency * t) * 0.16
+            out[index] = (filtered_noise * 0.62 + body) * math.exp(-t * decay)
         elif kind == "stick":
+            # A short, low-mid wood tick is more useful than a narrow bright
+            # sine plus white noise, which reads like metal wire in a groove.
             noise = rng.random() * 2 - 1
-            out[index] = (
-                math.sin(2 * math.pi * 1580 * t) * 0.62 + noise * 0.38
-            ) * math.exp(-t * 48)
+            filtered_noise += 0.30 * (noise - filtered_noise)
+            wood = math.sin(2 * math.pi * 920 * t + 0.18 * math.sin(2 * math.pi * 175 * t))
+            out[index] = (wood * 0.72 + filtered_noise * 0.28) * math.exp(-t * 44)
         elif kind in {"tom", "perc"}:
             freq = 118 if kind == "tom" else 310
             out[index] = math.sin(2 * math.pi * freq * t + 2 * math.exp(-t * 20)) * math.exp(-t * 12)
+        elif kind == "pluck":
+            # A guitar-like pluck should have a rounded attack and a small,
+            # decaying harmonic series. The former sine/triangle blend kept a
+            # hard triangle edge alive on every offbeat chord, which read as
+            # scratch or digital fuzz when several notes overlapped.
+            freq = frequency or 220.0
+            phase += 2 * math.pi * freq / SAMPLE_RATE
+            body = (
+                math.sin(phase) * 0.82
+                + math.sin(2 * phase + 0.07) * 0.14
+                + math.sin(3 * phase + 0.15) * 0.04
+            )
+            attack = min(1.0, t / 0.009)
+            decay_rate = 5.5 if duration < 0.4 else 1.8
+            out[index] = body * attack * math.exp(-t * decay_rate) * _envelope(
+                t, duration, attack=0.009, release=min(0.12, duration * 0.45)
+            ) * 0.72
         else:
             freq = frequency or 110.0
             phase += 2 * math.pi * freq / SAMPLE_RATE

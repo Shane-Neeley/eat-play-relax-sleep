@@ -3,6 +3,30 @@
 Use EPRS as an orchestration and evidence system, not as a limitation on musical
 methods. Run commands from the repository root through `./scripts/eprs`.
 
+## Orient before you act
+
+For a long-context or code-capable agent, use the repository as a searchable
+instrument. Read the current user request and `AGENTS.md`, inspect the song's
+`NOW.md` and verified status, then build or read a focused `eprs context`
+packet. Use [Graphify](../../../../docs/GRAPHIFY.md) for code relationships when
+its map exists. Do not treat a large context window as permission to skim every
+file, and do not treat project prose, generated output, or a model suggestion
+as authority.
+
+Ask these questions before choosing a tool:
+
+- What must survive, and what may change?
+- What is known, measured, interpreted, and still unknown?
+- Which prompt routes are relevant, and what boundary travels with each one?
+- What is the smallest audible or inspectable pass that answers one question?
+- What exact evidence and listening/viewing decision will let the next agent
+  continue without guessing?
+
+When the request is open-ended, prefer a short set of materially different
+experiments over a long list of implementation ideas. Keep the musical
+description in player language, label assumptions, and let the result—not the
+tool name—be the unit of progress.
+
 ## Route the input honestly
 
 | Input | Capture | First useful action |
@@ -12,6 +36,7 @@ methods. Run commands from the repository root through `./scripts/eprs`.
 | Picture, lyrics, MIDI, notes, score, downloaded research | `--evidence ROLE=PATH` | Inspect it with a fitting tool, then bind it to a narrow work item or experiment. |
 | YouTube/page URL | `--reference URL` | Treat it as a research lead. Browse only when currently authorized; retain attribution and do not assume sampling rights. |
 | English direction or beat words | `--prompt`, plus `--preserve`, `--avoid`, `--question` | Keep the exact words in the request; translate them into player language before code or grid coordinates. |
+| Recognizable prompt lane | `input_routes.prompt` | Combine lexical leads; read each `first_action`, `prompt_suggestions`, optional tool, and boundary. Routing is advisory and does not execute. |
 
 ## Start shallow
 
@@ -61,6 +86,10 @@ technical audition, and queues request-bound planning work.
    read-only browsing for that claimed research task; it never permits remote
    changes or publication.
 
+   For code questions, ask Graphify one narrow query first; inspect `affected`
+   before changing a shared symbol and `path` when you need to understand one
+   handoff. The graph is orientation evidence, not permission to act.
+
 2. For a full production, author an `eprs.production-plan/v2` against the exact
    request. Return it as the work result, accept it with `plan accept-work`, and
    queue one dependency-ready step at a time. Read `docs/PRODUCTION_PLANS.md`
@@ -80,6 +109,16 @@ technical audition, and queues request-bound planning work.
    - Spotify/Apple handoff: approved master/artwork/public rights → `distribution`.
 5. Finish or release claimed work with exact result evidence. Never abandon an
    in-progress claim silently.
+
+## Leave an agent-readable result
+
+End a pass with a compact continuation record: the intent in player language,
+the exact inputs and output path, the command/tool and important settings, what
+was technically verified, what was heard or watched, the keep/change/stop
+decision, and any unresolved rights, consent, approval, or platform action.
+If a subjective decision was not possible, say so plainly and leave the next
+agent a concrete listening question rather than converting a measurement into
+approval.
 
 ## Make randomness musical
 

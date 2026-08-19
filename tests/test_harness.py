@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 import wave
 
-from eprs.harness import create_song_run
+from eprs.harness import _starter_beat, create_song_run
 from eprs.production_map import write_production_map
 from eprs.system import sha256, song_status
 
@@ -19,6 +19,22 @@ def silent_wav(path: Path) -> None:
 
 
 class SongHarnessTests(unittest.TestCase):
+    def test_prompt_selects_distinct_instrument_and_field_studies(self):
+        animal = _starter_beat("Animal Signal", "A field recording of bird calls answered by hand percussion.", 101)
+        guitar = _starter_beat("String Spark", "A plucked guitar and marimba instrument study.", 102)
+        voice = _starter_beat("Voice Room", "A spoken vocal room with a patient answer.", 103)
+        dance = _starter_beat("Night Floor", "A bright house club groove for dancing.", 104)
+
+        self.assertEqual(animal.meter, (6, 8))
+        self.assertIn("pluck", {track.options.get("voice") for track in animal.tracks})
+        self.assertIn("pluck", {track.options.get("voice") for track in guitar.tracks})
+        self.assertEqual(voice.meter, (3, 4))
+        self.assertEqual(dance.meter, (4, 4))
+        self.assertGreaterEqual(dance.tempo, 116)
+        self.assertLessEqual(dance.tempo, 132)
+        self.assertNotEqual(animal.meter, guitar.meter)
+        self.assertNotIn("pluck", {track.options.get("voice") for track in dance.tracks})
+
     def test_relative_default_root_works_from_repository_style_cwd(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

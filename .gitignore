@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+graphify-out/
 visuals/node_modules/
 visuals/public/media/
 .remotion/
@@ -41,6 +42,13 @@ notes/
 .vscode/
 .codex/
 .eprs-local/
+
+# Voice references and private performer material are never public examples.
+# Keep them outside tracked fixtures; local song workspaces are ignored above.
+**/recordings/raw/
+**/*voice-reference*
+**/*reference-voice*
+**/*audiosample*
 
 # This public repo ships only its self-contained project workflows. Other local
 # agent skills may coexist in the checkout without becoming repository scope.

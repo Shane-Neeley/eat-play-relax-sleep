@@ -27,6 +27,14 @@ A captured production request can precede the brief: it binds the user's prompt,
 preservation constraints, questions, references, permission notes, and mixed
 supplied files before any agent chooses a representation or experiment.
 
+For an arriving context-capable agent, the architecture is a decision path:
+intent → declared source/evidence → one bounded experiment → technical checks →
+listening or viewing decision → next experiment. `eprs context` and the
+request's `input_routes` make that path recoverable without embedding binary
+media. Routes, adapter fits, measurements, generated notes, and Graphify
+relationships are orientation evidence; they help select the next question but
+never become authority to operate a tool or call a result approved.
+
 ## Why the layers are orthogonal
 
 - **Intent is not implementation.** A brief can survive a move from BeatScript to Sonic Pi, Audacity, a DAW, or live musicians.
@@ -80,9 +88,12 @@ supplied files before any agent chooses a representation or experiment.
   raw intake and freezes other evidence under one atomic request directory.
   JSON `request add` and direct prompt-and-files `request capture` share the
   same validator and record contract. The record adds a non-executing
-  `input_routes` index derived from declared handling, role words, and filename
-  extension so agents can quickly route performances, rhythm ideas, lyrics,
-  pictures, notation, documents, and research leads without content inference.
+  `input_routes` index derived from the prompt, declared handling, role words,
+  and filename extension so agents can quickly compose advisory routes for
+  voices, instruments, AI/model experiments, autotune, animal/iNaturalist
+  evidence, Sonic Pi, video/DAW tools, YouTube delivery, performances, rhythm
+  ideas, lyrics, pictures, notation, documents, and research leads without
+  content inference. Prompt routes are suggestions, not authority to act.
 - `eprs.source-sketch/v1`: an explicit continuation from one exact agent-led
   run and captured request. It classifies supplied recordings only to choose
   seeded entrances, conservative no-boost gain, and narrow pan; writes an

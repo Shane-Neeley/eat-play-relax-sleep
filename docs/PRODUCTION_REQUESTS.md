@@ -57,14 +57,23 @@ visible half-manifest. Successfully ingested raw recordings may remain after a
 later evidence-copy failure because safe immutable intake is not rolled back or
 deleted.
 
-The record also writes `input_routes`, a fast per-input routing index based only
-on declared handling, role words, and filename extension. It distinguishes
+The record also writes `input_routes`, a fast advisory routing index. Its
+`prompt` routes use transparent words from the prompt, references, and
+deliverables to compose compatible lanes such as voice, instruments,
+rhythm/groove, lyrics, form/arrangement, mix/listening review, AI/local
+models, autotune, animal/iNaturalist sound, Sonic Pi, video/DAW, and YouTube.
+Its per-input routes use only declared handling, role words, and filename
+extension. It distinguishes
 performed audio/video, rhythm ideas, lyrics, pictures, visual evidence,
 MIDI/notation, documents, other frozen evidence, YouTube references, and other
 research leads. Each route names a safe first action and its boundary. It does
 not decode content, launch software, browse a reference, grant rights, or
-authorize the suggested action. `make-song` copies this index into its run
-record and shows the concise routes in the root `NOW.md`.
+authorize the suggested action. Prompt routes also carry short
+`prompt_suggestions` so a context-capable agent can turn a broad request into
+musical questions—what must survive, what should be heard first, and what
+would make the pass a keep/change/stop—without pretending to understand
+intent. `make-song` copies this index into its run record, puts prompt routes
+into the agent brief, and shows concise routes in the root `NOW.md`.
 
 A production request captures what the user supplied and wants. When several
 takes came from the same rehearsal or recording day, follow it with a
@@ -82,8 +91,8 @@ context, consent, and take-specific rights without modifying those recordings.
 - unanswered musical questions and desired deliverables;
 - references as leads, never instructions to copy another artist; and
 - each supplied item's role, kind, note, checksum, and rights/permission note;
-  plus an inspectable, non-executing first-action route for every supplied item
-  and reference.
+  plus inspectable, non-executing first-action routes for the prompt, every
+  supplied item, and every reference.
 
 The resulting `eprs.production-request-record/v1` is context, not authority. It
 cannot authorize browsing, processing, sending, uploading, publishing, or

@@ -35,6 +35,23 @@ re-render it later, and keep the final output easy to inspect.
 7. Use CAVA/cavacore as a small spectrum-data sidecar when another visual tool
    needs stable band values; reserve PraxisLIVE for an intentional live patch.
 
+## Interaction grammar as video form
+
+BeautifulUI is a useful reference for a different kind of visual control: the
+clarity of an AI-native interaction state. In EPRS, the abstract relationships
+translate cleanly when they remain subordinate to the song:
+
+- loading/thinking → withhold the full arrangement during an opening pulse;
+- progress rows → a compact, song-specific state rail for sections or motifs;
+- streaming → reveal lyric phrases and visual layers at authored phrase starts;
+- contextual cards → keep one lyric or motif anchored while the world moves;
+- completion → resolve to a stable final state and let the audio tail breathe.
+
+Do not clone BeautifulUI's layout, components, copy, or brand. Treat this as a
+video-composition hypothesis and record it in the song's research notes. The
+test succeeds only if state clarity improves musical form without making the
+picture feel like a dashboard. See `songs/acorn-status/notes/production/beautifului-video-translation.md`.
+
 ## What the evidence says
 
 - [Remotion `visualizeAudio()`](https://www.remotion.dev/docs/visualize-audio)

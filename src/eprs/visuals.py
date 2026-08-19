@@ -26,6 +26,8 @@ PALETTES = {
     "warm": ["#ff6b35", "#f7c59f", "#efefd0", "#d6a2ad"],
     "acid": ["#ff8066", "#7f5af0", "#d7ff72", "#f3eadc"],
     "mono": ["#f5f2ea", "#a9afb9", "#565d69", "#ffffff"],
+    "field": ["#b7d66d", "#5c8f73", "#263d3a", "#f2d49b"],
+    "dusk": ["#f09ac2", "#8e7dbe", "#27334d", "#f6d6a8"],
 }
 
 
@@ -33,6 +35,8 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
     """Compile a free prompt into a conservative visual score agents can refine."""
     lowered = prompt.lower()
     if any(word in lowered for word in ("constellation", "star", "nodes", "circuit")):
+        world = "constellation"
+    elif any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism", "nature")):
         world = "constellation"
     elif any(word in lowered for word in (
         "ribbon", "liquid", "tape", "wave", "flow", "family", "voice", "voices",
@@ -66,7 +70,15 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
         "typography": {"show": show_typography, "position": "center"},
         "avoid": ["faces", "stock footage", "generic AI imagery", "literal equalizer bars", "constant motion"],
     }
-    if "pull me in" in lowered or "pull-in" in lowered or "invitation" in lowered:
+    if any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism")):
+        score["motif"] = "rare-signal-atlas"
+    elif any(word in lowered for word in ("paper", "notebook", "score", "lyric sheet")):
+        score["motif"] = "paper-score"
+    elif any(word in lowered for word in ("cloud", "mist", "vapor", "haze")):
+        score["motif"] = "cloud-braid"
+    elif any(word in lowered for word in ("screenprint", "poster", "ink", "print")):
+        score["motif"] = "screenprint-count"
+    elif "pull me in" in lowered or "pull-in" in lowered or "invitation" in lowered:
         score["motif"] = "pull-me-in"
     elif any(word in lowered for word in ("jamaica", "jamaican", "reggae", "dancehall")):
         score["motif"] = "jamaica-reggae"

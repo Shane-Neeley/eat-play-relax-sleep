@@ -1,4 +1,6 @@
 from pathlib import Path
+import subprocess
+import sys
 import unittest
 
 from eprs.adapters import load_adapter_profiles
@@ -13,6 +15,7 @@ class OptionalMusicLaneTests(unittest.TestCase):
         registry = load_toolchain()
         providers = {item["id"]: item for item in registry["tools"]}
         expected = {
+            "raon_opentts": {"local_voice_generation", "reference_voice_cloning"},
             "seed_vc": {"singing_voice_conversion", "local_voice_conversion"},
             "openvpi_game": {"audio_to_midi", "animal_pitch_extraction"},
             "diffsinger": {"note_controlled_singing", "singing_voice_synthesis"},
@@ -25,7 +28,10 @@ class OptionalMusicLaneTests(unittest.TestCase):
             self.assertFalse(providers[provider_id]["required"])
             self.assertTrue(capabilities <= set(providers[provider_id]["capabilities"]))
         workflows = {item["id"]: item for item in registry["workflows"]}
-        self.assertTrue({"animal-to-melody-lab", "singing-voice-lab", "stem-repair-lab"} <= workflows.keys())
+        self.assertTrue({
+            "animal-to-melody-lab", "singing-voice-lab", "stem-repair-lab",
+            "local-reference-voice-collaboration",
+        } <= workflows.keys())
 
     def test_optional_adapter_profiles_are_valid_and_capability_bound(self):
         profiles = load_adapter_profiles()
@@ -36,6 +42,7 @@ class OptionalMusicLaneTests(unittest.TestCase):
             "amphion-vevo15-singing-converter",
             "basic-pitch-contour-analysis",
             "demucs-stem-laboratory",
+            "raon-opentts-local-voice",
         }
         loaded = {item["id"]: item for item in profiles}
         self.assertTrue(expected <= loaded.keys())
@@ -44,6 +51,17 @@ class OptionalMusicLaneTests(unittest.TestCase):
             profile = loaded[profile_id]
             self.assertTrue(set(profile["capabilities"]) <= set(providers[profile["provider"]]["capabilities"]))
             self.assertTrue(all(handoff["requires_user_operation"] for handoff in profile["handoffs"]))
+
+    def test_raon_runner_exposes_consent_and_speech_boundaries(self):
+        completed = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "raon_opentts_voice.py"), "--help"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("--consent-note", completed.stdout)
+        self.assertIn("speech-first", completed.stdout)
+        self.assertIn("--reference-text", completed.stdout)
 
     def test_lane_docs_keep_fallback_and_rights_language_visible(self):
         text = (ROOT / "docs" / "OPTIONAL_MUSIC_LANES.md").read_text()

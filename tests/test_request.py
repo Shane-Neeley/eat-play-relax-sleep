@@ -12,6 +12,7 @@ import wave
 from eprs.context import build_agent_context
 from eprs.cli import main, parser
 from eprs.request import (
+    _prompt_input_routes,
     capture_production_request,
     create_production_request,
     load_production_request,
@@ -33,6 +34,54 @@ def tone_wav(path: Path, frequency: float) -> None:
 
 
 class ProductionRequestTests(unittest.TestCase):
+    def test_prompt_routes_surface_composable_music_and_media_lanes(self):
+        routes = _prompt_input_routes(
+            "Make a bird-call vocal over a guitar, use local AI autotune, Sonic Pi, and a visual video.",
+            ["https://www.youtube.com/watch?v=public-reference"],
+            ["YouTube Short with captions"],
+        )
+        route_ids = {route["id"] for route in routes}
+        self.assertTrue({"voice", "instrument", "animal-field-sound", "ai-model"} <= route_ids)
+        self.assertTrue({"autotune", "live-code", "visual-media", "youtube", "research"} <= route_ids)
+        animal = next(route for route in routes if route["id"] == "animal-field-sound")
+        self.assertIn("eprs inaturalist study", animal["optional_tools"])
+        self.assertIn("not a current sighting", animal["boundary"])
+        self.assertTrue(animal["prompt_suggestions"])
+        self.assertIn("license", " ".join(animal["prompt_suggestions"]))
+
+        open_routes = _prompt_input_routes("Make an original melody.", [], [])
+        self.assertEqual([route["id"] for route in open_routes], ["open-ended"])
+
+    def test_prompt_routes_surface_core_music_maker_lanes(self):
+        routes = _prompt_input_routes(
+            "Build a loose groove with lyrics that grows from an intro into a chorus and drop, then leave mix headroom.",
+            [],
+            ["one reversible listening mix"],
+        )
+        route_ids = {route["id"] for route in routes}
+        self.assertTrue(
+            {"rhythm-groove", "lyrics", "form-arrangement", "mix-review"} <= route_ids
+        )
+        rhythm = next(route for route in routes if route["id"] == "rhythm-groove")
+        self.assertIn("eprs groove", rhythm["optional_tools"])
+        self.assertIn("never quantize", rhythm["boundary"])
+        lyric = next(route for route in routes if route["id"] == "lyrics")
+        self.assertIn("eprs lyrics review", lyric["optional_tools"])
+        form = next(route for route in routes if route["id"] == "form-arrangement")
+        self.assertIn("source-aware", form["first_action"])
+        mix = next(route for route in routes if route["id"] == "mix-review")
+        self.assertIn("end to end", mix["first_action"])
+        self.assertIn("keep, change, or stop", " ".join(mix["prompt_suggestions"]))
+
+        voice_clone = _prompt_input_routes(
+            "Clone my voice from a reference sample and make a speech cue over the song.",
+            [],
+            [],
+        )[0]
+        self.assertEqual(voice_clone["id"], "voice")
+        self.assertIn("Raon-OpenTTS", " ".join(voice_clone["optional_tools"]))
+        self.assertIn("speech-first", voice_clone["boundary"])
+
     def test_direct_capture_accepts_prompt_recordings_and_evidence_without_json(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -94,6 +143,8 @@ class ProductionRequestTests(unittest.TestCase):
                 item["family"] for item in request["input_routes"]["references"]
             }
             self.assertEqual(reference_families, {"research-lead", "youtube-reference"})
+            prompt_route_ids = {item["id"] for item in request["input_routes"]["prompt"]}
+            self.assertTrue({"instrument", "youtube", "research"} <= prompt_route_ids)
             self.assertIn("does not execute", request["input_routes"]["authority"])
             packet = build_agent_context(song, request=manifest.parent.name, verify=True)
             routed_families = {
@@ -104,6 +155,12 @@ class ProductionRequestTests(unittest.TestCase):
                 routed_families,
                 {"performed-audio", "lyrics-or-songwords", "picture"},
             )
+            focused_prompt_routes = packet["focus"]["production_request"]["record"]["input_routes"]["prompt"]
+            self.assertIn("instrument", {item["id"] for item in focused_prompt_routes})
+            instrument_route = next(
+                item for item in focused_prompt_routes if item["id"] == "instrument"
+            )
+            self.assertTrue(instrument_route["prompt_suggestions"])
 
             args = parser().parse_args([
                 "request", "capture", "--song", str(song),

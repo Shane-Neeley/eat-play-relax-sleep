@@ -86,6 +86,61 @@ track hat   | x... ..g. x... .... | x... .... x... ..g. | ; gain=0.16 pan=0.26 h
 notes bass  | A1 . . . . . E2 . G2 . . . E2 . . . | ; voice=bass gain=0.26 length=3.2 pan=-0.12
 notes glow  | A3+C4+E4 . . . . . . . G3+B3+D4 . . . E3+A3+C4 . . . | ; voice=lead gain=0.12 length=5 pan=0.22
 """,
+    """title \"Field Signal\"
+tempo 104
+meter 6/8
+resolution 12
+bars 8
+swing 0.50
+seed 1
+
+track kick   | X.. ... ... | X.. ..x ... | ; gain=0.70
+track stick  | ... x.. ... | ... ..x ... | ; gain=0.16 pan=-0.12 humanize_ms=8
+track shaker | x.x x.x x.x | x.x x.x x.x | ; gain=0.14 pan=0.24 humanize_ms=5
+notes call   | D4 . . F4 . . A4 . . | D4 . . G4 . . A4 . . | ; voice=pluck gain=0.15 length=1.1 pan=0.16
+notes answer | . . . A3 . . G3 . . | . . . F3 . . D3 . . | ; voice=lead gain=0.13 length=1.4 pan=-0.18
+""",
+    """title \"String Spark\"
+tempo 108
+meter 4/4
+resolution 16
+bars 8
+swing 0.52
+seed 1
+
+track kick | X... .... ..x. .... | X... .... ...x .... | ; gain=0.68
+track stick | .... x... .... x... | .... x... ..g. x... | ; gain=0.18 pan=-0.14 humanize_ms=6
+track hat  | ..x. ..x. ..x. ..x. | ..x. .x.. ..x. .x.. | ; gain=0.13 pan=0.22
+notes pluck | E3 . G3 . B3 . G3 . D3 . F#3 . A3 . F#3 . | ; voice=pluck gain=0.18 length=0.8 pan=0.12
+notes bass  | E2 . . . . . B1 . D2 . . . A1 . . . | ; voice=bass gain=0.27 length=1.2 pan=-0.16
+""",
+    """title \"Four On The Floor\"
+tempo 124
+meter 4/4
+resolution 16
+bars 8
+swing 0.50
+seed 1
+
+track kick  | X... X... X... X... | X... X... X... X... | ; gain=0.76
+track clap  | .... X... .... X... | .... X... .... X... | ; gain=0.26 pan=-0.08
+track hat   | ..x. ..x. ..x. ..x. | ..x. ..x. .x.. ..x. | ; gain=0.14 pan=0.20
+track shaker | .x.x .x.x .x.x .x.x | .x.x .x.x x.x. .x.x | ; gain=0.10 pan=-0.24 humanize_ms=3
+notes bass  | C2 . C2 . G1 . C2 . C2 . C2 . G1 . Bb1 . | ; voice=bass gain=0.30 length=0.85
+""",
+    """title \"Voice Room\"
+tempo 86
+meter 3/4
+resolution 12
+bars 8
+swing 0.56
+seed 1
+
+track kick | X.. ... ... | X.. ... ..g | ; gain=0.60
+track stick | ... x.. ... | ... ..x ... | ; gain=0.12 pan=0.24 humanize_ms=10
+notes bed | C3+E3+G3 . . . . . . . . . | A2+C3+E3 . . . . . . . . . | ; voice=lead gain=0.10 length=3.4 pan=-0.08
+notes answer | . . . G4 . . A4 . . . E4 . | . . . E4 . . G4 . . . C5 . | ; voice=pluck gain=0.12 length=1.2 pan=0.18
+""",
 )
 
 
@@ -117,6 +172,14 @@ def _starter_beat(title: str, prompt: str, seed: int):
     lowered = prompt.casefold()
     if any(word in lowered for word in ("sleep", "ambient", "drift", "quiet", "slow")):
         study_index = 2
+    elif any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism")):
+        study_index = 3
+    elif any(word in lowered for word in ("voice", "vocal", "singer", "singing", "spoken", "speech", "choir")):
+        study_index = 6
+    elif any(word in lowered for word in ("guitar", "string", "pluck", "ukulele", "marimba", "instrument")):
+        study_index = 4
+    elif any(word in lowered for word in ("dance", "club", "house", "techno", "four on the floor")):
+        study_index = 5
     elif any(word in lowered for word in ("odd", "five", "uneven", "crooked", "broken")):
         study_index = 1
     else:
@@ -235,6 +298,7 @@ def _agent_brief(
     preserve: list[str],
     avoid: list[str],
     has_supplied_recordings: bool,
+    prompt_routes: list[dict] | None = None,
 ) -> str:
     lines = [
         "---",
@@ -262,6 +326,16 @@ def _agent_brief(
     if references:
         lines.extend(["", "## References and leads", ""])
         lines.extend(f"- {item}" for item in references)
+    if prompt_routes:
+        lines.extend(["", "## Prompt routes", ""])
+        for route in prompt_routes:
+            if not isinstance(route, dict):
+                continue
+            label = route.get("label", route.get("id", "route"))
+            first_action = route.get("first_action", "inspect the route before acting")
+            tools = route.get("optional_tools", [])
+            tool_text = f"; optional tools: {', '.join(tools)}" if tools else ""
+            lines.append(f"- **{label}**: {first_action}{tool_text}")
     lines.extend([
         "",
         "## First listen",
@@ -299,8 +373,13 @@ def _now_markdown(song: Path, manifest: dict) -> str:
         "- Novelty: explicit seed replay; matching a prior artifact is allowed\n"
     )
     routes = manifest.get("input_routes", {})
+    prompt_routes = routes.get("prompt", []) if isinstance(routes, dict) else []
     provided_routes = routes.get("provided", []) if isinstance(routes, dict) else []
     reference_routes = routes.get("references", []) if isinstance(routes, dict) else []
+    prompt_lines = [
+        f"- **{item.get('label', item.get('id', 'route'))}**: {item.get('first_action', '')}"
+        for item in prompt_routes if isinstance(item, dict)
+    ]
     routing_lines = [
         f"- **{item['role']}** (`{item['family']}`): {item['first_action']}"
         for item in provided_routes if isinstance(item, dict)
@@ -312,6 +391,7 @@ def _now_markdown(song: Path, manifest: dict) -> str:
     if not routing_lines:
         routing_lines = ["- No files or research leads were supplied in this run."]
     routing_text = "\n".join(routing_lines)
+    prompt_text = "\n".join(prompt_lines) or "- Open-ended creative direction; choose one smallest experiment."
     return f"""<!-- eprs.now/v1 -->
 # Current song run
 
@@ -329,6 +409,12 @@ This file is the shallow entry point for the latest agent-led run. The generated
 {visual_line}{map_line}- Run manifest: `{paths['run_manifest']}`
 
 ## Input routing
+
+### Prompt routes
+
+{prompt_text}
+
+### Supplied files and references
 
 {routing_text}
 
@@ -424,6 +510,7 @@ def create_song_run(
         _agent_brief(
             run_title, prompt, run_seed, references, preserve, avoid,
             has_supplied_recordings=bool(recording_count),
+            prompt_routes=request_record.get("input_routes", {}).get("prompt", []),
         ),
         encoding="utf-8",
     )

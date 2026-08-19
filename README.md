@@ -16,6 +16,29 @@ The evidence-backed remaining production priorities live in
 Explicit local packet/response agents run through the mandatory isolation and
 receipt boundary documented in [AGENT_RUNNERS.md](docs/AGENT_RUNNERS.md).
 
+## Start here as an agent
+
+For a context-capable model arriving with a musical prompt, use the repository
+as an indexed instrument rather than treating every note or preview as an
+instruction:
+
+1. Read [the agent contract](AGENTS.md), then inspect `NOW.md` and verified
+   `scripts/eprs status SONG --verify` for the current song.
+2. If `graphify-out/graph.json` exists, ask one focused Graphify question about
+   the code path; use `affected` before changing a shared hub.
+3. Capture mixed prompts and files with explicit recording/evidence/reference
+   roles, then read `input_routes`. Routes combine, explain their lexical
+   basis, suggest questions, and carry boundaries; they do not execute.
+4. State the musical idea in player language, choose one smallest audible or
+   inspectable experiment, and preserve its source, settings, and evidence.
+5. Validate technical facts, then listen or watch end to end. Report the exact
+   output and the remaining keep/change/stop, rights, consent, approval, or
+   platform gate.
+
+Good exploration prompts are: “What must survive?”, “What is the narrowest
+question this pass can answer?”, “Which tool is actually ready for that job?”,
+and “What evidence would let the next agent continue without guessing?”
+
 ## Start in five minutes
 
 ```bash

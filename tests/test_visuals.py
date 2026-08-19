@@ -25,6 +25,8 @@ class VisualPromptTests(unittest.TestCase):
         pull = compile_prompt("pull me in: a dark room opens into a warm signal", "Pull Me In", 13)
         reggae = compile_prompt("Jamaican reggae flags over a dub bass pocket", "Reggae", 14)
         paper = compile_prompt("warm paper score cards and a constellation of notes", "Paper", 15)
+        field = compile_prompt("field recording of a bird call in a mossy nature signal", "Field", 16)
+        cloud = compile_prompt("slow dusk cloud braid through a patient vocal haze", "Cloud", 17)
         self.assertEqual(constellation["world"], "constellation")
         self.assertEqual(ribbons["world"], "ribbons")
         self.assertEqual(portal["world"], "portal")
@@ -35,7 +37,11 @@ class VisualPromptTests(unittest.TestCase):
         self.assertGreater(ribbons["reactivity"]["mids"], portal["reactivity"]["mids"])
         self.assertEqual(pull["motif"], "pull-me-in")
         self.assertEqual(reggae["motif"], "jamaica-reggae")
-        paper["motif"] = "paper-score"
+        self.assertEqual(paper["motif"], "paper-score")
+        self.assertEqual(field["world"], "constellation")
+        self.assertEqual(field["motif"], "rare-signal-atlas")
+        self.assertEqual(field["palette"], PALETTES["field"])
+        self.assertEqual(cloud["motif"], "cloud-braid")
         self.assertEqual(validate_spec(paper)["motif"], "paper-score")
 
     def test_score_round_trip(self):

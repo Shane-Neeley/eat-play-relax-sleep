@@ -141,6 +141,57 @@ batch manifest points to each per-cue autotune sidecar. Advanced controls remain
 available through standalone `eprs autotune`, so an agent can make several
 treatments from one immutable synthetic performance without rerunning TTS.
 
+## Use Raon-OpenTTS for a consented speech voice cue
+
+This repository is public: never check a personal reference recording, its
+transcript, a cloned-voice render, or a private provenance manifest into Git.
+Store the reference outside tracked files (for example under the ignored
+`.eprs-local/private-voice/` directory), keep generated song workspaces under
+the ignored `songs/` directory, and run the public-check before publishing.
+The example below uses placeholder paths and text; replace them locally with
+the speaker's exact transcript and an explicit consent note.
+
+The official [Raon-OpenTTS-1B model card](https://huggingface.co/KRAFTON/Raon-OpenTTS-1B)
+and [source repository](https://github.com/krafton-ai/Raon-OpenTTS) describe an
+English zero-shot TTS model that conditions speech on a reference recording and
+its exact transcript. EPRS keeps this as a separate optional adapter because
+the model card is CC-BY-NC-4.0, the model renders at 16 kHz, and it is
+speech-first rather than score-conditioned singing synthesis.
+
+Prepare the official checkout, checkpoint, and 16 kHz HiFi-GAN vocoder in the
+ignored `.eprs-local/raon-opentts-env` environment and the source checkout under
+`.eprs-local/raon-opentts`. Then run a small, new cue batch:
+
+```bash
+PATH=.eprs-local/raon-opentts-env/bin:$PATH \
+  ./scripts/eprs doctor --workflow local-reference-voice-collaboration
+./scripts/raon_opentts_voice.py \
+  --reference-audio .eprs-local/private-voice/reference-voice.wav \
+  --reference-text "Exact words spoken in the reference sample." \
+  --consent-note "Speaker owns this sample and consents to local reference-conditioned speech cues for this song." \
+  --text "Maybe mode." --text "Still deciding." \
+  --checkpoint .eprs-local/raon-opentts/checkpoints/1B/model_last.pt \
+  --vocoder-dir .eprs-local/raon-opentts/pretrained_models/tts-hifigan-libritts-16kHz \
+  --out-dir songs/maybe-mode/audio/raon-v1 \
+  --prefix maybe-raon --autotune-preset tight \
+  --autotune-key A --autotune-scale major-pentatonic
+```
+
+The reference stays local and is checksummed in the manifest; it is not copied
+into the output directory or sent to Hugging Face. Keep the raw cue and tuned
+cue separate, disclose the result as a consented synthetic/reference-conditioned
+speech cue, and review the complete mix. For actual singing, record the vocal
+and use the existing `eprs autotune` path, or author target notes with
+[`scripts/note_aware_melody.py`](../scripts/note_aware_melody.py) before any
+final pitch cleanup. Do not use Raon speech TTS or autotune as a substitute for
+melody, phrasing, or a performer.
+
+Before a pull request or release, verify both the index and the candidate file
+set: `git ls-files | rg -i 'voice|reference|recordings/raw|audiosample'` should
+show only generic code, tests, and documentation. Also run
+`make public-check`; an ignored file is still private only while it
+remains outside the staged/public file set.
+
 ## Use FireRedTTS3 as an optional remote voice-design lane
 
 The public [FireRedTTS3 Space](https://huggingface.co/spaces/hugging-apps/firered-tts3)

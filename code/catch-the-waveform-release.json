@@ -1,0 +1,36 @@
+{
+  "schema": "eprs.release/v1",
+  "title": "Catch the Waveform public YouTube release",
+  "intent": "Freeze the exact master-bound surf-rock educational video, reviewed thumbnail/captions/chapters, and transparent metadata used for the authorized public CashForClankers upload.",
+  "approved_master": "masters/catch-the-waveform-lossless-master/2da05d768b-catch-the-waveform-lossless-master.wav",
+  "approved_video": "video/catch-the-waveform-surf-educational-master-draft.mp4",
+  "youtube_assets": "video/youtube-assets/catch-the-waveform-publishing-assets/b0d0036ba4/bundle.json",
+  "clearances": [],
+  "credits": [
+    {
+      "name": "EPRS local production",
+      "role": "original composition, Sonic Pi arrangement, mix, master, autotune program, visual score, video, thumbnail, captions, chapters, and metadata",
+      "note": "No external recordings or media used."
+    },
+    {
+      "name": "Qwen3-TTS Ryan and Serena",
+      "role": "original fictional adult synthetic lead and response vocals with audible E-major hard-step autotune",
+      "note": "Synthetic voices generated locally; no human reference audio or real-person imitation used."
+    }
+  ],
+  "rights_note": "All audio, Sonic Pi code, autotune code, video, thumbnail, captions, chapters, and public copy are original local work. The vocal performances are synthetic Qwen3-TTS voices with EPRS hard-step autotune processing; no real-person voice reference, external media, face, logo, or private source text is used. YouTube altered/synthetic-media disclosure was enabled.",
+  "youtube": {
+    "title": "Catch the Waveform — An Educational Surf-Rock Sonic Pi Song",
+    "description": "Catch the Waveform — an original educational surf-rock music film about turning a small piece of code into a moving musical wave.\n\nThe video teaches the production as it plays: BUILD → HEAR → TWEAK → LOCK, with progressive Sonic Pi code cards, a beat map, guitar and drum techniques, streaming lyrics, and a visible COMPLETE state.\n\nMusic: 104 BPM, E-major surf-rock drums and guitars, tremolo pluck, short echo, FM bass, and sung fictional synthetic voices processed through a custom local hard-step autotune program. Original local audio and video; no samples from external recordings, no artist imitation, and no external media.\n\nSoftware: Sonic Pi, Qwen3-TTS, a custom Python autotune wrapper, Pillow, and FFmpeg.\n\nSynthetic/altered-media disclosure: enabled.",
+    "tags": [
+      "Sonic Pi",
+      "surf rock",
+      "autotune",
+      "music education",
+      "coding music",
+      "EPRS",
+      "educational music video"
+    ],
+    "visibility_intent": "public"
+  }
+}

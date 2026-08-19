@@ -1,0 +1,11 @@
+{
+  "schema": "eprs.youtube-publication-receipt/v1",
+  "handoff": "notes/publications/be3909f883e296a648581edf0713994034f0c7dcc108e6b7989f1231e359a909/handoff.json",
+  "platform_id": "6b32zzFsPRU",
+  "canonical_url": "https://www.youtube.com/watch?v=6b32zzFsPRU",
+  "visibility": "public",
+  "uploaded_at": "2026-08-18T00:20:00Z",
+  "published_at": "2026-08-18T00:20:00Z",
+  "performed_by": "actor=best-robot-main via youtube-channel skill",
+  "authorization_note": "Shane explicitly requested: Publish the exact Catch the Waveform master-bound educational surf-rock video to YouTube. Uploaded to CashForClankers with public visibility, subscriber notifications off, synthetic-media disclosure enabled, and the reviewed educational thumbnail applied."
+}
