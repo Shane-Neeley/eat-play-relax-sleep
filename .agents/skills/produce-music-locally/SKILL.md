@@ -7,6 +7,11 @@ description: Create, develop, record, edit, arrange, sound-design, mix, master, 
 
 Help move a musical idea toward a useful artifact without imposing a genre, production method, toolchain, or definition of “finished.” Preserve the user's creative direction and every irreplaceable source.
 
+Human-facing entry points are the [EPRS documentation map](../../../docs/README.md),
+the [getting-started guide](../../../docs/GETTING_STARTED.md), and the
+[agentic tune walkthrough](../../../docs/AGENTIC_TUNE.md). Use this skill when
+the short guides have led you to a repository-backed agent handoff.
+
 ## Orient a context-capable model
 
 Long context improves recovery and comparison, but it does not turn every file

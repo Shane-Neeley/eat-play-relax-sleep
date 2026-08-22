@@ -8,6 +8,12 @@ Keep repository-specific knowledge here and keep machine paths, credentials,
 private project context, and user-specific defaults out. Forks may replace or
 extend these workflows without changing the core application.
 
+For the public, progressively disclosed route, start with the
+[documentation map](../../docs/README.md) or the
+[agentic tune walkthrough](../../docs/AGENTIC_TUNE.md). This directory is the
+deeper operating layer for agents that need the contracts and repeatable
+handoffs.
+
 ## Included skills
 
 - `produce-music-locally` — use EPRS as the agent-led operating spine for

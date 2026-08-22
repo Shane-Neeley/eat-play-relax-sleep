@@ -3,6 +3,10 @@
 Use EPRS as an orchestration and evidence system, not as a limitation on musical
 methods. Run commands from the repository root through `./scripts/eprs`.
 
+For a concise public explanation, see the [documentation map](../../../../docs/README.md)
+and the [agentic tune walkthrough](../../../../docs/AGENTIC_TUNE.md). This
+reference keeps the longer command and handoff details close to the skill.
+
 ## Orient before you act
 
 For a long-context or code-capable agent, use the repository as a searchable
