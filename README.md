@@ -1,6 +1,17 @@
 # Eat Play Relax Sleep
 
-A local-first creative operating system where agents and musicians can write code, run audible experiments, preserve source recordings, develop songs, visualize rhythm, and prepare finished media without turning one tool into a bottleneck.
+A local-first, open-source music-production system where agents and musicians can write code, run audible experiments, preserve source recordings, develop songs, visualize rhythm, and prepare finished media without turning one tool into a bottleneck.
+
+**CashForClankers** is the public video side of EPRS. Watch the work on
+[YouTube](https://www.youtube.com/@cashforclankers), explore the project at
+[Shaneneeley.com](https://www.shaneneeley.com/), or keep reading if you want to
+build your own agentic studio.
+
+EPRS is not a single music model or a magic “make me a song” button. It is the
+inspectable layer around creative tools: a prompt becomes a bounded request,
+then an experiment, a reviewed artifact, and—only after explicit approval—a
+release package. The source, evidence, settings, decisions, and unresolved
+questions stay visible so another person or agent can continue without guessing.
 
 The public repository contains playable BeatScript studies, reusable creative templates, an interactive browser Beat Lab, safe recording intake, experiment lineage, SVG rhythm maps, audio analysis, and a YouTube-ready FFmpeg adapter.
 
@@ -8,13 +19,111 @@ It also includes a [promptable audio-reactive visual engine](docs/VISUALS.md): c
 Synthetic voice cues can be generated with optional Qwen3-TTS and then passed
 through [agent-addressable, formant-aware pitch correction](docs/VOCALS.md),
 with raw/tuned candidates and checksum-bearing settings kept separate.
+Guitar and ukulele play-alongs use the authored, glanceable chord-diagram
+contract in [CHORD_DIAGRAMS.md](docs/CHORD_DIAGRAMS.md) and its reusable
+[`templates/chord-set.json`](templates/chord-set.json) starting point.
 The visual-method research ranking lives in [VISUAL_METHODS.md](docs/VISUAL_METHODS.md).
 The current local-model and Suno collaboration ranking lives in
 [AI_GENERATION.md](docs/AI_GENERATION.md).
 The evidence-backed remaining production priorities live in
 [QUALITY_GAPS.md](docs/QUALITY_GAPS.md).
+User-owned recurring prompts can use the portable
+[Daily Context contract](docs/DAILY_CONTEXT.md) and
+[`templates/daily-context.json`](templates/daily-context.json); EPRS does not
+fetch a particular person's site or notebook.
+Frontier-oriented adapters can use the portable
+[frontier-watch contract](docs/FRONTIER_WATCH.md) and
+[`templates/frontier-watch.json`](templates/frontier-watch.json) to separate
+new leads from independent checks, capability tests, and creative experiments.
+Audience-reaction experiments can use the bounded research and calibration
+guidance in [AUDIENCE_SIMULATION.md](docs/AUDIENCE_SIMULATION.md); simulated
+participants are hypotheses, not a substitute for human or platform evidence.
 Explicit local packet/response agents run through the mandatory isolation and
 receipt boundary documented in [AGENT_RUNNERS.md](docs/AGENT_RUNNERS.md).
+
+## See the tools
+
+These are real local surfaces in the EPRS workflow—not a mock dashboard. The
+exact tool mix is optional; EPRS keeps the musical intent, source files, and
+handoffs portable when a different tool is better for the job.
+
+<table>
+  <tr>
+    <td align="center"><strong>EPRS Beat Lab</strong><br><img src="docs/screenshots/beat-lab.png" alt="EPRS Beat Lab showing a portable step-sequencer pattern" width="360"></td>
+    <td align="center"><strong>Sonic Pi</strong><br><img src="docs/screenshots/sonic-pi.png" alt="Sonic Pi running an EPRS coded percussion study" width="360"></td>
+    <td align="center"><strong>Shotcut</strong><br><img src="docs/screenshots/shotcut.png" alt="Shotcut open-source video editor used as an optional picture lane" width="360"></td>
+  </tr>
+  <tr>
+    <td>Browser-first BeatScript authoring, mutation, and audition.</td>
+    <td>Live-coded sound, samples, performance, MIDI, and OSC.</td>
+    <td>Optional local timeline editing and picture review.</td>
+  </tr>
+</table>
+
+Screenshots captured locally on macOS; application interfaces and versions may
+change. The other important surfaces are [Audacity for hands-on recording and
+editing](docs/RECORDING.md), [Remotion for seeded audio-reactive visuals](docs/VISUALS.md),
+and [FFmpeg/FFprobe for media interchange and delivery](docs/VIDEO.md).
+
+## Ask an OpenClaw agent for a tune
+
+OpenClaw can act as the coordinator while EPRS remains the local, auditable
+production boundary. Give the agent a musical brief and clear limits, then ask
+it to run the smallest useful experiment. For example:
+
+```text
+Work in /path/to/eat-play-relax-sleep.
+
+Use EPRS to make a 12-bar instrumental called “Porch Signal”: a loose guitar
+invitation answered by a sparse, slightly crooked groove. Prefer Sonic Pi for
+the coded bed if it is available; BeatScript is the deterministic fallback.
+
+Preserve the breath before the answer and leave room for a human guitar take.
+Do not quantize, tune, normalize, compress, publish, upload, or touch any file
+under songs/*/recordings/raw/. Do not claim that a render is approved.
+
+Return the exact song-relative paths for the source, rendered experiment,
+production map, and next human listening question.
+```
+
+The agent can then use the bounded EPRS entry point:
+
+```bash
+./scripts/eprs make-song "Porch Signal" \
+  --prompt "A loose guitar invitation answered by a sparse, slightly crooked 12-bar groove" \
+  --preserve "the breath before the answer and room for a human guitar take" \
+  --avoid "quantization, tuning, normalization, compression, and publication" \
+  --question "Does the answer feel like a reply rather than a repeated loop?" \
+  --no-visual
+
+./scripts/eprs status songs/porch-signal --verify
+./scripts/eprs source-sketch songs/porch-signal \
+  --shape call-response \
+  --intent "Let the guitar invite; let the coded bed answer after the room breathes."
+```
+
+For a queued handoff instead of one continuous run, OpenClaw can create and
+claim one bounded work item. The agent writes the source and evidence, while a
+person still listens before anything is promoted:
+
+```bash
+./scripts/eprs work add --song songs/porch-signal \
+  --title "Write the Sonic Pi bed" \
+  --kind "bounded coded groove experiment" \
+  --prompt "Write a finite, seeded 12-bar Sonic Pi bed that leaves a pickup-sized gap for guitar" \
+  --require-result sonic-pi-source \
+  --require-result listening-note
+
+./scripts/eprs work claim-next \
+  --song songs/porch-signal \
+  --agent openclaw
+```
+
+This is an orchestration pattern, not a hidden OpenClaw integration: the
+coordinator may call the local CLI, but EPRS owns the request, provenance,
+review, and publication gates. See the [agent contract](AGENTS.md),
+[production-request intake](docs/PRODUCTION_REQUESTS.md), and
+[Sonic Pi handoff](docs/SONIC_PI.md).
 
 ## Start here as an agent
 
@@ -194,7 +303,9 @@ The resulting `eprs.inaturalist-creative-study/v1` record measures attack
 spacing, energy, rough pitch, and a brightness proxy, then keeps independent
 creative prompts for beats, noises, lyrics, vocals, and tones. See the
 [2026 animal-sound AI brief](docs/ANIMAL_SOUND_AI_2026.md) for the research
-trail and the limits on calling model pattern discovery “translation.”
+trail and the limits on calling model pattern discovery “translation,” then
+use the [2027 communication and song roadmap](docs/ANIMAL_COMMUNICATION_ROADMAP_2027.md)
+for the context, interaction, and authored-response lanes.
 
 ### Freeze an iNaturalist photo reference
 
@@ -823,6 +934,11 @@ See [renderer-neutral picture handoff](docs/PICTURE.md). The capture contract is
 not tied to Remotion: editors, DAW video lanes, live-visual recorders, and future
 agent tools can provide the same preserved picture/evidence handoff.
 
+For a visual that teaches or follows a backing track, keep the chord-set data
+beside the audio recipe and bind both to the same authored bar/beat map. See
+[chord diagrams](docs/CHORD_DIAGRAMS.md) and the companion
+[diagram design system](docs/CHORD_DIAGRAM_DESIGN.md).
+
 ## System map
 
 ```text
@@ -850,7 +966,7 @@ Open `albums/<name>/README.md` for the album track list; album track folders
 link back to the canonical song workspaces under `songs/`.
 ```
 
-Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [engagement principles](docs/ENGAGEMENT.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [isolated agent runners](docs/AGENT_RUNNERS.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
+Read [the architecture](docs/ARCHITECTURE.md), [ranked quality gaps](docs/QUALITY_GAPS.md), [engagement principles](docs/ENGAGEMENT.md), [daily context inputs](docs/DAILY_CONTEXT.md), [frontier watch and capability tests](docs/FRONTIER_WATCH.md), [audience-reaction simulation](docs/AUDIENCE_SIMULATION.md), [randomness and artifact novelty](docs/RANDOMNESS.md), [toolchain registry](docs/TOOLCHAIN.md), [software adapter profiles](docs/ADAPTERS.md), [production-request intake](docs/PRODUCTION_REQUESTS.md), [source-aware first sketches](docs/SOURCE_SKETCHES.md), [request-bound production plans](docs/PRODUCTION_PLANS.md), [bounded agent context](docs/AGENT_CONTEXT.md), [agent work queue](docs/AGENT_WORK.md), [isolated agent runners](docs/AGENT_RUNNERS.md), [attributed research records](docs/RESEARCH_RECORDS.md), [source-bound lyric development](docs/LYRICS.md), [audio selections](docs/SELECTIONS.md), [performed rhythm observations](docs/RHYTHM.md), [phrase, pitch, and pulse evidence](docs/MUSICAL_OBSERVATIONS.md), [drummer-facing groove development](docs/GROOVE.md), [two-microphone timing and polarity evidence](docs/PHASE.md), [decision evidence bindings](docs/EVIDENCE_BINDINGS.md), [performance-aware take comparison](docs/PERFORMANCE_COMPARISON.md), [reversible performance comping](docs/COMPING.md), [reversible stem processing](docs/PROCESSING.md), [experiments](docs/EXPERIMENTS.md), [declarative mixing](docs/MIXING.md), [DAW-neutral interchange](docs/DAW_INTERCHANGE.md), [lossless mastering](docs/MASTERING.md), [research and orthogonal directions](docs/RESEARCH.md), [video delivery](docs/VIDEO.md), [renderer-neutral picture handoff](docs/PICTURE.md), [YouTube publishing assets](docs/YOUTUBE_ASSETS.md), [local FINAL release packages](docs/RELEASES.md), [streaming distribution handoffs](docs/DISTRIBUTION.md), [offline publication handoffs](docs/PUBLICATION.md), [the contribution and public-data policy](CONTRIBUTING.md), and [the agent contract](AGENTS.md).
 
 ## Tool philosophy
 
