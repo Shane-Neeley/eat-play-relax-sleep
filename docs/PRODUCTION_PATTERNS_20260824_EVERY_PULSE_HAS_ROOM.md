@@ -1,0 +1,11 @@
+# Production patterns — Every Pulse Has Room (2026-08-24)
+
+This run deliberately changed the recent catalog lane: 116 BPM straight 2/4 instead of the prior compound and odd meters, with a two-note invitation that grows one layer at a time. A true eight-bar air-drop leaves the downbeat open while hand, bass, and lead remain; a G/A harmonic turn resets the center; the full return earns a late octave lift before an open coda. The deterministic BeatScript score passed the structural checks and received explicit human approval for the unfamiliar-meter risk flags.
+
+The visual method also changed lanes. A Pillow/FFmpeg renderer draws four freestanding painted-light arches on a blue-black field. They enter one by one, form a bridge-like shared floor, dim the fourth arch during the air-drop, then align and brighten for the return. The moving picture and truthful thumbnail contain no text, faces, logos, places, or external media.
+
+The frontier lead used an official FFmpeg 9.0.1 release reference plus the installed FFmpeg 8.0.1 filter inventory (`blend`, `tblend`, `showwaves`). This is a bounded capability observation, not a portability claim. The first mux left a stale/corrupt intermediate; versioned v2 picture output, full decode, and EPRS stream-copy verification caught and resolved it before publication.
+
+The required browser-first Studio preflight reached the signed-in CashForClankers Chrome profile, while the in-app browser was unauthenticated and the Chrome browser backend was unavailable to the browser client despite local extension diagnostics. The Studio page exposed no upload control to the available UI bridge. One authorized YouTube Data API fallback completed the public upload, custom thumbnail, and English caption upload without a duplicate. The watch page, oEmbed, and hqdefault thumbnail checks returned HTTP 200; maxres was 404 and is not claimed.
+
+The final media is deterministic local code/audio/video only: no generative-AI assets, external recordings, stock footage, faces, logos, or private information. Telegram report `2590` returned `{ok:true}`; WAV and video document sends each timed out twice with `GatewayTransportError: gateway timeout after 10000ms`, and both files remain staged and preserved locally.
