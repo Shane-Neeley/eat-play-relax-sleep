@@ -154,18 +154,6 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         if not isinstance(quality_value, str) or not quality_value.strip():
             raise ValueError("release creative_quality must be a song-relative report path")
         quality_report, quality_record = verify_creative_quality(song_path, quality_value)
-    if visibility == "public":
-        if quality_report is None or quality_record is None:
-            raise ValueError(
-                "public release requires a verified creative_quality report; "
-                "technical approval alone is not a public quality gate"
-            )
-        human_status = quality_record["human_approval"]["status"]
-        if human_status != "approved":
-            raise ValueError(
-                "public release requires explicit human creative approval; "
-                "technical and automated quality checks cannot self-publish"
-            )
 
     lineage = trace_audio_lineage(song_path, master)
     validate_external_audio_visibility(lineage, visibility, "release")
@@ -251,6 +239,21 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     ]
     if unused:
         raise ValueError(f"release clearance does not cover a used session take: {', '.join(unused)}")
+
+    # Validate the public creative gate after recording rights so a release with
+    # an unresolved raw take reports the actionable clearance failure first.
+    if visibility == "public":
+        if quality_report is None or quality_record is None:
+            raise ValueError(
+                "public release requires a verified creative_quality report; "
+                "technical approval alone is not a public quality gate"
+            )
+        human_status = quality_record["human_approval"]["status"]
+        if human_status != "approved":
+            raise ValueError(
+                "public release requires explicit human creative approval; "
+                "technical and automated quality checks cannot self-publish"
+            )
 
     sources = {
         "master": {
