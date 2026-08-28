@@ -1,9 +1,9 @@
-export type VisualWorld = "portal" | "ribbons" | "constellation";
+export type VisualWorld = "portal" | "ribbons" | "constellation" | "meadow";
 
 const VISUAL_MOTIFS = [
   "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae",
   "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid",
-  "screenprint-count", "squirrel-pines",
+  "screenprint-count", "squirrel-pines", "cricket-pulse",
 ] as const;
 
 export type VisualMotif = typeof VISUAL_MOTIFS[number];
@@ -80,7 +80,7 @@ export const normalizeSpec = (candidate: Partial<VisualSpec>): VisualSpec => {
     title: candidate.title || "Untitled Signal",
     subtitle: candidate.subtitle || "EAT · PLAY · RELAX · SLEEP",
     prompt: candidate.prompt || "A patient signal growing in a dark room",
-    world: ["portal", "ribbons", "constellation"].includes(candidate.world || "")
+    world: ["portal", "ribbons", "constellation", "meadow"].includes(candidate.world || "")
       ? candidate.world as VisualWorld : "portal",
     motif: VISUAL_MOTIFS.includes(candidate.motif as VisualMotif)
       ? candidate.motif as VisualMotif

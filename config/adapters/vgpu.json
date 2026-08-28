@@ -1,0 +1,52 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "vgpu-headless-picture",
+  "label": "Headless vgpu picture adapter",
+  "summary": "Render the same EPRS visual score as deterministic offscreen WebGPU frames, then mux the original audio locally for a technical picture candidate.",
+  "provider": "vgpu",
+  "capabilities": [
+    "headless_promptable_visuals"
+  ],
+  "handoffs": [
+    {
+      "id": "score-to-headless-picture",
+      "label": "Render a score through headless vgpu",
+      "intent": "Exercise a promptable music-video score without a browser window, preserving the score, audio checksum, frame controls, and technical verification for later picture review.",
+      "capabilities": [
+        "headless_promptable_visuals"
+      ],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "A song-local visual score and a declared audio derivative",
+        "vgpu 0.3.1 installed under visuals/ and a passing vgpu doctor check",
+        "Declared title, source rights, renderer setting, and review state"
+      ],
+      "outputs": [
+        "An H.264 yuv420p progressive BT.709 MP4 with AAC audio at 48 kHz stereo",
+        "An eprs.vgpu-render/v1 sidecar and a song-local audio-control manifest",
+        "A frame sequence rendered through offscreen WebGPU for local inspection"
+      ],
+      "steps": [
+        "Run eprs visual-render with --renderer vgpu against the chosen score and audio.",
+        "Inspect representative frames and probe the complete candidate locally.",
+        "If the candidate is worth keeping, capture it through eprs picture add and review the complete picture before any delivery assembly."
+      ],
+      "verification": [
+        "Confirm the score, audio, controls, output, and renderer settings are checksum-bound in the sidecar.",
+        "Confirm even dimensions, H.264/yuv420p/progressive BT.709 picture, AAC 48 kHz stereo, and duration within frame tolerance.",
+        "Confirm technical rendering does not set creative approval, picture keep, publication, upload, or release authority."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The original score, source audio, generated frame evidence, controls manifest, output MP4, and complete render sidecar",
+      "Open musical space and the declared EAT · PLAY · RELAX · SLEEP visual intent rather than illustrating every waveform event"
+    ],
+    "avoid": [
+      "Unlicensed footage or photos, silent insertion of faces or model output, overwriting prior renders, or treating a GPU smoke test as picture approval",
+      "Using vgpu as a substitute for the approved lossless master, renderer-neutral picture review, or a separately authorized publication handoff"
+    ]
+  }
+}

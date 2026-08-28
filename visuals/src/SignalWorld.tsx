@@ -150,6 +150,79 @@ const Constellation = ({spec, spectrum}: Props) => {
   </AbsoluteFill>;
 };
 
+const Meadow = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const mids = mean(spectrum.slice(5, 18)) * spec.reactivity.mids;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const horizon = height * (0.54 - mids * 0.035);
+  const groundY = height * 0.77;
+  const grass = Array.from({length: 72}, (_, index) => {
+    const x = ((index * 0.137 + seeded(spec.seed, index) * 0.08) % 1) * width;
+    const lean = Math.sin(time * (0.55 + seeded(spec.seed + 10, index) * 0.25) + index) * width * 0.012;
+    const top = groundY - height * (0.045 + seeded(spec.seed + 20, index) * 0.16) * (0.82 + mids * 0.42);
+    return {x, top, lean, width: 1.2 + seeded(spec.seed + 30, index) * 2.3};
+  });
+  const fireflies = Array.from({length: 24}, (_, index) => ({
+    x: width * (0.10 + seeded(spec.seed + 40, index) * 0.80),
+    y: height * (0.20 + seeded(spec.seed + 50, index) * 0.40),
+    phase: seeded(spec.seed + 60, index) * Math.PI * 2,
+  }));
+  return <AbsoluteFill style={{background: spec.background, overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <linearGradient id="meadow-sky" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={spec.palette[0]} stopOpacity={0.78} />
+          <stop offset="56%" stopColor={spec.palette[1]} stopOpacity={0.52} />
+          <stop offset="100%" stopColor={spec.background} />
+        </linearGradient>
+        <linearGradient id="meadow-ground" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={spec.palette[1]} stopOpacity={0.58} />
+          <stop offset="100%" stopColor={spec.palette[3]} stopOpacity={0.92} />
+        </linearGradient>
+        <filter id="meadow-glow"><feGaussianBlur stdDeviation={7 + highs * 12} /></filter>
+      </defs>
+      <rect width={width} height={height} fill="url(#meadow-sky)" />
+      <circle cx={width * (0.77 + Math.sin(time * 0.12) * 0.025)} cy={height * 0.22} r={height * (0.075 + bass * 0.018)} fill={spec.palette[0]} opacity={0.30 + bass * 0.15} filter="url(#meadow-glow)" />
+      <circle cx={width * 0.77} cy={height * 0.22} r={height * (0.035 + bass * 0.012)} fill={spec.palette[0]} opacity={0.76} />
+      <path d={`M 0 ${horizon + height * 0.05} Q ${width * 0.22} ${horizon - height * 0.06} ${width * 0.45} ${horizon + height * 0.03} T ${width} ${horizon - height * 0.02} L ${width} ${height} L 0 ${height} Z`} fill={rgba(spec.palette[1], 0.42)} />
+      <path d={`M 0 ${groundY} Q ${width * 0.22} ${groundY - height * 0.07} ${width * 0.48} ${groundY + height * 0.01} T ${width} ${groundY - height * 0.06} L ${width} ${height} L 0 ${height} Z`} fill="url(#meadow-ground)" />
+      <path d={`M 0 ${horizon} Q ${width * 0.22} ${horizon - height * 0.045} ${width * 0.50} ${horizon + height * 0.012} T ${width} ${horizon - height * 0.02}`} fill="none" stroke={spec.palette[0]} strokeOpacity={0.38 + mids * 0.18} strokeWidth={2 + mids * 3} />
+      {grass.map((blade, index) => <path key={`blade-${index}`} d={`M ${blade.x} ${groundY + height * 0.04} Q ${blade.x + blade.lean} ${(groundY + blade.top) / 2} ${blade.x + blade.lean * 1.5} ${blade.top}`} fill="none" stroke={index % 3 === 0 ? spec.palette[0] : spec.palette[3]} strokeOpacity={0.40 + mids * 0.34} strokeWidth={blade.width} strokeLinecap="round" />)}
+      {fireflies.map((fly, index) => {
+        const x = fly.x + Math.sin(time * 0.32 + fly.phase) * width * 0.018;
+        const y = fly.y + Math.cos(time * 0.41 + fly.phase) * height * 0.020;
+        const glow = 0.18 + (0.5 + 0.5 * Math.sin(time * 2.1 + fly.phase)) * (0.28 + highs * 0.42);
+        return <circle key={`fly-${index}`} cx={x} cy={y} r={1.5 + highs * 2.5} fill={index % 2 ? spec.palette[0] : spec.palette[2]} opacity={glow} />;
+      })}
+    </svg>
+  </AbsoluteFill>;
+};
+
+const CricketPulseOverlay = ({spec, spectrum}: Props) => {
+  const frame = useCurrentFrame();
+  const {width, height, fps} = useVideoConfig();
+  const time = frame / fps;
+  const bass = mean(spectrum.slice(0, 5)) * spec.reactivity.bass;
+  const highs = mean(spectrum.slice(18)) * spec.reactivity.highs;
+  const centers = [
+    [width * 0.31, height * 0.55],
+    [width * 0.66, height * 0.48],
+  ];
+  return <AbsoluteFill style={{pointerEvents: "none", overflow: "hidden"}}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      {centers.map(([cx, cy], centerIndex) => Array.from({length: 4}, (_, index) => {
+        const phase = (time * (0.17 + centerIndex * 0.035) + index * 0.23 + centerIndex * 0.41) % 1;
+        const radius = Math.min(width, height) * (0.035 + phase * (0.13 + bass * 0.08));
+        return <circle key={`chirp-ring-${centerIndex}-${index}`} cx={cx} cy={cy} r={radius} fill="none" stroke={spec.palette[(index + centerIndex) % 3]} strokeWidth={1.2 + highs * 2.4} opacity={(1 - phase) * (0.16 + highs * 0.30)} />;
+      }))}
+      <path d={`M ${width * 0.12} ${height * 0.84} Q ${width * 0.30} ${height * (0.78 - bass * 0.05)} ${width * 0.48} ${height * 0.84} T ${width * 0.88} ${height * (0.79 - bass * 0.04)}`} fill="none" stroke={spec.palette[0]} strokeOpacity={0.22 + highs * 0.18} strokeWidth={2 + highs * 2} strokeDasharray="2 18" />
+    </svg>
+  </AbsoluteFill>;
+};
+
 const MagneticDustOverlay = ({spec, spectrum}: Props) => {
   const frame = useCurrentFrame();
   const {width, height, fps, durationInFrames} = useVideoConfig();
@@ -717,7 +790,7 @@ export const SignalWorld = (props: Props) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const texturePhase = seeded(props.spec.seed, frame) * props.spec.texture.grain;
-  const World = props.spec.world === "ribbons" ? Ribbons : props.spec.world === "constellation" ? Constellation : Portal;
+  const World = props.spec.world === "meadow" ? Meadow : props.spec.world === "ribbons" ? Ribbons : props.spec.world === "constellation" ? Constellation : Portal;
   return <AbsoluteFill style={{background: props.spec.background}}>
     <World {...props} />
     <AbsoluteFill style={{pointerEvents: "none", opacity: props.spec.texture.scanlines, backgroundImage: "repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(0,0,0,.45) 4px)"}} />
@@ -734,6 +807,7 @@ export const SignalWorld = (props: Props) => {
     {props.spec.motif === "cloud-braid" ? <CloudBraidOverlay {...props} /> : null}
     {props.spec.motif === "screenprint-count" ? <ScreenPrintCountOverlay {...props} /> : null}
     {props.spec.motif === "squirrel-pines" ? <SquirrelPinesOverlay {...props} /> : null}
+    {props.spec.motif === "cricket-pulse" ? <CricketPulseOverlay {...props} /> : null}
     {props.spec.typography.show ? <div style={{position: "absolute", right: 44, bottom: 32, color: rgba(props.spec.palette[3], 0.45), font: "500 14px ui-monospace,monospace", letterSpacing: "0.18em"}}>{Math.floor(frame / fps).toString().padStart(3, "0")} · {props.spec.seed}</div> : null}
   </AbsoluteFill>;
 };

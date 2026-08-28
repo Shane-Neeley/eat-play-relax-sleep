@@ -1,0 +1,120 @@
+{
+  "schema": "eprs.chord-set/v1",
+  "title": "Classic E Blues chord set",
+  "song": "songs/<song-name>",
+  "purpose": "play-along",
+  "source": {
+    "kind": "authored-progression",
+    "note": "Declare the progression and voicings; do not infer chords from waveform analysis."
+  },
+  "playback": {
+    "audio": "masters/<master-title>/<approved-master>.wav",
+    "key": "E",
+    "tempo_bpm": 84,
+    "meter": "4/4",
+    "count_in_bars": 1,
+    "cycles": 3,
+    "repeat": false
+  },
+  "views": [
+    {
+      "id": "guitar-standard",
+      "instrument": "guitar",
+      "tuning": {
+        "name": "Standard",
+        "string_order": ["E", "A", "D", "G", "B", "e"],
+        "capo": 0,
+        "diagram_order_note": "String 6 to string 1; this is low-to-high in standard tuning."
+      },
+      "shape_id_by_chord": {
+        "E7": "guitar-e7-open",
+        "A7": "guitar-a7-open",
+        "B7": "guitar-b7-open"
+      },
+      "shapes": [
+        {
+          "id": "guitar-e7-open",
+          "name": "E7",
+          "position": "open",
+          "frets": ["0", "2", "0", "1", "0", "0"],
+          "fingerings": [null, 2, null, 1, null, null]
+        },
+        {
+          "id": "guitar-a7-open",
+          "name": "A7",
+          "position": "open",
+          "frets": ["X", "0", "2", "0", "2", "0"],
+          "fingerings": [null, null, 2, null, 3, null]
+        },
+        {
+          "id": "guitar-b7-open",
+          "name": "B7",
+          "position": "open",
+          "frets": ["X", "2", "1", "2", "0", "2"],
+          "fingerings": [null, 2, 1, 3, null, 4]
+        }
+      ]
+    },
+    {
+      "id": "ukulele-high-g",
+      "instrument": "ukulele",
+      "tuning": {
+        "name": "High-G reentrant",
+        "string_order": ["G", "C", "E", "A"],
+        "capo": 0,
+        "diagram_order_note": "String 4 to string 1; G is reentrant and higher than C."
+      },
+      "shape_id_by_chord": {
+        "E7": "ukulele-e7-first",
+        "A7": "ukulele-a7-open",
+        "B7": "ukulele-b7-second"
+      },
+      "shapes": [
+        {
+          "id": "ukulele-e7-first",
+          "name": "E7",
+          "position": "1st",
+          "frets": ["1", "2", "0", "2"],
+          "fingerings": [1, 2, null, 3]
+        },
+        {
+          "id": "ukulele-a7-open",
+          "name": "A7",
+          "position": "open",
+          "frets": ["0", "1", "0", "0"],
+          "fingerings": [null, 1, null, null]
+        },
+        {
+          "id": "ukulele-b7-second",
+          "name": "B7",
+          "position": "2nd",
+          "frets": ["4", "3", "2", "2"],
+          "fingerings": [3, 2, 1, 1],
+          "barre": {"fret": 2, "from_string": 2, "to_string": 1, "finger": 1}
+        }
+      ]
+    }
+  ],
+  "progression": [
+    {"cycle": 1, "bar": 1, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 2, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 3, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 4, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 5, "beat": 1, "chord": "A7"},
+    {"cycle": 1, "bar": 6, "beat": 1, "chord": "A7"},
+    {"cycle": 1, "bar": 7, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 8, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 9, "beat": 1, "chord": "B7"},
+    {"cycle": 1, "bar": 10, "beat": 1, "chord": "A7"},
+    {"cycle": 1, "bar": 11, "beat": 1, "chord": "E7"},
+    {"cycle": 1, "bar": 12, "beat": 1, "chord": "B7"}
+  ],
+  "display": {
+    "mode": "current-plus-next",
+    "palette": "eprs-midnight-practice-room",
+    "show_string_labels": true,
+    "show_finger_numbers": true,
+    "show_note_names": false,
+    "show_progression_strip": true
+  }
+}

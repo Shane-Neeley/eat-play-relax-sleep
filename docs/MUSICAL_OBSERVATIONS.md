@@ -56,6 +56,11 @@ For a long rehearsal, choose the musical question first:
 This artifact is evidence for the next arrangement experiment, not a claim
 that a song is in tune, in time, harmonically understood, or ready to release.
 
+If a later request needs chord diagrams, create or approve an authored
+`eprs.chord-set/v1` progression separately. An observation can suggest a
+listening question, but it does not authorize a key, chord, voicing, tuning, or
+play-along map.
+
 ## Use one observation explicitly
 
 Nothing consumes an observation merely because it exists. Bind it to a fresh

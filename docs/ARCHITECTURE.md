@@ -248,7 +248,10 @@ never become authority to operate a tool or call a result approved.
 - `eprs.process/v1`: one source and an ordered, player-intended operation chain.
   `eprs.process-render/v1` binds the immutable source checksum, resolved filter
   controls, float working stem, safety invariants, measurements, warnings, and
-  keep/change/stop listening history. It never grants implicit processing.
+  keep/change/stop listening history. `trim` and bounded `time_stretch` make
+  deliberate source-fit edits possible for a musical stem while preserving the
+  original file; they require explicit intent and a listening comparison. It
+  never grants implicit processing.
 - `eprs.mix/v1`: a human- and agent-editable arrangement score with musical
   intent, source-relative timeline placement, trims, explicit gains, conservative
   balance/pan, and fades. `eprs.mix-render/v1` preserves its resolved source

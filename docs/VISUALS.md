@@ -2,9 +2,18 @@
 
 The visual system turns a high-level prompt into a versioned score, then renders that score deterministically against an audio file. It does not generate faces or depend on a single model.
 
+For guitar or ukulele play-alongs, use the authored chord-set contract before
+choosing a visual renderer. The chord map is a semantic timing layer: bind it
+to the same bar/beat progression as the backing track, then render the current
+shape and progression strip through the normal picture review boundary. See
+[Chord diagrams in EPRS](CHORD_DIAGRAMS.md) and the
+[glanceable diagram design system](CHORD_DIAGRAM_DESIGN.md). Do not infer a
+chord map from `eprs observe` output.
+
 ## The visual instrument rack
 
 - **EPRS SVG engine + Remotion:** production default. Frame-accurate, seedable, parameterized, locally previewable, and suitable for H.264 delivery.
+- **vgpu:** optional headless WebGPU adapter. It runs the same `eprs.visual/v1` score through an offscreen Dawn device, writes inspectable PNG frames, and lets FFmpeg mux the declared audio without opening a browser.
 - **Hydra:** future live video-synth adapter for feedback, fractals, pixel operations, and Sonic Pi/OSC performance.
 - **Meyda or p5.sound:** future real-time feature extraction for browser installations and live input.
 - **Three.js:** future WebGL 2 / 3D and shader-world adapter. Check WebGL capability and keep shader errors enabled while developing.
@@ -22,11 +31,16 @@ scripts/eprs visual-prompt \
 
 This deterministic compiler is a starting assistant, not an art director. Agents should refine the resulting `eprs.visual/v1` JSON using the supplied prompt, [visual brief](../templates/visual-brief.md), and listening notes. The original prompt stays in the score.
 
-Three built-in worlds are intentionally orthogonal:
+Four built-in worlds are intentionally orthogonal:
 
 - `portal`: depth, machinery, threshold, feedback echoes.
 - `ribbons`: flow, tape, wave, smear, midrange motion.
 - `constellation`: sparse nodes, relationships, silence, high-frequency detail.
+- `meadow`: daylight, grass movement, firefly-scale points, and expanding chirp rings.
+
+The `cricket-pulse` motif is paired with the meadow world for field-recording
+tracks that need a bright organic visual lane. It is an authored visual
+response, not a claim that animal calls contain decoded human messages.
 
 ## Optional natural-history photographs
 
@@ -71,9 +85,29 @@ make visual-studio
 
 `make visuals-install` also renders a local ignored `demo.wav` so Remotion Studio opens usefully on a fresh clone. Replace that preview input through a render score before making creative decisions about a real song.
 
-Draft mode renders at half resolution for fast decisions. Full mode renders
-1920×1080 H.264/yuv420p in BT.709, with AAC at 48 kHz and a half-frame-rate
-GOP. Each render receives a JSON sidecar containing hashes for the score, audio,
+For a browser-free smoke test or a batch render, use the optional vgpu adapter:
+
+```bash
+make vgpu-doctor
+scripts/eprs visual-render songs/signal-garden/visuals/signal.json \
+  --audio songs/signal-garden/experiments/signal.wav \
+  --renderer vgpu --quality draft --timeout-seconds 600 \
+  --out songs/signal-garden/video/previews/signal-vgpu.mp4
+```
+
+vgpu writes a song-local `.controls.json` file containing bounded, hashed audio
+controls and a `.mp4.json` `eprs.vgpu-render/v1` sidecar. The frame renderer is
+procedural and intentionally does not stage photographs; scores with frozen
+iNaturalist photographs should use Remotion's rights-checking path. vgpu full
+renders are 1280×720 so a headless iteration stays practical; the existing
+Remotion full path remains the higher-resolution delivery default. A vgpu result
+is still only a technical picture candidate: capture and complete-picture review
+remain required.
+
+Draft Remotion mode renders at half resolution for fast decisions. Remotion full
+mode renders 1920×1080 H.264/yuv420p in BT.709; vgpu full mode renders 1280×720.
+Both paths use AAC at 48 kHz and a half-frame-rate GOP. Each render receives a
+JSON sidecar containing hashes for the score, audio,
 and output plus elapsed time, concurrency, and the enforced render time budget.
 
 The renderer owns Remotion, Chromium, and FFmpeg in one private process group.

@@ -15,6 +15,7 @@ from .clearance import (
 from .delivery import verify_youtube_provenance
 from .lineage import trace_audio_lineage, validate_external_audio_visibility
 from .master import verify_master_provenance
+from .quality import verify_creative_quality
 from .system import load_song_manifest, sha256, slugify, utc_now
 from .youtube_assets import verify_youtube_asset_bundle
 
@@ -82,7 +83,7 @@ def _verify_youtube_text(title: str, description: str, tags: list[str]) -> None:
 
 def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     """Copy approved media and declared metadata into one immutable FINAL package."""
-    song_path = Path(song)
+    song_path = Path(song).resolve()
     load_song_manifest(song_path)
     spec_path = Path(spec)
     if not spec_path.is_file():
@@ -109,7 +110,7 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         song_path, video_value, require_approval=True,
     )
     video_master = video_metadata.get("master", {})
-    if video_master.get("path") != str(master.relative_to(song_path.resolve())):
+    if video_master.get("path") != str(master.resolve().relative_to(song_path)):
         raise ValueError("release master is not the approved master used by the YouTube video")
 
     asset_manifest = None
@@ -145,6 +146,26 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     if len(tags) != len(set(tag.casefold() for tag in tags)):
         raise ValueError("release YouTube tags must be unique")
     _verify_youtube_text(youtube_title, description, tags)
+
+    quality_report = None
+    quality_record = None
+    quality_value = score.get("creative_quality")
+    if quality_value is not None:
+        if not isinstance(quality_value, str) or not quality_value.strip():
+            raise ValueError("release creative_quality must be a song-relative report path")
+        quality_report, quality_record = verify_creative_quality(song_path, quality_value)
+    if visibility == "public":
+        if quality_report is None or quality_record is None:
+            raise ValueError(
+                "public release requires a verified creative_quality report; "
+                "technical approval alone is not a public quality gate"
+            )
+        human_status = quality_record["human_approval"]["status"]
+        if human_status != "approved":
+            raise ValueError(
+                "public release requires explicit human creative approval; "
+                "technical and automated quality checks cannot self-publish"
+            )
 
     lineage = trace_audio_lineage(song_path, master)
     validate_external_audio_visibility(lineage, visibility, "release")
@@ -261,6 +282,15 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                 for artifact in asset_bundle["artifacts"]
             ],
         }
+    if quality_report is not None and quality_record is not None:
+        sources["creative_quality"] = {
+            "path": str(quality_report.relative_to(song_path.resolve())),
+            "sha256": sha256(quality_report),
+            "schema": quality_record["schema"],
+            "decision": quality_record["decision"],
+            "auto_publish_eligible": quality_record["auto_publish_eligible"],
+            "human_approval": quality_record["human_approval"]["status"],
+        }
     recipe = {
         "schema": RELEASE_SCHEMA,
         "title": title,
@@ -278,6 +308,8 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         "clearances": clearance_evidence,
         "sources": sources,
     }
+    if quality_report is not None:
+        recipe["creative_quality"] = str(quality_report.relative_to(song_path.resolve()))
     release_id = hashlib.sha256(
         json.dumps(recipe, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
@@ -306,6 +338,12 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         shutil.copy2(video, video_copy)
         if sha256(master_copy) != sources["master"]["sha256"] or sha256(video_copy) != sources["youtube_video"]["sha256"]:
             raise RuntimeError("FINAL release copy verification failed")
+        copied_quality = None
+        if quality_report is not None:
+            copied_quality = temporary / "creative-quality.json"
+            shutil.copy2(quality_report, copied_quality)
+            if sha256(copied_quality) != sources["creative_quality"]["sha256"]:
+                raise RuntimeError("FINAL creative quality copy verification failed")
         copied_asset_artifacts = []
         if asset_manifest is not None and asset_bundle is not None:
             asset_dir = temporary / "youtube-assets"
@@ -449,6 +487,12 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                 "role": role,
                 "path": str((destination / path.name).relative_to(song_path)),
                 "sha256": sha256(path),
+            })
+        if copied_quality is not None:
+            artifacts.append({
+                "role": "creative quality report",
+                "path": str((destination / copied_quality.name).relative_to(song_path)),
+                "sha256": sha256(copied_quality),
             })
         for item in copied_asset_artifacts:
             artifacts.append({

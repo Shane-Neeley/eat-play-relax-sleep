@@ -102,6 +102,50 @@ class ProcessTests(unittest.TestCase):
             self.assertFalse(metadata["render"]["limiting"])
             self.assertFalse(metadata["render"]["automatic_normalization"])
 
+    def test_trim_and_time_stretch_make_an_explicit_beat_fit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            song = new_song(root, "Rattle Pocket")
+            source = self._source(root, song)
+            source_digest = sha256(source)
+            spec = self._spec(root, song, source, [
+                {
+                    "type": "trim",
+                    "intent": "Chop to the bright call-bearing burst without editing the source.",
+                    "start_seconds": 0.02,
+                    "duration_seconds": 0.16,
+                },
+                {
+                    "type": "time_stretch",
+                    "intent": "Slow the burst into the authored pocket without changing its pitch.",
+                    "tempo_ratio": 0.8,
+                },
+                {
+                    "type": "fade",
+                    "intent": "Remove the edit seam before placing the hit on the grid.",
+                    "direction": "in",
+                    "start_seconds": 0,
+                    "duration_seconds": 0.01,
+                },
+            ])
+
+            stem, sidecar = render_process(spec, song)
+            metadata = json.loads(sidecar.read_text())
+            self.assertEqual(sha256(source), source_digest)
+            self.assertTrue(metadata["render"]["source_trim"])
+            self.assertTrue(metadata["render"]["time_stretch"])
+            self.assertEqual([operation["type"] for operation in metadata["operations"]], [
+                "trim", "time_stretch", "fade",
+            ])
+            self.assertAlmostEqual(
+                float(metadata["output"]["probe"]["format"]["duration"]),
+                0.2,
+                delta=0.03,
+            )
+            self.assertIn("timing was deliberately edited", " ".join(metadata["warnings"]))
+            self.assertEqual(song_status(song, verify=True)["inventory"]["stems_pending_review"], 1)
+            self.assertTrue(stem.is_file())
+
     def test_echo_declares_and_verifies_its_tail(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -127,6 +171,15 @@ class ProcessTests(unittest.TestCase):
                 render_process(self._spec(root, song, source, [{"type": "gain", "db": -3}]), song)
             with self.assertRaisesRegex(ValueError, "unsupported"):
                 render_process(self._spec(root, song, source, [{"type": "normalize", "intent": "Make it loud."}]), song)
+            with self.assertRaisesRegex(ValueError, "tempo_ratio"):
+                render_process(self._spec(root, song, source, [{
+                    "type": "time_stretch", "intent": "Reject an unsafe ratio.", "tempo_ratio": 0.49,
+                }]), song)
+            with self.assertRaisesRegex(ValueError, "between"):
+                render_process(self._spec(root, song, source, [{
+                    "type": "trim", "intent": "Reject a slice outside the source.",
+                    "start_seconds": 0.2, "duration_seconds": 0.2,
+                }]), song)
             with self.assertRaisesRegex(ValueError, "finite"):
                 render_process(self._spec(root, song, source, [{"type": "gain", "intent": "Reject NaN.", "db": float("nan")}]), song)
 

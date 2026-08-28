@@ -1,0 +1,58 @@
+{
+  "schema": "eprs.process/v1",
+  "title": "rattlesnake pulse fast",
+  "role": "rattlesnake percussive layer",
+  "intent": "Use a clipped real rattlesnake burst as a fast pickup before the backbeat.",
+  "source": "references/inaturalist-audio/prairie-rattlesnake-rattle-alternate/observation-393347812-sound-2128992.m4a",
+  "evidence": [
+    {
+      "id": "prairie-rattlesnake-study",
+      "role": "iNaturalist creative study",
+      "path": "notes/inaturalist-studies/prairie-rattlesnake-rattle-study/35ff3b5dc7-8c1c618c58/study.json",
+      "use": "Use the measured noisy burst evidence to choose an audible source slice; do not claim animal intent."
+    },
+    {
+      "id": "prairie-rattlesnake-rhythm",
+      "role": "band-pass rhythm observation",
+      "path": "notes/rhythm/rattle-analysis-bandpassf8000w5000/763b9f1313-5a4b8c60-rhythm.json",
+      "use": "Choose a call-bearing region from the measured attacks before fitting it to the authored grid."
+    }
+  ],
+  "operations": [
+    {
+      "type": "trim",
+      "intent": "Chop one measured rattle burst into a short pickup.",
+      "start_seconds": 0.55,
+      "duration_seconds": 0.12
+    },
+    {
+      "type": "time_stretch",
+      "intent": "Speed the pickup into the gap before the backbeat without changing pitch.",
+      "tempo_ratio": 1.35
+    },
+    {
+      "type": "highpass",
+      "intent": "Keep this real source hit above the kick and bass.",
+      "frequency_hz": 2400
+    },
+    {
+      "type": "gain",
+      "intent": "Keep the actual field source audible without making the pickup dominate.",
+      "db": 20
+    },
+    {
+      "type": "fade",
+      "intent": "Remove the edited slice seam before grid placement.",
+      "direction": "in",
+      "start_seconds": 0,
+      "duration_seconds": 0.004
+    },
+    {
+      "type": "fade",
+      "intent": "Close the fast pickup without a click.",
+      "direction": "out",
+      "start_seconds": 0.084,
+      "duration_seconds": 0.004
+    }
+  ]
+}

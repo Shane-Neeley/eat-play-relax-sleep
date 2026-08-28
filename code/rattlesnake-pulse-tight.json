@@ -1,0 +1,58 @@
+{
+  "schema": "eprs.process/v1",
+  "title": "rattlesnake pulse tight",
+  "role": "rattlesnake percussive layer",
+  "intent": "Use a real CC-BY rattlesnake burst as a bright rhythmic hit in the 108 BPM pocket.",
+  "source": "references/inaturalist-audio/prairie-rattlesnake-rattle-alternate/observation-393347812-sound-2128992.m4a",
+  "evidence": [
+    {
+      "id": "prairie-rattlesnake-study",
+      "role": "iNaturalist creative study",
+      "path": "notes/inaturalist-studies/prairie-rattlesnake-rattle-study/35ff3b5dc7-8c1c618c58/study.json",
+      "use": "Use the measured noisy burst evidence to choose an audible source slice; do not claim animal intent."
+    },
+    {
+      "id": "prairie-rattlesnake-rhythm",
+      "role": "band-pass rhythm observation",
+      "path": "notes/rhythm/rattle-analysis-bandpassf8000w5000/763b9f1313-5a4b8c60-rhythm.json",
+      "use": "Choose a call-bearing region from the measured attacks before fitting it to the authored grid."
+    }
+  ],
+  "operations": [
+    {
+      "type": "trim",
+      "intent": "Chop to the second bright rattle burst while leaving the iNaturalist source untouched.",
+      "start_seconds": 0.14,
+      "duration_seconds": 0.10
+    },
+    {
+      "type": "time_stretch",
+      "intent": "Slow this burst into a compact quarter-pocket hit without changing pitch.",
+      "tempo_ratio": 0.7
+    },
+    {
+      "type": "highpass",
+      "intent": "Keep the real rattle edge above the kick and bass.",
+      "frequency_hz": 2400
+    },
+    {
+      "type": "gain",
+      "intent": "Make the actual field sound audible enough to function as a musical layer.",
+      "db": 20
+    },
+    {
+      "type": "fade",
+      "intent": "Remove the edited slice seam before grid placement.",
+      "direction": "in",
+      "start_seconds": 0,
+      "duration_seconds": 0.006
+    },
+    {
+      "type": "fade",
+      "intent": "Close the fitted hit cleanly without flattening its tail.",
+      "direction": "out",
+      "start_seconds": 0.136,
+      "duration_seconds": 0.006
+    }
+  ]
+}

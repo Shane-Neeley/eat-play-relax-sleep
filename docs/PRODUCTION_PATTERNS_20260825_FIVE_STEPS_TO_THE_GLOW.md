@@ -18,7 +18,7 @@ This note records reusable production lessons from the ChatGPT Scheduler EPRS ru
 
 ## Frontier watch
 
-The official FFmpeg page reports 9.0.1 (2026-08-12). A local FFmpeg 8.0.1 blend oracle passed with a preserved 64x64 artifact; the public renderer stayed Pillow-only until cross-version behavior is verified. Packet: `/Users/bestrobot/.openclaw/workspace/eprs-frontier-five-steps-20260825.json`.
+The official FFmpeg page reports 9.0.1 (2026-08-12). A local FFmpeg 8.0.1 blend oracle passed with a preserved 64x64 artifact; the public renderer stayed Pillow-only until cross-version behavior is verified. Packet: the dated EPRS frontier-watch packet for 2026-08-25 (local path omitted from this public note).
 
 ## Verification and handoff
 

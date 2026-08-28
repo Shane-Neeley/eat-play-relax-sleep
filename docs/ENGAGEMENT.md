@@ -36,6 +36,28 @@ changes, and the relationship between performed timing and the grid. Never let
 normalization, autotune, compression, or a visualizer stand in for a missing
 musical idea.
 
+## The discovery question should be musically answerable
+
+For short-form work, the title can be the audience-facing version of the
+musical question. A useful question is accurate, easy to parse, and answerable
+by the first audible or visual demonstration; it is not a substitute for a
+payoff.
+
+An early EPRS field signal supports this as a hypothesis, not a rule:
+`Does “Human Timing” Automatically Make a Groove Better?` reached 141 public
+views, while the same-format `Does Moderate Syncopation Make 4/4 Groove
+Harder?` reached 18. Both were 26-second research-demo Shorts, but their
+topics, titles, first frames, audio tests, upload timing, and distribution
+differed. Analytics data needed to isolate packaging—impressions, CTR,
+stayed-to-watch, retention, and traffic source—was unavailable.
+
+When drafting a research Short, test the title promise separately from the
+arrangement and the first-second hook. Prefer a relatable term plus a concrete
+sonic outcome over unnecessary specialist jargon, while keeping the claim
+truthful and the research limit explicit. Evaluate public performance with
+watch and satisfaction measures when available; treat raw view count as a
+weak proxy when it is not.
+
 ## Tool-neutral handoff
 
 Every meaningful experiment should preserve:
@@ -48,3 +70,29 @@ Every meaningful experiment should preserve:
 
 The next tool is free to be weird. It only needs to return enough evidence for
 EPRS to compare what it did musically and safely.
+
+## Public-release creative preflight
+
+Technical render approval and a free-form “listened through” sentence are not
+enough to authorize a public release. Before packaging a public video, run:
+
+```bash
+eprs quality code/song.beat --song songs/song --out notes/creative-quality.json
+```
+
+The report binds its findings to the exact BeatScript checksum and checks for
+an early identity, multiple state changes, audible contrast, a late payoff, and
+a changed ending. It also escalates risky cases instead of pretending that
+they are ordinary finished songs. Every public release still requires explicit
+human creative approval; odd or unfamiliar meters and patterns that do not
+align cleanly to their bar grid are additionally held by the preflight:
+
+```bash
+eprs quality-approve notes/creative-quality.json --song songs/song \
+  --approval-note "Specific reason this complete listening pass is worth publishing."
+```
+
+Public `eprs release` packaging requires the verified report and refuses any
+report without that approval. This is deliberately conservative: a technically
+valid experiment can remain a useful local sketch, while a listener—not the
+renderer—decides whether an arrangement is ready for the channel.

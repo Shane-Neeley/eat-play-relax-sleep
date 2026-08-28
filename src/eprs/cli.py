@@ -27,6 +27,7 @@ from .dispatch import (
 )
 from .daw_return import capture_daw_return
 from .frontdoor import expose_current_media
+from .frontier import load_frontier_watch
 from .groove import create_groove_development, review_groove, verify_groove_development
 from .harness import create_song_run
 from .interchange import prepare_daw_interchange, verify_daw_interchange
@@ -50,6 +51,7 @@ from .planning import (
 from .process import render_process, review_processed_stem
 from .production_map import write_production_map
 from .publication import prepare_publication_handoff, record_publication_receipt
+from .quality import approve_creative_quality, write_quality_report
 from .release import package_release
 from .research import create_research_record, load_research_record
 from .runtime import format_performance_report, performance_report
@@ -82,6 +84,7 @@ from .system import (
 )
 from .visualize import svg
 from .visuals import render_visual, write_prompt_score
+from .vgpu import render_vgpu
 from .work import (
     claim_next_work_item,
     create_work_item,
@@ -437,6 +440,22 @@ def parser() -> argparse.ArgumentParser:
     check = commands.add_parser("check", help="Parse and validate a .beat file")
     check.add_argument("beat")
 
+    quality = commands.add_parser(
+        "quality",
+        help="Run the deterministic creative-form and publication-risk preflight",
+    )
+    quality.add_argument("beat")
+    quality.add_argument("--song", required=True)
+    quality.add_argument("--out", required=True, help="Song-relative quality report path")
+
+    quality_approve = commands.add_parser(
+        "quality-approve",
+        help="Record explicit human approval for a held creative-quality report",
+    )
+    quality_approve.add_argument("report")
+    quality_approve.add_argument("--song", required=True)
+    quality_approve.add_argument("--approval-note", required=True)
+
     render_cmd = commands.add_parser("render", help="Render a .beat prototype to 48 kHz stereo WAV")
     render_cmd.add_argument("beat")
     render_cmd.add_argument("--out", required=True)
@@ -651,6 +670,17 @@ def parser() -> argparse.ArgumentParser:
     research_show = research_commands.add_parser("show", help="Show and verify one research record")
     research_show.add_argument("item")
     research_show.add_argument("--song", required=True)
+
+    frontier = commands.add_parser(
+        "frontier",
+        help="Validate portable, dated frontier-research scouting packets",
+    )
+    frontier_commands = frontier.add_subparsers(dest="frontier_command", required=True)
+    frontier_validate = frontier_commands.add_parser(
+        "validate",
+        help="Validate an eprs.frontier-watch/v1 packet without browsing or changing it",
+    )
+    frontier_validate.add_argument("spec")
 
     lyrics = commands.add_parser(
         "lyrics",
@@ -1129,12 +1159,19 @@ def parser() -> argparse.ArgumentParser:
     visual_prompt.add_argument("--seed", type=int, default=1)
     visual_prompt.add_argument("--out", required=True)
 
-    visual_render = commands.add_parser("visual-render", help="Render an audio-reactive prompt visual with Remotion")
+    visual_render = commands.add_parser(
+        "visual-render",
+        help="Render an audio-reactive prompt visual with Remotion or headless vgpu",
+    )
     visual_render.add_argument("spec")
     visual_render.add_argument("--audio", required=True)
     visual_render.add_argument("--out", required=True)
     visual_render.add_argument("--seconds", type=float)
     visual_render.add_argument("--quality", choices=("draft", "full"), default="draft")
+    visual_render.add_argument(
+        "--renderer", choices=("remotion", "vgpu"), default="remotion",
+        help="Visual backend (vgpu renders headlessly through WebGPU and FFmpeg)",
+    )
     visual_render.add_argument(
         "--timeout-seconds", type=float, default=1_800.0,
         help="Stop the render and its browser workers after this time (default: 1800)",
@@ -1317,6 +1354,14 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "check":
             beat = load(args.beat)
             print(f"OK: {beat.title} — {beat.bars} bars, {len(beat.tracks)} tracks, {beat.duration:.2f}s")
+        elif args.command == "quality":
+            report = write_quality_report(args.beat, args.song, args.out)
+            print(report)
+            record = json.loads(report.read_text(encoding="utf-8"))
+            if record["decision"] != "pass":
+                return 2
+        elif args.command == "quality-approve":
+            print(approve_creative_quality(args.song, args.report, args.approval_note))
         elif args.command == "render":
             print(render(load(args.beat), args.out))
         elif args.command == "visualize":
@@ -1460,6 +1505,18 @@ def main(argv: list[str] | None = None) -> int:
             elif args.research_command == "show":
                 _, research_record = load_research_record(args.song, args.item)
                 print(json.dumps(research_record, indent=2))
+        elif args.command == "frontier":
+            if args.frontier_command == "validate":
+                path, record = load_frontier_watch(args.spec)
+                print(json.dumps({
+                    "path": str(path),
+                    "schema": record["schema"],
+                    "date": record["date"],
+                    "sources": len(record["sources"]),
+                    "candidates": len(record["candidates"]),
+                    "selected_candidate_ids": record["selection"]["selected_candidate_ids"],
+                    "status": "valid",
+                }, indent=2))
         elif args.command == "lyrics":
             if args.lyrics_command == "add":
                 print(create_lyric_development(args.spec, args.song))
@@ -1850,8 +1907,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "visual-prompt":
             print(write_prompt_score(args.prompt, args.title, args.seed, args.out))
         elif args.command == "visual-render":
-            video, provenance = render_visual(
-                args.spec, args.audio, args.out, args.seconds, args.quality,
+            renderer = render_vgpu if args.renderer == "vgpu" else render_visual
+            video, provenance = renderer(
+                args.spec,
+                args.audio,
+                args.out,
+                args.seconds,
+                args.quality,
                 timeout_seconds=args.timeout_seconds,
             )
             print(json.dumps({"video": str(video), "provenance": str(provenance)}, indent=2))

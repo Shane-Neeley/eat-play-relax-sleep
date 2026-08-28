@@ -80,7 +80,24 @@ class INaturalistStudyTests(unittest.TestCase):
         catalog = bioacoustic_model_catalog()
         self.assertEqual(catalog["schema"], MODEL_CATALOG_SCHEMA)
         ids = {model["id"] for model in catalog["models"]}
-        self.assertTrue({"naturelm-audio", "perch-2", "birdnet", "dolphingemma"} <= ids)
+        self.assertTrue({
+            "naturelm-audio",
+            "perch-2",
+            "birdnet",
+            "dolphingemma",
+            "animal2vec-meerkat",
+            "biome",
+            "rare-call-transfer-detector",
+        } <= ids)
+        self.assertEqual(catalog["reviewed_at"], "2026-08-21")
+        self.assertIn("contextual-communication", {
+            track["id"] for track in catalog["research_tracks"]
+        })
+        self.assertIn("preserve source and context", catalog["2027_plan"]["priority"])
+        self.assertEqual(
+            next(model for model in catalog["models"] if model["id"] == "zf-aim")["interaction_risk"],
+            "high",
+        )
         self.assertIn("not proof of animal intent", catalog["interpretation_boundary"])
 
     def test_study_maps_one_sound_to_five_creative_domains(self):

@@ -129,6 +129,17 @@
       }
     },
     {
+      "id": "vgpu",
+      "label": "Headless vgpu WebGPU renderer",
+      "kind": "project-path",
+      "required": false,
+      "paths": ["visuals/node_modules/vgpu"],
+      "capabilities": ["headless_promptable_visuals"],
+      "install_hints": {
+        "default": "Run `cd visuals && npm install` and `make vgpu-doctor`."
+      }
+    },
+    {
       "id": "chatcut_bridge",
       "label": "ChatCut-safe local handoff bridge",
       "kind": "project-path",
@@ -424,7 +435,7 @@
       "id": "visual-production",
       "label": "Promptable visual production",
       "description": "Develop and render local promptable visuals, then preserve renderer-neutral picture candidates for review.",
-      "capabilities": ["media_analysis", "visual_development", "promptable_visuals", "renderer_neutral_picture_capture", "picture_stream_assembly"]
+      "capabilities": ["media_analysis", "visual_development", "promptable_visuals", "headless_promptable_visuals", "renderer_neutral_picture_capture", "picture_stream_assembly"]
     },
     {
       "id": "chatcut-visual-handoff",
@@ -454,7 +465,7 @@
       "id": "full-local-production",
       "label": "Full local production",
       "description": "Run the complete local prompt-and-recordings-to-YouTube-handoff workflow, including recurring agent work and visuals.",
-      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "agent_dispatch", "recording_session_intake", "recording_clearance", "research_records", "lyric_development", "audio_selection", "rhythm_observation", "musical_observation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "daw_interchange", "daw_roundtrip", "lossless_mastering", "media_analysis", "visual_development", "promptable_visuals", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"]
+      "capabilities": ["song_workspace", "beat_render", "groove_interpretation", "production_request_intake", "production_planning", "agent_context", "work_queue", "agent_dispatch", "recording_session_intake", "recording_clearance", "research_records", "lyric_development", "audio_selection", "rhythm_observation", "musical_observation", "phase_observation", "performance_comparison", "performance_comping", "render_evidence_binding", "stem_processing", "mix_rendering", "daw_interchange", "daw_roundtrip", "lossless_mastering", "media_analysis", "visual_development", "promptable_visuals", "headless_promptable_visuals", "youtube_preparation", "renderer_neutral_picture_capture", "picture_stream_assembly", "youtube_asset_packaging", "release_packaging", "distribution_packaging", "publication_handoff"]
     }
   ]
 }

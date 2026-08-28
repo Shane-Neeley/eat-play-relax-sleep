@@ -57,6 +57,14 @@ track chorus_crash | X... .... .... .... | ; kind=crash start_bar=17 end_bar=48 
 
 `swing 0.50` is straight. Values above it delay every second subdivision; the allowed ceiling is intentionally 0.75. Swing and `humanize_ms` approximate timing but do not claim to create pocket—the performance relationship in the brief remains authoritative.
 
+For odd or unfamiliar meters, do a separate bar-grid preflight before treating
+the render as a finished song. A lane whose pattern length wraps partway through
+the meter can be an intentional polyrhythmic device, but it can also be an
+accidental 4/4 phrase pasted into 7/8. EPRS reports that condition explicitly;
+it is a human-review risk, not evidence of musical sophistication. Use
+`eprs quality` and document the intended grouping and why the listener can feel
+the pulse.
+
 ## From a loop to a late-blooming form
 
 A private local trial validated a useful form-first pattern. Three materially

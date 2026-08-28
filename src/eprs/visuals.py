@@ -28,13 +28,16 @@ PALETTES = {
     "mono": ["#f5f2ea", "#a9afb9", "#565d69", "#ffffff"],
     "field": ["#b7d66d", "#5c8f73", "#263d3a", "#f2d49b"],
     "dusk": ["#f09ac2", "#8e7dbe", "#27334d", "#f6d6a8"],
+    "meadow": ["#f6c85f", "#8ecf76", "#f17f75", "#2b6864"],
 }
 
 
 def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
     """Compile a free prompt into a conservative visual score agents can refine."""
     lowered = prompt.lower()
-    if any(word in lowered for word in ("constellation", "star", "nodes", "circuit")):
+    if any(word in lowered for word in ("meadow", "grass", "sunlit", "sunny", "wildflower", "firefly", "cricket")):
+        world = "meadow"
+    elif any(word in lowered for word in ("constellation", "star", "nodes", "circuit")):
         world = "constellation"
     elif any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism", "nature")):
         world = "constellation"
@@ -63,14 +66,16 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
         "schema": "eprs.visual/v1", "title": title,
         "subtitle": "EAT · PLAY · RELAX · SLEEP", "prompt": prompt,
         "world": world, "seed": seed, "palette": PALETTES[palette_name],
-        "background": "#080a0f",
+        "background": "#dce9bd" if world == "meadow" else "#080a0f",
         "motion": {"speed": speed, "feedback": 0.58, "rotation": 0.34, "turbulence": turbulence},
         "reactivity": {"bass": bass, "mids": mids, "highs": highs},
         "texture": {"grain": 0.2 if turbulence > 0.5 else 0.14, "scanlines": 0.1, "bloom": 0.72},
         "typography": {"show": show_typography, "position": "center"},
         "avoid": ["faces", "stock footage", "generic AI imagery", "literal equalizer bars", "constant motion"],
     }
-    if any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism")):
+    if any(word in lowered for word in ("cricket", "chirp", "firefly", "meadow pulse")):
+        score["motif"] = "cricket-pulse"
+    elif any(word in lowered for word in ("animal", "bird", "frog", "cicada", "wildlife", "field recording", "organism")):
         score["motif"] = "rare-signal-atlas"
     elif any(word in lowered for word in ("paper", "notebook", "score", "lyric sheet")):
         score["motif"] = "paper-score"
@@ -95,9 +100,9 @@ def write_prompt_score(prompt: str, title: str, seed: int, output: str | Path) -
 def validate_spec(candidate: dict) -> dict:
     if candidate.get("schema") != "eprs.visual/v1":
         raise ValueError("visual score must use schema eprs.visual/v1")
-    if candidate.get("world") not in {"portal", "ribbons", "constellation"}:
-        raise ValueError("visual world must be portal, ribbons, or constellation")
-    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid", "screenprint-count", "squirrel-pines"}:
+    if candidate.get("world") not in {"portal", "ribbons", "constellation", "meadow"}:
+        raise ValueError("visual world must be portal, ribbons, constellation, or meadow")
+    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid", "screenprint-count", "squirrel-pines", "cricket-pulse"}:
         raise ValueError("visual motif is not supported by the renderer")
     cards = candidate.get("cards")
     if cards is not None:

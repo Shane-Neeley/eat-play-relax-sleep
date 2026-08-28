@@ -1,0 +1,13 @@
+# Local diagnostic only: test the real rattlesnake slices inside a familiar 4/4 pocket.
+title "Rattle Pocket Fit"
+tempo 108
+meter 4/4
+resolution 16
+bars 8
+swing 0.54
+seed 20260827
+
+track kick  | X...X...X...X... | ; kind=kick gain=0.72 humanize_ms=2
+track snare | ....X.......X... | ; kind=snare gain=0.42 pan=0.08 offset_ms=5 humanize_ms=3
+track hat   | x.x.x.x.x.x.x.x. | ; kind=hat gain=0.13 pan=0.25 humanize_ms=2
+notes hook | E4 . G4 A4 . G4 . E4 . G4 A4 . G4 . E4 . | ; voice=pluck gain=0.16 pan=0.1 length=0.28

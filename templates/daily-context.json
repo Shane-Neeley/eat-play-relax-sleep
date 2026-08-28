@@ -1,0 +1,69 @@
+{
+  "schema": "eprs.daily-context/v1",
+  "date": "2026-01-01",
+  "title": "Daily context · Example",
+  "instruction": "Add a passage to the conversation for a closer read.",
+  "passages": [
+    {
+      "id": "example-book-1",
+      "kind": "book",
+      "text": "Replace this fictional placeholder with a passage you are allowed to use.",
+      "author": "Example Author",
+      "work": "Example Work",
+      "source": {
+        "label": "Replace with the source record",
+        "url": "https://example.org/source",
+        "rights": "replace-with-verified-rights",
+        "visibility": "private-source"
+      },
+      "handling": "inspiration-only"
+    },
+    {
+      "id": "example-wisdom-1",
+      "kind": "wisdom",
+      "text": "Replace this fictional placeholder with a dated wisdom or reflection passage.",
+      "author": "Example Reader",
+      "work": "Example Collection",
+      "source": {
+        "label": "Replace with the source record",
+        "url": "https://example.org/wisdom",
+        "rights": "replace-with-verified-rights",
+        "visibility": "private-source"
+      },
+      "handling": "inspiration-only"
+    },
+    {
+      "id": "example-highlight-1",
+      "kind": "highlight",
+      "text": "Replace this fictional placeholder with one concise reading highlight.",
+      "source": {
+        "label": "Replace with the source record",
+        "url": "https://example.org/highlight-1",
+        "rights": "replace-with-verified-rights",
+        "visibility": "private-source"
+      },
+      "handling": "inspiration-only"
+    },
+    {
+      "id": "example-highlight-2",
+      "kind": "highlight",
+      "text": "Replace this fictional placeholder with a second concise reading highlight.",
+      "source": {
+        "label": "Replace with the source record",
+        "url": "https://example.org/highlight-2",
+        "rights": "replace-with-verified-rights",
+        "visibility": "private-source"
+      },
+      "handling": "inspiration-only"
+    }
+  ],
+  "selection": {
+    "mode": "date-stable",
+    "method": "adapter-defined",
+    "rule": "Choose one central tension, image, or question and optionally one contrast."
+  },
+  "privacy": {
+    "source_policy": "Keep full source text and personal details in the private source system.",
+    "public_metadata": "Do not copy private passages, personal details, or unverified rights claims into release metadata."
+  }
+}

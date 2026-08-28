@@ -2280,6 +2280,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
                 attention.append(f"Visual render has invalid output reference: {video_path.relative_to(song_path)}")
             if verify and video_metadata.get("output_sha256") != checksum(video_path):
                 attention.append(f"Checksum mismatch for visual render {video_path.relative_to(song_path)}")
+        elif schema == "eprs.vgpu-render/v1":
+            if video_metadata.get("output") != video_path.name:
+                attention.append(f"vGPU render has invalid output reference: {video_path.relative_to(song_path)}")
+            if verify and video_metadata.get("output_sha256") != checksum(video_path):
+                attention.append(f"Checksum mismatch for vGPU render {video_path.relative_to(song_path)}")
         else:
             attention.append(f"Video has unsupported provenance schema: {video_path.relative_to(song_path)}")
 

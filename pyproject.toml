@@ -41,6 +41,7 @@ include = [
     "src/eprs/beat.py",
     "src/eprs/cli.py",
     "src/eprs/delivery.py",
+    "src/eprs/frontier.py",
     "src/eprs/inaturalist_audio.py",
     "src/eprs/inaturalist_photo.py",
     "src/eprs/inaturalist_study.py",
@@ -48,6 +49,7 @@ include = [
     "src/eprs/lineage.py",
     "src/eprs/master.py",
     "src/eprs/production_map.py",
+    "src/eprs/quality.py",
     "src/eprs/runtime.py",
     "src/eprs/selection.py",
     "src/eprs/session.py",
@@ -55,6 +57,7 @@ include = [
     "src/eprs/sonic_pi_catalog.py",
     "src/eprs/visualize.py",
     "src/eprs/visuals.py",
+    "src/eprs/vgpu.py",
 ]
 
 [tool.ty.terminal]

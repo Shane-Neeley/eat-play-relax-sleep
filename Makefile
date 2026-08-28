@@ -1,4 +1,4 @@
-.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio
+.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio vgpu-doctor
 
 UV ?= uv
 UV_RUN = $(UV) run --locked
@@ -33,11 +33,11 @@ test: lock-check
 # before a checkpoint or handoff.
 test-fast: lock-check
 	PYTHONPATH=src $(UV_RUN) python -m unittest -v \
-		tests.test_adapters tests.test_beat tests.test_context tests.test_evidence \
+		tests.test_adapters tests.test_beat tests.test_context tests.test_daily_context tests.test_evidence \
 		tests.test_dispatch \
 		tests.test_plan tests.test_plan_progress tests.test_planning \
-		tests.test_request tests.test_research tests.test_runner tests.test_runtime tests.test_visuals \
-		tests.test_work tests.test_work_origin
+		 tests.test_request tests.test_research tests.test_frontier tests.test_runner tests.test_runtime tests.test_visuals \
+		tests.test_work tests.test_work_origin tests.test_quality
 	node --test tests-js/*.test.mjs
 
 public-check: lock-check
@@ -58,3 +58,6 @@ visuals-check:
 
 visual-studio:
 	cd visuals && npm run studio
+
+vgpu-doctor:
+	cd visuals && npx vgpu doctor

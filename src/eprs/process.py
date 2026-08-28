@@ -69,6 +69,34 @@ def _operation(record: object, index: int, sample_rate: int, duration: float) ->
         db = _range(record, "db", -90, 24)
         resolved["db"] = db
         expression = f"volume={db:.12g}dB:precision=double"
+    elif kind == "trim":
+        start = _range(record, "start_seconds", 0, duration)
+        remaining = duration - start
+        segment_duration = _range(
+            record,
+            "duration_seconds",
+            0.001,
+            remaining,
+        )
+        resolved.update({
+            "start_seconds": start,
+            "duration_seconds": segment_duration,
+        })
+        expression = (
+            f"atrim=start={start:.12g}:duration={segment_duration:.12g},"
+            "asetpts=PTS-STARTPTS"
+        )
+        duration = segment_duration
+    elif kind == "time_stretch":
+        # FFmpeg's atempo filter is intentionally bounded to one explicit,
+        # inspectable ratio. A second recipe can make a larger change without
+        # hiding a chain of tempo manipulations in one number.
+        tempo_ratio = _range(record, "tempo_ratio", 0.5, 2.0)
+        if abs(tempo_ratio - 1.0) < 1e-9:
+            raise ValueError("process time_stretch tempo_ratio must change the duration")
+        resolved["tempo_ratio"] = tempo_ratio
+        expression = f"atempo=tempo={tempo_ratio:.12g}"
+        duration /= tempo_ratio
     elif kind in {"highpass", "lowpass"}:
         frequency = _range(record, "frequency_hz", 10, nyquist_limit)
         poles_value = record.get("poles", 2)
@@ -395,6 +423,10 @@ def render_process(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         warnings.append(
             "Explicit compression is present; compare level-matched against the source and record a listening decision."
         )
+    if any(operation["type"] in {"trim", "time_stretch"} for operation in operations):
+        warnings.append(
+            "Source timing was deliberately edited; compare the edited stem against the immutable source and the beat grid before keeping it."
+        )
     temporary.rename(destination)
     metadata = {
         "schema": PROCESS_RENDER_SCHEMA,
@@ -416,7 +448,8 @@ def render_process(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
             "automatic_normalization": False,
             "automatic_gain_control": False,
             "pitch_correction": False,
-            "time_stretch": False,
+            "time_stretch": any(operation["type"] == "time_stretch" for operation in operations),
+            "source_trim": any(operation["type"] == "trim" for operation in operations),
             "denoise": False,
             "limiting": False,
             "compression": any(operation["type"] == "compressor" for operation in operations),

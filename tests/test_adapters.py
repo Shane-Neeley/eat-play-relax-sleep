@@ -143,7 +143,7 @@ class SoftwareAdapterTests(unittest.TestCase):
             {
                 "ace-step-local-generator", "amphion-vevo15-singing-converter", "audacity-editor", "basic-pitch-contour-analysis", "chatcut-visual-handoff", "demucs-stem-laboratory", "diffsinger-note-controlled-voice", "ffmpeg-media", "firered-tts3-space-voice", "minimax-music3-cuda-generator", "openvpi-game-animal-melody", "qwen3-tts-local-voice", "raon-opentts-local-voice", "seed-vc-singing-converter",
                 "shotcut-open-editor", "midashenglm-gen-scene-generator",
-                "remotion-picture", "sonic-pi-live-code",
+                "remotion-picture", "sonic-pi-live-code", "vgpu-headless-picture",
             },
         )
         catalog = adapter_catalog(available_only=True)
@@ -265,7 +265,7 @@ class SoftwareAdapterTests(unittest.TestCase):
             )
             self.assertTrue(private["provider"]["available"])
             self.assertNotIn(str(local_tool), json.dumps(catalog))
-            self.assertEqual(len(load_adapter_profiles()), 18)
+            self.assertEqual(len(load_adapter_profiles()), 19)
 
     def test_cli_exposes_list_filters_and_exact_guides(self):
         diagnostic = parser().parse_args([

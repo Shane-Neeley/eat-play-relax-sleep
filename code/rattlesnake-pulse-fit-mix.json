@@ -1,0 +1,38 @@
+{
+  "schema": "eprs.mix/v1",
+  "title": "rattlesnake pulse fit audition",
+  "intent": "Audition the real rattlesnake source as a repeated, edited rhythmic layer inside a familiar 4/4 song pocket.",
+  "evidence": [
+    {
+      "id": "prairie-rattlesnake-study",
+      "role": "iNaturalist creative study",
+      "path": "notes/inaturalist-studies/prairie-rattlesnake-rattle-study/35ff3b5dc7-8c1c618c58/study.json",
+      "use": "Bind the actual source study and keep the animal meaning boundary explicit."
+    },
+    {
+      "id": "prairie-rattlesnake-rhythm",
+      "role": "band-pass rhythm observation",
+      "path": "notes/rhythm/rattle-analysis-bandpassf8000w5000/763b9f1313-5a4b8c60-rhythm.json",
+      "use": "Bind the measured attacks that selected the source slices."
+    }
+  ],
+  "output": {"sample_rate": 48000},
+  "tracks": [
+    {
+      "id": "song-pocket",
+      "role": "familiar 4/4 song pocket",
+      "intent": "Provide an immediate kick, backbeat, hat, and hook for the source-layer audition.",
+      "path": "beats/rattle-fit-pocket-v1.wav",
+      "start_seconds": 0,
+      "source_start_seconds": 0,
+      "duration_seconds": 17.78,
+      "gain_db": -2,
+      "pan": 0,
+      "fade_in_ms": 0,
+      "fade_out_ms": 0
+    },
+    {"id":"tight-01","role":"real rattlesnake hit","intent":"Put the edited source hit on beat 1 of bar 1.","path":"stems/rattlesnake-percussive-layer/rattlesnake-pulse-tight/bc0d29a839-rattlesnake-pulse-tight.wav","start_seconds":0.0,"source_start_seconds":0,"duration_seconds":0.130333,"gain_db":-1,"pan":-0.2,"fade_in_ms":0,"fade_out_ms":0},
+    {"id":"wide-01","role":"real rattlesnake answer","intent":"Answer the kick on beat 2 of bar 1 with a longer edited source slice.","path":"stems/rattlesnake-percussive-layer/rattlesnake-pulse-wide/0fc00598f4-rattlesnake-pulse-wide.wav","start_seconds":0.555556,"source_start_seconds":0,"duration_seconds":0.233854,"gain_db":-2,"pan":0.2,"fade_in_ms":0,"fade_out_ms":0},
+    {"id":"fast-01","role":"real rattlesnake pickup","intent":"Place a fast edited source pickup before beat 4 of bar 1.","path":"stems/rattlesnake-percussive-layer/rattlesnake-pulse-fast/7e62051647-rattlesnake-pulse-fast.wav","start_seconds":1.666668,"source_start_seconds":0,"duration_seconds":0.105917,"gain_db":-2,"pan":-0.25,"fade_in_ms":0,"fade_out_ms":0}
+  ]
+}

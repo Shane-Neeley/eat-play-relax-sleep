@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 import unittest
 
+from eprs.cli import parser
 from eprs.visuals import (
     PALETTES,
     _run_renderer,
@@ -27,6 +28,7 @@ class VisualPromptTests(unittest.TestCase):
         paper = compile_prompt("warm paper score cards and a constellation of notes", "Paper", 15)
         field = compile_prompt("field recording of a bird call in a mossy nature signal", "Field", 16)
         cloud = compile_prompt("slow dusk cloud braid through a patient vocal haze", "Cloud", 17)
+        meadow = compile_prompt("sunlit meadow grass with a Snowy Tree Cricket chirp pulse", "Chirp", 18)
         self.assertEqual(constellation["world"], "constellation")
         self.assertEqual(ribbons["world"], "ribbons")
         self.assertEqual(portal["world"], "portal")
@@ -42,6 +44,10 @@ class VisualPromptTests(unittest.TestCase):
         self.assertEqual(field["motif"], "rare-signal-atlas")
         self.assertEqual(field["palette"], PALETTES["field"])
         self.assertEqual(cloud["motif"], "cloud-braid")
+        self.assertEqual(meadow["world"], "meadow")
+        self.assertEqual(meadow["motif"], "cricket-pulse")
+        self.assertEqual(meadow["palette"], PALETTES["meadow"])
+        self.assertEqual(validate_spec(meadow)["world"], "meadow")
         self.assertEqual(validate_spec(paper)["motif"], "paper-score")
 
     def test_score_round_trip(self):
@@ -57,6 +63,20 @@ class VisualPromptTests(unittest.TestCase):
         candidate["world"] = "generic-ai-video"
         with self.assertRaisesRegex(ValueError, "visual world"):
             validate_spec(candidate)
+
+    def test_visual_render_exposes_headless_vgpu_backend(self):
+        args = parser().parse_args([
+            "visual-render",
+            "score.json",
+            "--audio",
+            "song.wav",
+            "--out",
+            "film.mp4",
+            "--renderer",
+            "vgpu",
+        ])
+        self.assertEqual(args.renderer, "vgpu")
+        self.assertEqual(args.quality, "draft")
 
     def test_rejects_motif_the_renderer_would_silently_drop(self):
         candidate = compile_prompt("portal", "Test", 1)

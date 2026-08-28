@@ -1,0 +1,92 @@
+{
+  "schema": "eprs.frontier-watch/v1",
+  "date": "2026-01-01",
+  "question": "What newly accessible capability is worth testing, and what might it change next?",
+  "sources": [
+    {
+      "id": "primary-paper-or-release",
+      "kind": "paper",
+      "title": "Replace with a primary paper, preprint, dataset, or official release",
+      "locator": "https://example.org/primary-source",
+      "accessed_at": "2026-01-01",
+      "rights_note": "Public reference; do not copy protected text, figures, code, or media without permission.",
+      "note": "Prefer a primary source and record what it actually demonstrates."
+    },
+    {
+      "id": "independent-check",
+      "kind": "replication-or-oracle",
+      "title": "Replace with an independent check, executable oracle, or competing result",
+      "locator": "https://example.org/independent-check",
+      "accessed_at": "2026-01-01",
+      "rights_note": "Use for verification and bounded analysis only.",
+      "note": "If no independent check exists, say so instead of upgrading the claim."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "one-frontier-lead",
+      "domain": "math / physics / biology / computing",
+      "title": "A short, searchable name for the lead",
+      "question": "What exact question is still open after reading the sources?",
+      "claim": "State the strongest claim without implying more evidence than exists.",
+      "human_direction": {
+        "thought_experiment": "What unusual scenario, analogy, or intuition is steering the search?",
+        "cross_domain_bridge": "Which other field supplies the productive comparison, and where might it fail?",
+        "steering_question": "What does the human want the formal work to explore?",
+        "why_this_might_be_wrong": "State the strongest reason the creative direction could be a false analogy."
+      },
+      "formal_pressure": {
+        "translation": "Translate the intuition into a precise object, model, code task, or proof obligation.",
+        "consequence_space": "Enumerate the consequences, special cases, and predictions if the translation holds.",
+        "counterexample_search": "Describe the first counterexamples, adversarial cases, or competing derivations to run.",
+        "oracle_scope": "Say exactly what the oracle can establish and what it cannot."
+      },
+      "empirical_boundary": {
+        "mode": "compute-closed",
+        "what_compute_can_test": "Which parts can be checked with mathematics, code, simulation, or existing data?",
+        "what_requires_reality": "Which claims still require new measurements, experiments, or independent peer review?"
+      },
+      "source_ids": ["primary-paper-or-release"],
+      "status": {
+        "stage": "lead",
+        "confidence": "Interesting lead; not independently validated.",
+        "independent_check": "No check yet, or describe the check in plain language."
+      },
+      "mechanism": "What causal or computational mechanism could make this work?",
+      "bottleneck": "What becomes scarce, difficult, or newly important if the claim holds?",
+      "unknowns": [
+        "What result would falsify or substantially weaken the lead?",
+        "Which boundary condition has not been tested?"
+      ],
+      "capability_test": {
+        "task": "Run the smallest reproducible math, code, simulation, or literature test.",
+        "oracle": "Define the exact check, invariant, proof obligation, baseline, or independent comparison.",
+        "constraints": [
+          "Do not call a generated explanation a proof.",
+          "Preserve the input, version, seed, and failed attempts."
+        ],
+        "artifact": "A short notebook, executable test, counterexample search, or bounded negative result."
+      },
+      "creative_test": {
+        "task": "Translate one verified relationship into a small original EPRS experiment.",
+        "oracle": "Listen or look for one specific change; technical validity is not creative approval.",
+        "constraints": [
+          "Keep evidence, interpretation, and invention visibly separate.",
+          "Do not turn a scientific possibility into a public claim."
+        ],
+        "artifact": "One short audio, visual, or interactive study with a research note."
+      },
+      "next_action": "Choose the smallest test that can change the conclusion."
+    }
+  ],
+  "selection": {
+    "mode": "date-stable",
+    "method": "external adapter plus human or agent review",
+    "selected_candidate_ids": ["one-frontier-lead"],
+    "rule": "Choose one lead; do not make every interesting paper into a song."
+  },
+  "privacy": {
+    "source_policy": "Keep private notes, credentials, personal identities, and full copyrighted passages outside the public packet.",
+    "public_metadata": "Publish only supported, rights-cleared descriptions; label speculation, creative inference, and failed tests."
+  }
+}

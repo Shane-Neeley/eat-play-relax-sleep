@@ -1,5 +1,37 @@
 # YouTube delivery video
 
+## Description and lyric formatting
+
+Keep YouTube descriptions in a UTF-8 text file with real line breaks, then pass
+that file to the channel helper with `--description-file`. Do not put escaped
+`\\n` sequences inside a shell string: YouTube will store those two characters
+literally. For sung or synthetic vocals, author an `.srt` caption file beside
+the video and upload it as an English caption track when the OAuth token has
+caption-management scope. YouTube automatic captions are not a substitute for
+authored lyrics and may mishear names or rhymes.
+
+When a video is a guitar or ukulele play-along, the chord diagram is part of the
+picture candidate, not a replacement for the approved master or picture review.
+Use the same authored progression and time-zero as the backing track, keep one
+large current chord plus a quiet next cue, and review the complete video at
+delivery size. The reusable data and visual rules live in
+[CHORD_DIAGRAMS.md](CHORD_DIAGRAMS.md) and
+[CHORD_DIAGRAM_DESIGN.md](CHORD_DIAGRAM_DESIGN.md).
+
+## Public links and comment defaults
+
+YouTube can visually ellipsize a long raw URL in the watch-page description even
+when the full hyperlink target is preserved. For iNaturalist and similar credits,
+keep the observation or asset ID in visible text, use the shortest verified
+same-domain display URL, and retain the full canonical URL in the local
+provenance receipt. Never substitute an unverified URL shortener.
+
+Comment controls are a separate Studio setting rather than ordinary video
+metadata. Keep YouTube Studio → Settings → Upload defaults → Advanced settings →
+Comments set to `On`, then spot-check each API-uploaded video and correct its
+video-level setting if needed. A video or channel marked made for kids cannot
+have comments.
+
 The YouTube adapter supports two deliberate paths from one approved,
 checksum-verified lossless master: a restrained built-in title card, or a
 reviewed renderer-neutral picture whose guide audio is discarded and replaced
@@ -99,6 +131,19 @@ For audio-reactive, promptable films rather than a title card, use the
 [visual system](VISUALS.md), then capture its output through the renderer-neutral
 picture contract. Remotion renders and external editor exports remain candidates
 until picture review and final assembled picture-and-sync review are recorded.
+
+The visual system also exposes a headless vgpu path for deterministic WebGPU
+frames in batch work or environments without a browser window:
+
+```bash
+./scripts/eprs visual-render songs/signal-garden/visuals/signal.json \
+  --audio songs/signal-garden/experiments/signal.wav --renderer vgpu \
+  --quality draft --out songs/signal-garden/video/previews/signal-vgpu.mp4
+```
+
+The vgpu sidecar records the score/audio/control hashes and keeps creative
+approval false. It does not replace the approved master, picture capture, or
+complete watch review, and it does not upload or publish anything.
 
 ## Share a frozen control source across audio and picture
 
