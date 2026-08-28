@@ -63,6 +63,11 @@ class VisualPromptTests(unittest.TestCase):
         candidate["motif"] = "eclipse-shadow"
         self.assertEqual(validate_spec(candidate)["motif"], "eclipse-shadow")
 
+    def test_accepts_paper_pond_motif(self):
+        candidate = compile_prompt("paper-cut pond with three ripple rings", "Pond", 28)
+        candidate["motif"] = "paper-pond"
+        self.assertEqual(validate_spec(candidate)["motif"], "paper-pond")
+
     def test_rejects_unknown_world(self):
         candidate = compile_prompt("portal", "Test", 1)
         candidate["world"] = "generic-ai-video"

@@ -137,7 +137,7 @@ fn palette(index: f32) -> vec3f {
     let pulse = smoothstep(0.018, 0.0, abs(length(point - vec2f(sin(phase) * 0.22, 0.08)) - (0.20 + tickPhase * 0.27)));
     color += palette(0.05) * pulse * (0.10 + highs * 0.30);
   }
-  if (motif > 5.5) {
+  if (motif > 5.5 && motif < 6.5) {
     let moonCenter = vec2f(-0.38 + sin(phase * 0.18) * 0.035, -0.08 + cos(phase * 0.21) * 0.025);
     let moonRadius = 0.285;
     let moonEdge = max(1.5 / resolution.y, 0.0018);
@@ -156,6 +156,38 @@ fn palette(index: f32) -> vec3f {
     color += palette(0.28) * eclipseHalo * (0.05 + highs * 0.17);
     let eclipseTick = smoothstep(0.012, 0.0, abs(point.y - moonCenter.y - 0.34)) * smoothstep(0.72, 0.10, abs(point.x - moonCenter.x));
     color += palette(0.62) * eclipseTick * (0.02 + bass * 0.06);
+  }
+  if (motif > 6.5) {
+    // Paper pond: flat cut-paper shoreline, three moving ripple rings, reeds,
+    // and one marker. The compression of the rings is a song metaphor for
+    // shrinking loop time, not a scientific simulation or forecast.
+    let shorelineY = -0.12 + sin(point.x * 3.6 + phase * 0.42) * 0.035;
+    let shoreline = exp(-abs(point.y - shorelineY) * 58.0);
+    let pondFill = smoothstep(0.34, -0.16, point.y) * 0.13;
+    color += params.palette0.xyz * pondFill;
+    color += palette(0.22) * shoreline * (0.24 + bass * 0.48);
+    let rippleCenterA = vec2f(-0.30 + sin(phase * 0.44) * 0.10, -0.20);
+    let rippleCenterB = vec2f(0.18 + cos(phase * 0.31) * 0.11, -0.26);
+    let rippleCenterC = vec2f(0.46 + sin(phase * 0.24) * 0.08, -0.10);
+    let distanceA = length(point - rippleCenterA);
+    let distanceB = length(point - rippleCenterB);
+    let distanceC = length(point - rippleCenterC);
+    let ringA = smoothstep(0.018, 0.0, abs(distanceA - (0.08 + fract(time * 0.15) * 0.22)));
+    let ringB = smoothstep(0.016, 0.0, abs(distanceB - (0.06 + fract(time * 0.19 + 0.31) * 0.18)));
+    let ringC = smoothstep(0.014, 0.0, abs(distanceC - (0.05 + fract(time * 0.23 + 0.67) * 0.15)));
+    color += palette(0.82) * ringA * (0.14 + highs * 0.46);
+    color += palette(0.08) * ringB * (0.12 + mids * 0.42);
+    color += palette(0.54) * ringC * (0.10 + bass * 0.34);
+    let reedCell = floor((point.x + 1.35) * 13.0 + seed);
+    let reedX = fract((point.x + 1.35) * 13.0 + seed) - 0.5;
+    let reedLean = sin(reedCell * 1.9 + phase * 0.7) * 0.17;
+    let reed = (1.0 - smoothstep(0.0, 0.028, abs(reedX - reedLean * (point.y + 0.26)))) * smoothstep(-0.02, 0.50, point.y);
+    color += params.palette1.xyz * reed * (0.12 + mids * 0.34);
+    let markerCenter = vec2f(0.04 + sin(phase * 0.18) * 0.28, -0.02 + cos(phase * 0.23) * 0.07);
+    let marker = exp(-length(point - markerCenter) * 22.0);
+    color += params.palette2.xyz * marker * (0.08 + bass * 0.34);
+    let floorMark = smoothstep(0.012, 0.0, abs(point.y + 0.42)) * smoothstep(0.72, 0.08, abs(point.x + 0.12));
+    color += palette(0.38) * floorMark * (0.018 + highs * 0.06);
   }
 
   let vignette = smoothstep(1.05, 0.18, radius);
@@ -242,6 +274,7 @@ function paramsFor(spec, controls, index, width, height) {
     "screenprint-count": 4,
     "cricket-pulse": 5,
     "eclipse-shadow": 6,
+    "paper-pond": 7,
   };
   return {
     resolution: [width, height, 1 / width, 1 / height],

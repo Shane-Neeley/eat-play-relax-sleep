@@ -13,7 +13,7 @@ chord map from `eprs observe` output.
 ## The visual instrument rack
 
 - **EPRS SVG engine + Remotion:** production default. Frame-accurate, seedable, parameterized, locally previewable, and suitable for H.264 delivery.
-- **vgpu:** optional headless WebGPU adapter. It runs the same `eprs.visual/v1` score through an offscreen Dawn device, writes inspectable PNG frames, and lets FFmpeg mux the declared audio without opening a browser.
+- **vgpu:** headless WebGPU adapter and the default music-video backend when a song benefits from beat-reactive procedural motion. It runs the same `eprs.visual/v1` score through an offscreen Dawn device, writes inspectable PNG frames, and lets FFmpeg mux the declared audio without opening a browser. Use the EPRS SVG/Remotion path when a specific editorial or live-action composition is the better fit.
 - **Hydra:** future live video-synth adapter for feedback, fractals, pixel operations, and Sonic Pi/OSC performance.
 - **Meyda or p5.sound:** future real-time feature extraction for browser installations and live input.
 - **Three.js:** future WebGL 2 / 3D and shader-world adapter. Check WebGL capability and keep shader errors enabled while developing.
@@ -50,6 +50,14 @@ and make the moon read as blurry.
 The `cricket-pulse` motif is paired with the meadow world for field-recording
 tracks that need a bright organic visual lane. It is an authored visual
 response, not a claim that animal calls contain decoded human messages.
+
+The `paper-pond` motif is paired with a meadow world when a song needs a flat,
+editorial field-source display: a moving paper shoreline, three ripple rings,
+reeds, and one marker react to the declared audio controls. It is useful for
+combining a real iNaturalist sound with an abstract research idea while keeping
+the source audio authoritative. Do not turn it into literal animal footage,
+charts, or a scientific forecast; keep the creative translation and provenance
+in the song-local score and production note.
 
 ## Optional natural-history photographs
 
