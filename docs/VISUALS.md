@@ -38,6 +38,15 @@ Four built-in worlds are intentionally orthogonal:
 - `constellation`: sparse nodes, relationships, silence, high-frequency detail.
 - `meadow`: daylight, grass movement, firefly-scale points, and expanding chirp rings.
 
+The `eclipse-shadow` motif adds a deterministic partial-eclipse disc and moving
+shadow limb over the selected signal world. It is an authored visual symbol for
+an astronomical event, not a claim that the music models the physics of the
+eclipse. Keep the event timing and location in the song note or research record,
+not in an opaque renderer default. Event geometry should use a bounded
+anti-aliased edge, clip the occluder and halo to the subject mask, and keep the
+disc face high-contrast; otherwise the offset shadow can darken the background
+and make the moon read as blurry.
+
 The `cricket-pulse` motif is paired with the meadow world for field-recording
 tracks that need a bright organic visual lane. It is an authored visual
 response, not a claim that animal calls contain decoded human messages.

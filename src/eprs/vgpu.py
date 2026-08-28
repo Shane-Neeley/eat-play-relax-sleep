@@ -32,6 +32,7 @@ MOTIF_IDS = {
     "paper-score": 3.0,
     "screenprint-count": 4.0,
     "cricket-pulse": 5.0,
+    "eclipse-shadow": 6.0,
 }
 _BASS_FREQUENCIES = (45.0, 60.0, 80.0, 110.0, 150.0, 200.0)
 _MID_FREQUENCIES = (250.0, 350.0, 500.0, 700.0, 900.0, 1_200.0)

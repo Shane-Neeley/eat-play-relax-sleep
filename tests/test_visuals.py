@@ -58,6 +58,11 @@ class VisualPromptTests(unittest.TestCase):
             self.assertEqual(score["schema"], "eprs.visual/v1")
             self.assertIn("faces", score["avoid"])
 
+    def test_accepts_eclipse_shadow_motif(self):
+        candidate = compile_prompt("partial lunar eclipse over a dusk horizon", "Eclipse", 27)
+        candidate["motif"] = "eclipse-shadow"
+        self.assertEqual(validate_spec(candidate)["motif"], "eclipse-shadow")
+
     def test_rejects_unknown_world(self):
         candidate = compile_prompt("portal", "Test", 1)
         candidate["world"] = "generic-ai-video"

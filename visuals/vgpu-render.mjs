@@ -137,6 +137,26 @@ fn palette(index: f32) -> vec3f {
     let pulse = smoothstep(0.018, 0.0, abs(length(point - vec2f(sin(phase) * 0.22, 0.08)) - (0.20 + tickPhase * 0.27)));
     color += palette(0.05) * pulse * (0.10 + highs * 0.30);
   }
+  if (motif > 5.5) {
+    let moonCenter = vec2f(-0.38 + sin(phase * 0.18) * 0.035, -0.08 + cos(phase * 0.21) * 0.025);
+    let moonRadius = 0.285;
+    let moonEdge = max(1.5 / resolution.y, 0.0018);
+    let moonDistance = length(point - moonCenter);
+    let moonDisk = 1.0 - smoothstep(moonRadius - moonEdge, moonRadius + moonEdge, moonDistance);
+    let shadowCenter = moonCenter + vec2f(0.105 + sin(phase * 0.41) * 0.018, 0.012);
+    let shadowDistance = length(point - shadowCenter);
+    let shadowDisk = 1.0 - smoothstep(moonRadius - moonEdge, moonRadius + moonEdge, shadowDistance);
+    let eclipseMask = min(moonDisk, shadowDisk);
+    let innerMoon = 1.0 - smoothstep(moonRadius - 0.012, moonRadius - 0.005, moonDistance);
+    let limb = max(moonDisk - innerMoon, 0.0);
+    let eclipseHalo = exp(-abs(shadowDistance - moonRadius) * 72.0) * eclipseMask;
+    color = mix(color, params.palette3.xyz * (0.65 + mids * 0.12), moonDisk * 0.88);
+    color = mix(color, vec3f(0.030, 0.014, 0.045), eclipseMask * 0.985);
+    color += palette(0.03) * limb * (0.12 + highs * 0.18);
+    color += palette(0.28) * eclipseHalo * (0.05 + highs * 0.17);
+    let eclipseTick = smoothstep(0.012, 0.0, abs(point.y - moonCenter.y - 0.34)) * smoothstep(0.72, 0.10, abs(point.x - moonCenter.x));
+    color += palette(0.62) * eclipseTick * (0.02 + bass * 0.06);
+  }
 
   let vignette = smoothstep(1.05, 0.18, radius);
   color *= vignette * 2.0;
@@ -221,6 +241,7 @@ function paramsFor(spec, controls, index, width, height) {
     "paper-score": 3,
     "screenprint-count": 4,
     "cricket-pulse": 5,
+    "eclipse-shadow": 6,
   };
   return {
     resolution: [width, height, 1 / width, 1 / height],
