@@ -10,9 +10,13 @@ are frozen inside the song workspace.
 The visual method is deterministic Pillow + FFmpeg: rolling wave lines, a
 geometric bunny, a yellow pineapple, hook text, and tiny brown punchline dots.
 This keeps the “poop / old stinky pineapple” joke readable without stock images,
-faces, or private material. The spoken cue uses ordinary macOS `say`, not a
-generative voice or identity imitation, so the factual YouTube value remains
-“No, AI wasn't used.”
+faces, or private material. **Historical exception:** the spoken cue used
+ordinary macOS `say` before the permanent EPRS voice-source policy took effect
+on 2026-08-29. It is retained here as an accurate making-of record, but this
+route is prohibited for all new work; future voice cues must use a verified
+Hugging Face model or Shane's authorized clone with the documented autotune and
+provenance path. The old release's factual YouTube value remained “No, AI
+wasn't used.”
 
 The approved package was published publicly to CashForClankers as [Phaty,
 Don't Fall in the Waves](https://www.youtube.com/watch?v=l0mt4qmqHb4). Channel

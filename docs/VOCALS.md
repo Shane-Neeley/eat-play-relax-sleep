@@ -7,6 +7,23 @@ explicit musical note set. Keeping the stages separate lets an agent preserve
 the raw cue, change the tuning without regenerating the performance, and make
 an honest raw/tuned comparison.
 
+## Mandatory voice-source policy (effective 2026-08-29)
+
+Never use macOS `say`, Apple system TTS, or any built-in Mac voice. Samantha,
+Alex, and every other bundled system voice are prohibited permanently, even as
+an offline fallback. If a voice is needed, use a Hugging Face TTS/singing model
+with verified code, checkpoint, license, and reproducibility, or use Shane's
+explicitly authorized cloned voice kept outside the public repository. A
+melodic or sung clone must pass through EPRS autotune with its key, scale,
+preset, and sidecar preserved; speech cues may remain untreated when no
+musical pitch treatment is intended.
+
+Preserve raw and treated audio, model/clone provenance, hashes, version,
+license, consent boundary, settings, and review. Never imitate a named artist
+or claim that a clone is a performer identity. See [VOICE_POLICY.md](VOICE_POLICY.md)
+for the release gate. Historical notes that mention Samantha are archival
+records and are not approved implementation examples.
+
 ## What the recent Strokes record suggests
 
 The relevant recent album is the Strokes' seventh album, *Reality Awaits*

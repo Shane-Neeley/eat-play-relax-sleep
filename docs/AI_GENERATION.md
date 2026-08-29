@@ -9,6 +9,18 @@ EPRS treats a generator as one optional instrument. It receives one bounded
 hypothesis and returns candidates plus provenance. It does not replace raw
 recordings, taste, arrangement, listening, rights review, or the editable mix.
 
+## Voice-source gate
+
+The macOS `say` command and every bundled Mac system voice are permanently
+prohibited for EPRS production. A voice-bearing candidate must use a verified
+Hugging Face TTS/singing checkpoint or Shane's explicitly authorized cloned
+voice, kept outside the public repository. Melodic clone performances use the
+EPRS autotune path with preserved raw audio and settings. Record the model or
+clone provenance, checkpoint/source hash, version, license, consent boundary,
+and the actual YouTube disclosure decision. Samantha references in older
+retrospectives are historical exceptions, not current options. The detailed
+release gate is [VOICE_POLICY.md](VOICE_POLICY.md).
+
 ## Current ranking
 
 | Rank | Method | Fit for this project | Main constraint |

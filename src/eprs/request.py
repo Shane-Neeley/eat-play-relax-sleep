@@ -36,8 +36,8 @@ _PROMPT_ROUTE_RULES = (
             "What consent, identity, and source boundaries must be settled before a voice tool is considered?",
             "If the goal is singing, where is the authored melody or recorded vocal, since speech-first TTS and autotune cannot invent it?",
         ),
-        "optional_tools": ("Qwen3-TTS or another declared voice adapter", "Raon-OpenTTS speech-cue adapter", "eprs autotune", "docs/VOCALS.md"),
-        "boundary": "Keep raw voices immutable; never clone or imitate a person without explicit consent. Raon-OpenTTS is speech-first and autotune does not invent a sung melody.",
+        "optional_tools": ("Qwen3-TTS or another declared Hugging Face voice adapter", "Raon-OpenTTS speech-cue adapter", "eprs autotune", "docs/VOCALS.md", "docs/VOICE_POLICY.md"),
+        "boundary": "Keep raw voices immutable; never use macOS say or a bundled Mac system voice; use a verified Hugging Face model or Shane's explicitly authorized clone. Never clone or imitate a person without explicit consent. Raon-OpenTTS is speech-first and autotune does not invent a sung melody.",
     },
     {
         "id": "instrument",
