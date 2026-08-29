@@ -157,7 +157,7 @@ fn palette(index: f32) -> vec3f {
     let eclipseTick = smoothstep(0.012, 0.0, abs(point.y - moonCenter.y - 0.34)) * smoothstep(0.72, 0.10, abs(point.x - moonCenter.x));
     color += palette(0.62) * eclipseTick * (0.02 + bass * 0.06);
   }
-  if (motif > 6.5) {
+  if (motif > 6.5 && motif < 7.5) {
     // Paper pond: flat cut-paper shoreline, three moving ripple rings, reeds,
     // and one marker. The compression of the rings is a song metaphor for
     // shrinking loop time, not a scientific simulation or forecast.
@@ -188,6 +188,45 @@ fn palette(index: f32) -> vec3f {
     color += params.palette2.xyz * marker * (0.08 + bass * 0.34);
     let floorMark = smoothstep(0.012, 0.0, abs(point.y + 0.42)) * smoothstep(0.72, 0.08, abs(point.x + 0.12));
     color += palette(0.38) * floorMark * (0.018 + highs * 0.06);
+  }
+  if (motif > 7.5) {
+    // Tide pool: bounded domain warp, signed-distance-style rings, separated
+    // color fringes, and phase-shifted caustics. These are graphic techniques,
+    // not a physical ocean simulation.
+    let tidePhase = phase * 1.34;
+    let warped = point + vec2f(
+      sin(point.y * 7.0 + tidePhase * 1.6) * 0.045 * (0.7 + turbulence),
+      cos(point.x * 8.0 - tidePhase) * 0.026 * (0.7 + mids)
+    );
+    let waterlineY = -0.08 + sin(warped.x * 7.0 + tidePhase * 0.65) * 0.035;
+    let waterMask = smoothstep(0.18, -0.38, warped.y);
+    let foamEdge = exp(-abs(warped.y - waterlineY) * 72.0);
+    color = mix(color, color * 0.30 + params.palette0.xyz * 0.12, waterMask * 0.78);
+    color += palette(0.62) * foamEdge * (0.08 + highs * 0.26);
+    let basin = vec2f(sin(tidePhase * 0.21) * 0.045, -0.20 + cos(tidePhase * 0.27) * 0.025);
+    let basinDistance = length(warped - basin);
+    let compression = 0.07 + 0.19 * (0.5 + 0.5 * sin(tidePhase * 0.32));
+    let ringA = smoothstep(0.020, 0.0, abs(basinDistance - compression));
+    let ringB = smoothstep(0.017, 0.0, abs(basinDistance - (compression * 0.64 + 0.055)));
+    let ringC = smoothstep(0.014, 0.0, abs(basinDistance - (compression * 0.34 + 0.028)));
+    color += params.palette1.xyz * ringA * (0.15 + bass * 0.42);
+    color += params.palette3.xyz * ringB * (0.12 + mids * 0.34);
+    color += params.palette2.xyz * ringC * (0.10 + highs * 0.30);
+    let fringeCenter = basin + vec2f(0.018, 0.0);
+    let fringeDistance = length(warped - fringeCenter);
+    let fringe = smoothstep(0.014, 0.0, abs(fringeDistance - (compression + 0.012)));
+    color += params.palette3.xyz * fringe * (0.06 + highs * 0.20);
+    let causticX = fract(warped.x * 9.0 + sin(tidePhase * 0.5) * 0.4);
+    let causticY = fract(warped.y * 15.0 - cos(tidePhase * 0.37) * 0.3);
+    let caustic = smoothstep(0.07, 0.0, abs(causticX - 0.5)) * smoothstep(0.13, 0.0, abs(causticY - 0.5));
+    color += palette(0.90) * caustic * waterMask * (0.018 + highs * 0.08);
+    let hotSpot = exp(-length(warped - basin) * 24.0);
+    color += params.palette2.xyz * hotSpot * (0.018 + bass * 0.09);
+    let tideTick = smoothstep(0.010, 0.0, abs(warped.y - 0.34)) * smoothstep(0.78, 0.14, abs(warped.x));
+    color += params.palette0.xyz * tideTick * (0.018 + mids * 0.05);
+    // Compress additive highlights before the shared vignette multiplier so
+    // neon rings keep their hue instead of becoming a clipped white disk.
+    color = (vec3f(1.0, 1.0, 1.0) - exp(-color * 0.80)) * 0.72;
   }
 
   let vignette = smoothstep(1.05, 0.18, radius);
@@ -275,6 +314,7 @@ function paramsFor(spec, controls, index, width, height) {
     "cricket-pulse": 5,
     "eclipse-shadow": 6,
     "paper-pond": 7,
+    "tide-pool": 8,
   };
   return {
     resolution: [width, height, 1 / width, 1 / height],

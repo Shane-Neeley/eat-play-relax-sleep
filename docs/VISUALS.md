@@ -59,6 +59,15 @@ the source audio authoritative. Do not turn it into literal animal footage,
 charts, or a scientific forecast; keep the creative translation and provenance
 in the song-local score and production note.
 
+The `tide-pool` motif uses bounded domain warping, signed-distance-style ring
+edges, phase-shifted caustics, and a restrained chromatic fringe for energetic
+short-form visuals. It is deliberately graphic rather than a physical water
+simulation. Use `--orientation portrait` with vgpu for a native 9:16 Short
+(`720x1280` at full quality); keep the source audio and beat authoritative.
+When additive rings or hotspots approach white, apply motif-local exponential
+highlight compression before the shared vignette multiplier; this preserves
+the palette and edge separation instead of producing a clipped, blurry disk.
+
 ## Optional natural-history photographs
 
 A relevant iNaturalist photograph is a good source choice when a real species,
@@ -116,13 +125,15 @@ vgpu writes a song-local `.controls.json` file containing bounded, hashed audio
 controls and a `.mp4.json` `eprs.vgpu-render/v1` sidecar. The frame renderer is
 procedural and intentionally does not stage photographs; scores with frozen
 iNaturalist photographs should use Remotion's rights-checking path. vgpu full
-renders are 1280×720 so a headless iteration stays practical; the existing
+renders are 1280×720 in landscape and 720×1280 with `--orientation portrait`,
+so a headless iteration stays practical; the existing
 Remotion full path remains the higher-resolution delivery default. A vgpu result
 is still only a technical picture candidate: capture and complete-picture review
 remain required.
 
 Draft Remotion mode renders at half resolution for fast decisions. Remotion full
-mode renders 1920×1080 H.264/yuv420p in BT.709; vgpu full mode renders 1280×720.
+mode renders 1920×1080 H.264/yuv420p in BT.709; vgpu full mode renders
+1280×720 landscape or 720×1280 portrait.
 Both paths use AAC at 48 kHz and a half-frame-rate GOP. Each render receives a
 JSON sidecar containing hashes for the score, audio,
 and output plus elapsed time, concurrency, and the enforced render time budget.

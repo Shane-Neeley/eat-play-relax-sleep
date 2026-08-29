@@ -25,6 +25,7 @@ DEFAULT_RENDER_TIMEOUT_SECONDS = 1_800.0
 RENDER_FPS = 30
 CONTROL_SAMPLE_RATE = 8_000
 RENDER_SIZES = {"draft": (640, 360), "full": (1280, 720)}
+PORTRAIT_RENDER_SIZES = {"draft": (360, 640), "full": (720, 1280)}
 WORLD_IDS = {"portal": 0.0, "ribbons": 1.0, "constellation": 2.0, "meadow": 3.0}
 MOTIF_IDS = {
     "rare-signal-atlas": 1.0,
@@ -34,6 +35,7 @@ MOTIF_IDS = {
     "cricket-pulse": 5.0,
     "eclipse-shadow": 6.0,
     "paper-pond": 7.0,
+    "tide-pool": 8.0,
 }
 _BASS_FREQUENCIES = (45.0, 60.0, 80.0, 110.0, 150.0, 200.0)
 _MID_FREQUENCIES = (250.0, 350.0, 500.0, 700.0, 900.0, 1_200.0)
@@ -306,10 +308,13 @@ def render_vgpu(
     seconds: float | None = None,
     quality: str = "draft",
     timeout_seconds: float = DEFAULT_RENDER_TIMEOUT_SECONDS,
+    orientation: str = "landscape",
 ) -> tuple[Path, Path]:
     """Render an EPRS visual score through vgpu and mux the original audio."""
     if quality not in RENDER_SIZES:
         raise ValueError("vgpu visual quality must be draft or full")
+    if orientation not in {"landscape", "portrait"}:
+        raise ValueError("vgpu visual orientation must be landscape or portrait")
     spec_file = Path(spec_path).resolve()
     audio_file = Path(audio_path).resolve()
     if not spec_file.is_file():
@@ -327,7 +332,7 @@ def render_vgpu(
     duration = source_duration if seconds is None else min(source_duration, float(seconds))
     if not math.isfinite(duration) or duration <= 0:
         raise ValueError("vgpu preview seconds must be positive and finite")
-    width, height = RENDER_SIZES[quality]
+    width, height = (PORTRAIT_RENDER_SIZES if orientation == "portrait" else RENDER_SIZES)[quality]
     controls = build_audio_controls(audio_file, duration=duration, fps=RENDER_FPS)
     controls_json = json.dumps(controls, sort_keys=True, separators=(",", ":"))
     controls_hash = hashlib.sha256(controls_json.encode()).hexdigest()
@@ -340,6 +345,7 @@ def render_vgpu(
         "audio_sha256": audio_hash,
         "controls_sha256": controls_hash,
         "quality": quality,
+        "orientation": orientation,
         "width": width,
         "height": height,
         "fps": RENDER_FPS,
@@ -498,6 +504,7 @@ def render_vgpu(
             "duration_frames": len(controls["frames"]),
             "fps": RENDER_FPS,
             "quality": quality,
+            "orientation": orientation,
             "renderer": "vgpu 0.3.1 headless WebGPU + FFmpeg",
             "renderer_source_sha256": renderer_hash,
             "adapter": os.environ.get("VGPU_ADAPTER", "auto"),

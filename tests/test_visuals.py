@@ -68,6 +68,11 @@ class VisualPromptTests(unittest.TestCase):
         candidate["motif"] = "paper-pond"
         self.assertEqual(validate_spec(candidate)["motif"], "paper-pond")
 
+    def test_accepts_tide_pool_motif(self):
+        candidate = compile_prompt("tide pool caustics with warped rings", "Tide", 29)
+        candidate["motif"] = "tide-pool"
+        self.assertEqual(validate_spec(candidate)["motif"], "tide-pool")
+
     def test_rejects_unknown_world(self):
         candidate = compile_prompt("portal", "Test", 1)
         candidate["world"] = "generic-ai-video"
@@ -87,6 +92,7 @@ class VisualPromptTests(unittest.TestCase):
         ])
         self.assertEqual(args.renderer, "vgpu")
         self.assertEqual(args.quality, "draft")
+        self.assertEqual(args.orientation, "landscape")
 
     def test_rejects_motif_the_renderer_would_silently_drop(self):
         candidate = compile_prompt("portal", "Test", 1)

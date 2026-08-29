@@ -1173,6 +1173,10 @@ def parser() -> argparse.ArgumentParser:
         help="Visual backend (vgpu renders headlessly through WebGPU and FFmpeg)",
     )
     visual_render.add_argument(
+        "--orientation", choices=("landscape", "portrait"), default="landscape",
+        help="vgpu output orientation; portrait is suitable for Shorts",
+    )
+    visual_render.add_argument(
         "--timeout-seconds", type=float, default=1_800.0,
         help="Stop the render and its browser workers after this time (default: 1800)",
     )
@@ -1908,13 +1912,16 @@ def main(argv: list[str] | None = None) -> int:
             print(write_prompt_score(args.prompt, args.title, args.seed, args.out))
         elif args.command == "visual-render":
             renderer = render_vgpu if args.renderer == "vgpu" else render_visual
+            render_options = {"timeout_seconds": args.timeout_seconds}
+            if args.renderer == "vgpu":
+                render_options["orientation"] = args.orientation
             video, provenance = renderer(
                 args.spec,
                 args.audio,
                 args.out,
                 args.seconds,
                 args.quality,
-                timeout_seconds=args.timeout_seconds,
+                **render_options,
             )
             print(json.dumps({"video": str(video), "provenance": str(provenance)}, indent=2))
         return 0
