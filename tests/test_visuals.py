@@ -73,6 +73,17 @@ class VisualPromptTests(unittest.TestCase):
         candidate["motif"] = "tide-pool"
         self.assertEqual(validate_spec(candidate)["motif"], "tide-pool")
 
+    def test_accepts_shader_bakeoff_motifs(self):
+        candidate = compile_prompt("clear liquid light", "Bakeoff", 30)
+        for motif in ("liquid-glass", "caustic-cipher", "prism-beams", "particle-trails", "hard-light"):
+            candidate["motif"] = motif
+            self.assertEqual(validate_spec(candidate)["motif"], motif)
+
+    def test_accepts_mountain_river_light_motif(self):
+        candidate = compile_prompt("clear Himalayan mountain river light", "Nepal", 31)
+        self.assertEqual(candidate["motif"], "mountain-river-light")
+        self.assertEqual(validate_spec(candidate)["motif"], "mountain-river-light")
+
     def test_rejects_unknown_world(self):
         candidate = compile_prompt("portal", "Test", 1)
         candidate["world"] = "generic-ai-video"

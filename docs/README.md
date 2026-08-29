@@ -72,6 +72,8 @@ only when that route is relevant.
   stay separate from the creative tool.
 - [Toolchain registry](TOOLCHAIN.md) and [adapter profiles](ADAPTERS.md) —
   capability discovery without machine-specific credentials or paths.
+- [Technology-gap review](TECHNOLOGY_GAPS_20260829.md) — optional OpenCV and
+  SuperCollider pilots, plus explicit holds for heavier candidates.
 - [Randomness](RANDOMNESS.md), [experiments](EXPERIMENTS.md), and
   [evidence bindings](EVIDENCE_BINDINGS.md) — replayability without turning
   creative work into a fixed vending machine.

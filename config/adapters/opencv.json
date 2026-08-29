@@ -1,0 +1,56 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "opencv-video-quality-gate",
+  "label": "OpenCV video quality gate",
+  "summary": "Optional headless frame sampling for measurable focus, contrast, motion, crop geometry, and thumbnail evidence before a separate human picture review.",
+  "provider": "opencv",
+  "capabilities": [
+    "video_quality_analysis",
+    "thumbnail_quality_analysis",
+    "motion_quality_analysis",
+    "crop_geometry_analysis"
+  ],
+  "handoffs": [
+    {
+      "id": "inspect-video-quality",
+      "label": "Inspect a video candidate",
+      "intent": "Find measurable blur, low contrast, excessive center-crop loss, or weak thumbnail frames before spending time on a complete manual watch.",
+      "capabilities": [
+        "video_quality_analysis",
+        "thumbnail_quality_analysis",
+        "motion_quality_analysis",
+        "crop_geometry_analysis"
+      ],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "One local video candidate and its intended delivery orientation",
+        "Optional focus/contrast thresholds and target width/height"
+      ],
+      "outputs": [
+        "An eprs.video-quality/v1 JSON evidence report",
+        "A ranked thumbnail frame candidate with timestamp and measurable properties"
+      ],
+      "steps": [
+        "Sample a bounded, evenly spaced set of frames without rewriting the source.",
+        "Inspect Laplacian variance, edge density, contrast, sampled frame difference, and crop geometry as evidence only.",
+        "Use the report to revise the renderer or framing, then run the ordinary EPRS picture review on the new candidate."
+      ],
+      "verification": [
+        "Confirm the source path, decoded sample count, dimensions, frame rate, and thresholds are visible in the report.",
+        "Treat a pass as technical evidence, not a creative, sync, rights, publication, or thumbnail approval.",
+        "Keep low-motion or intentionally soft visuals available when the brief calls for them; do not turn metrics into a fixed house style."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The original video, exact sampling parameters, thresholds, and report",
+      "The distinction between measurable frame quality and player-facing visual intent"
+    ],
+    "avoid": [
+      "Overwriting or re-encoding the source, treating a sharp frame as a good film, or rejecting intentional softness without reading the brief",
+      "Calling OpenCV from the core render path or making the optional dependency mandatory"
+    ]
+  }
+}

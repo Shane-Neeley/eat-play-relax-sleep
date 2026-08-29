@@ -110,6 +110,12 @@ Each `eprs.toolchain/v1` entry declares:
 - capability names exposed when detection succeeds;
 - optional platform limits and installation hints.
 
+A command-set may also declare `python_modules` when availability depends on an
+optional module in the active EPRS interpreter rather than on a standalone
+executable. `doctor` checks those modules without importing creative code into
+normal startup; this keeps lanes such as headless OpenCV discoverable while
+leaving the base install small.
+
 The top-level `workflows` array declares a stable slug, label, description, and
 unique capability list. Every workflow capability must be advertised by at
 least one tool entry, which catches stale or misspelled integration contracts.

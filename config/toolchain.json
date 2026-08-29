@@ -48,6 +48,33 @@
       }
     },
     {
+      "id": "opencv",
+      "label": "OpenCV headless video quality gate",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "python3", "version_args": ["--version"]}
+      ],
+      "python_modules": ["cv2"],
+      "capabilities": ["video_quality_analysis", "thumbnail_quality_analysis", "motion_quality_analysis", "crop_geometry_analysis"],
+      "install_hints": {
+        "Darwin": "Install the headless optional lane with `make opencv-install`; it is used for bounded frame evidence, not creative approval.",
+        "Linux": "Install the headless optional lane with `uv sync --extra opencv`; it is used for bounded frame evidence, not creative approval."
+      }
+    },
+    {
+      "id": "supercollider",
+      "label": "SuperCollider scsynth audio engine",
+      "kind": "application",
+      "required": false,
+      "platforms": ["Darwin"],
+      "paths": ["/Applications/SuperCollider.app"],
+      "capabilities": ["audio_synthesis", "granular_sample_processing", "algorithmic_composition", "local_audio_server"],
+      "install_hints": {
+        "Darwin": "Install SuperCollider from supercollider.github.io or with `brew install --cask supercollider`; keep the lane optional and preserve a portable EPRS source/render."
+      }
+    },
+    {
       "id": "git",
       "label": "Git",
       "kind": "command-set",
@@ -347,6 +374,18 @@
     }
   ],
   "workflows": [
+    {
+      "id": "video-quality-gate",
+      "label": "Video quality evidence gate",
+      "description": "Sample a bounded set of frames for focus, contrast, motion, thumbnail, and crop-geometry evidence without declaring creative approval.",
+      "capabilities": ["media_analysis", "video_quality_analysis", "thumbnail_quality_analysis", "motion_quality_analysis", "crop_geometry_analysis"]
+    },
+    {
+      "id": "supercollider-audio-lab",
+      "label": "Optional SuperCollider audio lab",
+      "description": "Use SuperCollider/scsynth for bounded synthesis, granular/sample experiments, and algorithmic audio while keeping EPRS source and review contracts portable.",
+      "capabilities": ["audio_synthesis", "granular_sample_processing", "algorithmic_composition", "local_audio_server"]
+    },
     {
       "id": "daily-agent-work",
       "label": "Daily agent work",

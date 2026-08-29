@@ -13,6 +13,8 @@ EPRS stays a general production platform. These tools are swappable experiments,
 | DiffSinger | Note- and phoneme-controlled singing | Declared and probe-only; exact singer/vocoder license must be checked |
 | Amphion Vevo1.5 | Higher-upside prosody/timbre transfer | Declared and probe-only; hardware and model stack are not verified |
 | Demucs | Reversible stem laboratory | Declared and probe-only; preserve bleed and parent mix |
+| SuperCollider / scsynth | Richer local synthesis, granular/sample work, and algorithmic composition | Installed as an optional macOS cask; adapter-only and not a core render dependency |
+| OpenCV headless | Objective frame-quality and thumbnail evidence for picture candidates | Installed as an optional Python extra; bounded QA only, never creative approval |
 | Sonic Pi / BeatScript | Deterministic groove, bass, fills, and structure | Core-compatible authoring options; never the only musical path |
 
 ## Experiment contract

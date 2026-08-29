@@ -1,0 +1,83 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "supercollider-audio-server",
+  "label": "SuperCollider scsynth audio server",
+  "summary": "Optional local synthesis and sample laboratory for deterministic or performed audio experiments that remain portable outside the live server.",
+  "provider": "supercollider",
+  "capabilities": [
+    "audio_synthesis",
+    "granular_sample_processing",
+    "algorithmic_composition",
+    "local_audio_server"
+  ],
+  "handoffs": [
+    {
+      "id": "develop-scsynth-source",
+      "label": "Develop a bounded scsynth study",
+      "intent": "Test one player-facing synthesis or sample relationship with SuperCollider without turning the live server into the EPRS source of truth.",
+      "capabilities": [
+        "audio_synthesis",
+        "granular_sample_processing",
+        "algorithmic_composition"
+      ],
+      "automation": "hybrid",
+      "requires_user_operation": true,
+      "inputs": [
+        "A musical hypothesis, seed/timing policy, and source-bound sample paths when used",
+        "A song-relative .scd source and a new lossless output destination"
+      ],
+      "outputs": [
+        "A commented SuperCollider source file",
+        "A new WAV audition plus tool/version and render evidence"
+      ],
+      "steps": [
+        "Keep the musical idea in player language, then declare tempo, duration, seed, sample-rate, and any live input or local OSC boundary.",
+        "Use sclang/scsynth or the IDE for the smallest useful study; keep audio-server control local and explicit.",
+        "Copy or render the result into a new EPRS experiment artifact, inspect it, and record a keep/change/stop decision."
+      ],
+      "verification": [
+        "Confirm the .scd source, SuperCollider version, render settings, and source checksums are preserved.",
+        "Confirm the WAV is non-silent, not clipped, and retains the declared sample rate.",
+        "Treat the server performance as an audition until the EPRS render, provenance, and listening gates are complete."
+      ]
+    },
+    {
+      "id": "run-local-audio-server",
+      "label": "Run a local scsynth server",
+      "intent": "Use SuperCollider's real-time server for an explicitly operated local session while keeping network and session state outside portable release contracts.",
+      "capabilities": [
+        "local_audio_server"
+      ],
+      "automation": "gui",
+      "requires_user_operation": true,
+      "inputs": [
+        "A named local audio device and bounded session duration",
+        "A declared reason that real-time server behavior is useful for this experiment"
+      ],
+      "outputs": [
+        "A local performance capture or session note",
+        "A portable source/render handoff for later EPRS review"
+      ],
+      "steps": [
+        "Bind the server to localhost and use only the intended audio device; do not expose remote OSC by default.",
+        "Record the session locally if it contains a keeper, preserving timing, device, server, and source details.",
+        "Rebuild any release candidate through the ordinary EPRS master, picture, and review path."
+      ],
+      "verification": [
+        "Confirm no unrequested remote control surface was enabled.",
+        "Confirm the captured audio is a new artifact and the editable source remains available.",
+        "Record whether the result is a live document, experiment, or release candidate."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "Portable .scd source, local samples, server/version settings, captures, and review notes",
+      "EPRS's renderer-neutral source and release contracts"
+    ],
+    "avoid": [
+      "Making SuperCollider required, embedding the only arrangement in a live session, or enabling remote OSC without explicit operator setup",
+      "Treating GPL-3 software as if it changed the rights of separately authored audio or samples"
+    ]
+  }
+}

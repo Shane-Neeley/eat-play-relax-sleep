@@ -1,7 +1,8 @@
-.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio vgpu-doctor
+.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio vgpu-doctor opencv-install opencv-check
 
 UV ?= uv
 UV_RUN = $(UV) run --locked
+UV_RUN_OPENCV = $(UV) run --locked --extra opencv
 
 check-uv:
 	@command -v "$(UV)" >/dev/null 2>&1 || { echo "EPRS development requires uv" >&2; exit 1; }
@@ -61,3 +62,9 @@ visual-studio:
 
 vgpu-doctor:
 	cd visuals && npx vgpu doctor
+
+opencv-install: check-uv lock-check
+	$(UV) sync --locked --inexact --extra opencv
+
+opencv-check: lock-check
+	PYTHONPATH=src $(UV_RUN_OPENCV) python -m unittest -v tests.test_video_quality

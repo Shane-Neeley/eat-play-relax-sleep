@@ -36,6 +36,12 @@ MOTIF_IDS = {
     "eclipse-shadow": 6.0,
     "paper-pond": 7.0,
     "tide-pool": 8.0,
+    "liquid-glass": 9.0,
+    "caustic-cipher": 10.0,
+    "prism-beams": 11.0,
+    "particle-trails": 12.0,
+    "hard-light": 13.0,
+    "mountain-river-light": 14.0,
 }
 _BASS_FREQUENCIES = (45.0, 60.0, 80.0, 110.0, 150.0, 200.0)
 _MID_FREQUENCIES = (250.0, 350.0, 500.0, 700.0, 900.0, 1_200.0)

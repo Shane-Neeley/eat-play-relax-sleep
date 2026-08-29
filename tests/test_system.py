@@ -106,6 +106,38 @@ class SystemTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsafe version probe"):
                 load_toolchain(registry_path)
 
+    def test_doctor_can_gate_an_optional_provider_on_python_modules(self):
+        with tempfile.TemporaryDirectory() as folder:
+            registry_path = Path(folder) / "toolchain.json"
+            registry_path.write_text(json.dumps({
+                "schema": "eprs.toolchain/v1",
+                "tools": [{
+                    "id": "module-provider",
+                    "kind": "command-set",
+                    "required": False,
+                    "commands": [{"name": "python3"}],
+                    "python_modules": ["json"],
+                    "capabilities": ["module_capability"],
+                }, {
+                    "id": "missing-module-provider",
+                    "kind": "command-set",
+                    "required": False,
+                    "commands": [{"name": "python3"}],
+                    "python_modules": ["definitely_missing_eprs_module"],
+                    "capabilities": ["missing_module_capability"],
+                }],
+                "workflows": [],
+            }))
+
+            report = doctor(registry_path)
+            providers = {item["id"]: item for item in report["tools"]}
+            self.assertTrue(providers["module-provider"]["available"])
+            self.assertFalse(providers["missing-module-provider"]["available"])
+            self.assertEqual(
+                providers["missing-module-provider"]["python_modules"],
+                [{"name": "definitely_missing_eprs_module", "available": False}],
+            )
+
     def test_doctor_resolves_workflows_through_interchangeable_capability_providers(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

@@ -68,6 +68,29 @@ When additive rings or hotspots approach white, apply motif-local exponential
 highlight compression before the shared vignette multiplier; this preserves
 the palette and edge separation instead of producing a clipped, blurry disk.
 
+The shader bake-off motifs are intentionally orthogonal candidates for visual
+review, not extra production defaults:
+
+- `liquid-glass` uses signed-distance blob unions, pixel-scale rims, bounded
+  distortion, Fresnel-like edge energy, and narrow specular streaks.
+- `caustic-cipher` uses crossing phase-shifted sine ridges, a hard waterline,
+  and small bubble rings so the liquid texture stays legible at phone size.
+- `prism-beams` uses crisp line fields and a moving aperture to translate kick
+  and treble into light cuts instead of diffuse bloom.
+- `particle-trails` uses a bounded deterministic orbital swarm with compact
+  cores and directional tails; the seed is reduced to a fractional phase so
+  large integer seeds do not erase per-particle variation in f32 arithmetic.
+- `hard-light` is the clarity control: flat planes, a disc, bars, and narrow
+  contours with nearly no glow.
+- `mountain-river-light` uses layered analytic ridges, hard snow-edge lines, a
+  winding clear-water channel, and one moving light. It is an original
+  Himalayan-inspired abstraction for music support, not a map, sacred symbol,
+  landscape photograph, or disaster reconstruction.
+
+These candidates use standard signed-distance, analytic-ridge, bounded-particle,
+and selective-highlight techniques. The implementations are authored for the
+single-pass headless vgpu renderer and do not copy source code or assets.
+
 ## Optional natural-history photographs
 
 A relevant iNaturalist photograph is a good source choice when a real species,

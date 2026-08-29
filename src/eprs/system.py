@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import platform
@@ -151,6 +152,13 @@ def _validate_toolchain(registry: object) -> dict:
             or len(tool_capabilities) != len(set(tool_capabilities))
         ):
             raise ValueError(f"toolchain capabilities for {tool_id} must be unique non-empty strings")
+        python_modules = record.get("python_modules", [])
+        if (
+            not isinstance(python_modules, list)
+            or not all(isinstance(item, str) and item.strip() for item in python_modules)
+            or len(python_modules) != len(set(python_modules))
+        ):
+            raise ValueError(f"toolchain Python modules for {tool_id} must be unique non-empty strings")
         declared_capabilities.update(tool_capabilities)
     workflows = registry.get("workflows", [])
     if not isinstance(workflows, list):
@@ -303,6 +311,7 @@ def doctor(
         applicable = not isinstance(supported_platforms, list) or system_name in supported_platforms
         located: list[str] = []
         versions: dict[str, str] = {}
+        module_reports: list[dict[str, object]] = []
         kind = record["kind"]
         if applicable and kind == "command-set":
             command_records = record.get("commands", [])
@@ -349,6 +358,15 @@ def doctor(
         else:
             available = False
 
+        for module_name in record.get("python_modules", []):
+            try:
+                module_available = importlib.util.find_spec(module_name) is not None
+            except (ImportError, ModuleNotFoundError, ValueError):
+                module_available = False
+            module_reports.append({"name": module_name, "available": module_available})
+        if module_reports:
+            available = available and all(item["available"] for item in module_reports)
+
         for capability in record.get("capabilities", []):
             if isinstance(capability, str):
                 capabilities[capability] = capabilities.get(capability, False) or available
@@ -368,6 +386,7 @@ def doctor(
             "available": available,
             "located": located,
             "versions": versions,
+            "python_modules": module_reports,
             "capabilities": [item for item in record.get("capabilities", []) if isinstance(item, str)],
             "install_hint": hint if isinstance(hint, str) else None,
         })

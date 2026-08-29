@@ -15,6 +15,8 @@ class OptionalMusicLaneTests(unittest.TestCase):
         registry = load_toolchain()
         providers = {item["id"]: item for item in registry["tools"]}
         expected = {
+            "opencv": {"video_quality_analysis", "thumbnail_quality_analysis"},
+            "supercollider": {"audio_synthesis", "algorithmic_composition"},
             "raon_opentts": {"local_voice_generation", "reference_voice_cloning"},
             "seed_vc": {"singing_voice_conversion", "local_voice_conversion"},
             "openvpi_game": {"audio_to_midi", "animal_pitch_extraction"},
@@ -30,12 +32,15 @@ class OptionalMusicLaneTests(unittest.TestCase):
         workflows = {item["id"]: item for item in registry["workflows"]}
         self.assertTrue({
             "animal-to-melody-lab", "singing-voice-lab", "stem-repair-lab",
-            "local-reference-voice-collaboration",
+            "local-reference-voice-collaboration", "video-quality-gate",
+            "supercollider-audio-lab",
         } <= workflows.keys())
 
     def test_optional_adapter_profiles_are_valid_and_capability_bound(self):
         profiles = load_adapter_profiles()
         expected = {
+            "opencv-video-quality-gate",
+            "supercollider-audio-server",
             "seed-vc-singing-converter",
             "openvpi-game-animal-melody",
             "diffsinger-note-controlled-voice",
@@ -66,5 +71,5 @@ class OptionalMusicLaneTests(unittest.TestCase):
     def test_lane_docs_keep_fallback_and_rights_language_visible(self):
         text = (ROOT / "docs" / "OPTIONAL_MUSIC_LANES.md").read_text()
         lowered = text.lower()
-        for phrase in ("optional", "fallback", "license", "seed-vc", "animal-to-melody"):
+        for phrase in ("optional", "fallback", "license", "seed-vc", "animal-to-melody", "opencv", "supercollider"):
             self.assertIn(phrase, lowered)

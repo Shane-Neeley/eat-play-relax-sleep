@@ -52,6 +52,45 @@ scientific result. Keep failed tests and unknowns visible. See
 [`FRONTIER_WATCH.md`](FRONTIER_WATCH.md) for the daily-to-weekly loop and
 privacy, rights, safety, and approval boundaries.
 
+## Sound and acoustics research watch
+
+Recent primary research about sound should remain a living input to EPRS. It
+can suggest new source relationships, synthesis controls, spatial metaphors,
+or visual behaviors, but it must not become a fixed EPRS style or a scientific
+claim hidden inside a release. For each useful paper, preserve the DOI or
+publisher URL, authors, publication and access dates, method/measurement,
+important boundary conditions, rights note, and one original experiment. Keep
+the paper's observation separate from EPRS's interpretation and from what a
+listener might feel.
+
+The current example is [Midair Single-Sided Acoustic Levitation in High-
+Pressure Regions of Zero-Order Bessel Beams](https://doi.org/10.1103/pfkh-4x7j),
+by Yusuke Koroyasu, Christopher Stone, Yoichi Ochiai, Takayuki Hoshi, Bruce W.
+Drinkwater, and Tatsuki Fushimi (published 2026-08-24; accessed 2026-08-29),
+which reports stable three-dimensional levitation in the high-pressure axial
+core of a zero-order Bessel beam, controlled translation, simultaneous
+multi-particle cases, and persistence beyond an obstruction. Its useful EPRS
+translation is not “make levitation music”; it is a small study in a stable
+audible center, independent slow controls, disturbance, and recovery. The
+paper reports specific apparatus and physical conditions, so the resulting
+music/video must be labeled an original research translation rather than a
+physical simulation or demonstration. See the public [research translation
+note](research/pressure-finds-a-center.md); song-bound production records stay
+in the ignored local creative workspace.
+
+The article is marked open access under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
+EPRS uses attribution and the article's text-level observations only. Figures,
+movies, and other components can have separate rights and are not copied into
+the project.
+
+For future daily research prompts, favor one current primary sound/acoustics
+source plus one narrow, reversible EPRS test. Use supplemental data when it
+changes the interpretation, search for competing or boundary-condition papers,
+and stop when the translation would require unsupported claims, unlicensed
+material, or a new always-on subsystem. This keeps scientific novelty,
+creative variety, and agentic navigation connected without over-prescribing any
+one result.
+
 - Sonic Pi's official tutorial supports local WAV/AIFF/FLAC samples, directory indexing, MIDI, OSC, and multichannel audio. Consequence: Sonic Pi is a live-code/performance adapter, and portable recordings remain project assets rather than being embedded in generated code.
 - Sonic Pi listens for local OSC on port 4560 by default; remote OSC requires an explicit preference. Consequence: localhost control can be prototyped safely, while network control is deliberately out of the default path.
 - Sonic Pi v5.0.0 (released 2026-08-07) replaces scsynth with SuperSonic, adds live audio-device changes, separate volume/drive controls, MIDI-clock following, Ableton Link audio, game-controller input, session video recording, and richer runnable documentation. Consequence: EPRS exposes these as optional, human-operated capabilities and keeps lossless stem capture plus EPRS review as the release boundary. See [Sonic Pi in EPRS](SONIC_PI.md).

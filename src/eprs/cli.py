@@ -83,6 +83,7 @@ from .system import (
     song_status,
 )
 from .visualize import svg
+from .video_quality import write_video_quality_report
 from .visuals import render_visual, write_prompt_score
 from .vgpu import render_vgpu
 from .work import (
@@ -447,6 +448,19 @@ def parser() -> argparse.ArgumentParser:
     quality.add_argument("beat")
     quality.add_argument("--song", required=True)
     quality.add_argument("--out", required=True, help="Song-relative quality report path")
+
+    video_quality = commands.add_parser(
+        "video-quality",
+        help="Sample a video with optional OpenCV focus, contrast, motion, crop, and thumbnail evidence",
+    )
+    video_quality.add_argument("video")
+    video_quality.add_argument("--out", required=True, help="JSON report path")
+    video_quality.add_argument("--max-frames", type=int, default=18)
+    video_quality.add_argument("--min-sharpness", type=float, default=2.0)
+    video_quality.add_argument("--min-contrast", type=float, default=18.0)
+    video_quality.add_argument("--target-width", type=int)
+    video_quality.add_argument("--target-height", type=int)
+    video_quality.add_argument("--max-crop-fraction", type=float, default=0.40)
 
     quality_approve = commands.add_parser(
         "quality-approve",
@@ -1366,6 +1380,27 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
         elif args.command == "quality-approve":
             print(approve_creative_quality(args.song, args.report, args.approval_note))
+        elif args.command == "video-quality":
+            if (args.target_width is None) != (args.target_height is None):
+                raise ValueError("video-quality target width and height must be provided together")
+            target_aspect = (
+                args.target_width / args.target_height
+                if args.target_width is not None and args.target_height is not None
+                else None
+            )
+            report_path = write_video_quality_report(
+                args.video,
+                args.out,
+                max_frames=args.max_frames,
+                min_sharpness=args.min_sharpness,
+                min_contrast=args.min_contrast,
+                target_aspect=target_aspect,
+                max_crop_fraction=args.max_crop_fraction,
+            )
+            record = json.loads(report_path.read_text(encoding="utf-8"))
+            print(json.dumps({"report": str(report_path), **record}, indent=2))
+            if record["decision"] != "pass":
+                return 2
         elif args.command == "render":
             print(render(load(args.beat), args.out))
         elif args.command == "visualize":

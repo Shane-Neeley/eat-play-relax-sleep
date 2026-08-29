@@ -10,6 +10,12 @@ requires-python = ">=3.11"
 authors = [{name = "EPRS contributors"}]
 dependencies = []
 
+[project.optional-dependencies]
+# Keep computer vision out of the core install.  The headless wheel is enough
+# for deterministic frame QA and avoids pulling GUI/native OpenCV stacks into
+# every EPRS environment.
+opencv = ["opencv-python-headless>=4.11,<5"]
+
 [project.scripts]
 eprs = "eprs.cli:main"
 
@@ -57,6 +63,7 @@ include = [
     "src/eprs/sonic_pi_catalog.py",
     "src/eprs/visualize.py",
     "src/eprs/visuals.py",
+    "src/eprs/video_quality.py",
     "src/eprs/vgpu.py",
 ]
 

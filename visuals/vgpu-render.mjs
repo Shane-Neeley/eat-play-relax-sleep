@@ -31,6 +31,14 @@ fn palette(index: f32) -> vec3f {
   return mix(params.palette2.xyz, params.palette3.xyz, position - 2.0);
 }
 
+fn stroke(distanceValue: f32, width: f32, aa: f32) -> f32 {
+  return 1.0 - smoothstep(width, width + aa, abs(distanceValue));
+}
+
+fn disk(distanceValue: f32, radius: f32, aa: f32) -> f32 {
+  return 1.0 - smoothstep(radius, radius + aa, distanceValue);
+}
+
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let resolution = params.resolution.xy;
   let time = params.signal.x;
@@ -189,7 +197,7 @@ fn palette(index: f32) -> vec3f {
     let floorMark = smoothstep(0.012, 0.0, abs(point.y + 0.42)) * smoothstep(0.72, 0.08, abs(point.x + 0.12));
     color += palette(0.38) * floorMark * (0.018 + highs * 0.06);
   }
-  if (motif > 7.5) {
+  if (motif > 7.5 && motif < 8.5) {
     // Tide pool: bounded domain warp, signed-distance-style rings, separated
     // color fringes, and phase-shifted caustics. These are graphic techniques,
     // not a physical ocean simulation.
@@ -227,6 +235,219 @@ fn palette(index: f32) -> vec3f {
     // Compress additive highlights before the shared vignette multiplier so
     // neon rings keep their hue instead of becoming a clipped white disk.
     color = (vec3f(1.0, 1.0, 1.0) - exp(-color * 0.80)) * 0.72;
+  }
+
+  if (motif > 8.5 && motif < 9.5) {
+    // Liquid glass: an analytic union of two signed-distance blobs with a
+    // pixel-scale rim, bounded screen-space-style distortion, Fresnel-like
+    // edge energy, and narrow specular streaks. It borrows the useful visual
+    // cues from real-time refraction without pretending this is a simulation.
+    let aa = max((1.0 / resolution.y) * 1.65, 0.0012);
+    let glassPhase = time * 1.18 + fract(seed * 0.000001);
+    let warped = point + vec2f(
+      sin(point.y * 8.0 + glassPhase * 1.7) * 0.028,
+      cos(point.x * 7.0 - glassPhase * 1.2) * 0.022
+    );
+    let blobA = length(warped - vec2f(-0.12 + sin(glassPhase * 0.44) * 0.055, 0.04))
+      - (0.185 + bass * 0.018);
+    let blobB = length(warped - vec2f(0.14 + cos(glassPhase * 0.31) * 0.050, -0.055))
+      - (0.165 + mids * 0.015);
+    let blobDistance = min(blobA, blobB);
+    let body = 1.0 - smoothstep(0.0, aa, blobDistance);
+    let rim = stroke(blobDistance, 0.010, aa * 1.35);
+    let innerRim = stroke(blobDistance + 0.035, 0.0045, aa);
+    let refractedLine = stroke(
+      warped.x + warped.y * 0.62 + sin(glassPhase * 0.7) * 0.06,
+      0.0065,
+      aa
+    ) * body;
+    let specular = stroke(
+      warped.x - warped.y * 1.35 - 0.06 + sin(glassPhase) * 0.055,
+      0.012,
+      aa * 1.4
+    ) * body;
+    let edgeEnergy = pow(max(0.0, min(1.0, abs(blobDistance) * 22.0)), 1.6) * body;
+    color = params.palette3.xyz * 0.018 + params.palette0.xyz * 0.018 * (0.5 + bass);
+    color = mix(color, params.palette0.xyz * 0.34 + params.palette1.xyz * 0.08, body * 0.60);
+    color += params.palette0.xyz * rim * (0.62 + bass * 0.42);
+    color += params.palette1.xyz * innerRim * (0.40 + mids * 0.30);
+    color += params.palette2.xyz * refractedLine * (0.28 + highs * 0.32);
+    color += params.palette3.xyz * specular * (0.42 + highs * 0.55);
+    color += params.palette1.xyz * edgeEnergy * (0.08 + mids * 0.18);
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.42);
+  }
+
+  if (motif > 9.5 && motif < 10.5) {
+    // Caustic cipher: crossing, phase-shifted sine ridges inside a hard water
+    // plane. The narrow line fields keep caustics legible at Shorts size.
+    let aa = max((1.0 / resolution.y) * 1.35, 0.0010);
+    let waterPhase = time * 1.26 + fract(seed * 0.000001);
+    let waterTop = -0.02 + sin(point.x * 5.0 + waterPhase * 0.75) * 0.028;
+    let waterMask = smoothstep(waterTop + 0.06, waterTop - 0.22, point.y);
+    let q = point + vec2f(
+      sin(point.y * 6.5 + waterPhase) * 0.018,
+      cos(point.x * 5.5 - waterPhase * 0.8) * 0.015
+    );
+    let waveA = 1.0 - smoothstep(0.0, 0.075, abs(sin(q.x * 8.5 + sin(waterPhase * 0.55) * 1.1 + q.y * 2.2)));
+    let waveB = 1.0 - smoothstep(0.0, 0.085, abs(sin(q.y * 13.0 - cos(waterPhase * 0.44) * 1.2 + q.x * 1.6)));
+    let waveC = 1.0 - smoothstep(0.0, 0.060, abs(sin((q.x + q.y) * 18.0 - waterPhase * 1.1)));
+    let caustic = max(waveA * waveB, max(waveA * waveC, waveB * waveC));
+    let shoreline = stroke(point.y - waterTop, 0.006, aa * 1.5);
+    let bubbleA = disk(length(q - vec2f(-0.28 + sin(waterPhase * 0.4) * 0.08, -0.22)), 0.036, aa);
+    let bubbleB = disk(length(q - vec2f(0.26 + cos(waterPhase * 0.32) * 0.09, -0.30)), 0.025, aa);
+    let bubbleRims = stroke(length(q - vec2f(-0.28 + sin(waterPhase * 0.4) * 0.08, -0.22)) - 0.036, 0.004, aa)
+      + stroke(length(q - vec2f(0.26 + cos(waterPhase * 0.32) * 0.09, -0.30)) - 0.025, 0.004, aa);
+    color = params.palette3.xyz * 0.020 + params.palette0.xyz * 0.014;
+    color += params.palette0.xyz * waterMask * 0.11;
+    color += params.palette1.xyz * caustic * waterMask * (0.16 + highs * 0.36);
+    color += params.palette2.xyz * max(waveA, waveB) * waterMask * (0.06 + mids * 0.18);
+    color += params.palette3.xyz * shoreline * (0.34 + bass * 0.28);
+    color += params.palette2.xyz * (bubbleA + bubbleB) * (0.08 + bass * 0.12);
+    color += params.palette3.xyz * bubbleRims * 0.30;
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.32);
+  }
+
+  if (motif > 10.5 && motif < 11.5) {
+    // Prism beams: hard-edged light shafts and a moving lens aperture. This
+    // is intentionally graphic: line SDFs, not a bloom-heavy wash.
+    let aa = max((1.0 / resolution.y) * 1.45, 0.0011);
+    let prismPhase = time * 0.86 + fract(seed * 0.000001);
+    let beamA = stroke(point.y - point.x * 0.78 - 0.11 + sin(prismPhase * 0.7) * 0.06, 0.014, aa);
+    let beamB = stroke(point.y + point.x * 0.54 + 0.20 + cos(prismPhase * 0.53) * 0.05, 0.010, aa);
+    let beamC = stroke(point.y - point.x * 0.12 + 0.36 + sin(prismPhase * 0.41) * 0.08, 0.007, aa);
+    let apertureCenter = vec2f(sin(prismPhase * 0.42) * 0.24, cos(prismPhase * 0.33) * 0.14);
+    let apertureDistance = length(point - apertureCenter);
+    let aperture = disk(apertureDistance, 0.145 + bass * 0.022, aa);
+    let apertureRing = stroke(apertureDistance - (0.145 + bass * 0.022), 0.008, aa);
+    let crosshair = stroke(point.x - apertureCenter.x, 0.0035, aa) * disk(abs(point.y - apertureCenter.y), 0.11, aa)
+      + stroke(point.y - apertureCenter.y, 0.0035, aa) * disk(abs(point.x - apertureCenter.x), 0.11, aa);
+    color = params.palette3.xyz * 0.016 + params.palette2.xyz * 0.012;
+    color += params.palette0.xyz * beamA * (0.38 + bass * 0.44);
+    color += params.palette1.xyz * beamB * (0.28 + mids * 0.34);
+    color += params.palette2.xyz * beamC * (0.20 + highs * 0.32);
+    color += params.palette1.xyz * aperture * (0.10 + bass * 0.18);
+    color += params.palette3.xyz * apertureRing * (0.32 + highs * 0.40);
+    color += params.palette0.xyz * crosshair * 0.22;
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.28);
+  }
+
+  if (motif > 11.5 && motif < 12.5) {
+    // Particle trails: deterministic orbital particles, each with a compact
+    // core and a separate directional tail. The bounded loop is cheap enough
+    // for headless vgpu and keeps motion beat-reactive without a blurry field.
+    let aa = max((1.0 / resolution.y) * 1.5, 0.0011);
+    let particlePhase = time * 1.05 + fract(seed * 0.000001);
+    color = params.palette3.xyz * 0.014 + params.palette2.xyz * 0.012;
+    // Give the sparse orbit a quiet center of gravity so low-energy frames
+    // remain legible without turning the study into a full-screen wash.
+    let centerField = exp(-radius * 3.6) * (0.22 + bass * 0.18 + mids * 0.08);
+    color += palette(0.60) * centerField * 0.18;
+    for (var particle: i32 = 0; particle < 18; particle = particle + 1) {
+      let id = f32(particle);
+      // Keep the seed contribution small before f32 evaluation; adding a
+      // multi-billion seed directly would quantize away the particle index.
+      let randomA = 0.5 + 0.5 * sin(id * 7.37 + seed * 0.000001 + 2.7);
+      let randomB = 0.5 + 0.5 * sin(id * 11.13 + seed * 0.000001 * 0.41 + 9.2);
+      let orbit = 0.18 + randomA * 0.32;
+      let angleA = particlePhase * (0.22 + randomB * 0.42) + id * 2.3999;
+      let center = vec2f(cos(angleA), sin(angleA) * 0.78) * orbit;
+      let core = disk(length(point - center), 0.010 + highs * 0.005, aa);
+      let tailDirection = normalize(vec2f(-sin(angleA), cos(angleA) * 0.78));
+      let trailDistance = abs(dot(point - center, tailDirection));
+      let trailSide = abs(dot(point - center, vec2f(tailDirection.y, -tailDirection.x)));
+      let trail = (1.0 - smoothstep(0.006, 0.035, trailSide))
+        * (1.0 - smoothstep(0.015, 0.16 + bass * 0.05, trailDistance))
+        * step(0.0, dot(point - center, tailDirection));
+      let particleColor = palette(fract(randomA * 0.75 + id * 0.071));
+      color += particleColor * core * (0.50 + highs * 1.10);
+      color += particleColor * trail * (0.040 + mids * 0.18);
+    }
+    let orbitRing = stroke(length(point) - (0.31 + bass * 0.025), 0.004, aa);
+    color += params.palette1.xyz * orbitRing * (0.28 + bass * 0.36);
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.24);
+  }
+
+  if (motif > 12.5 && motif < 13.5) {
+    // Hard light: a poster-like stack of planes, discs, and razor-thin
+    // contours. It is a control candidate for the clearest possible thumbnail.
+    let aa = max((1.0 / resolution.y) * 1.2, 0.0009);
+    let hardPhase = time * 0.72 + fract(seed * 0.000001);
+    let plane = smoothstep(-0.05, 0.03, point.y + sin(point.x * 4.0 + hardPhase) * 0.018);
+    let sunCenter = vec2f(-0.06 + sin(hardPhase * 0.31) * 0.13, 0.11 + cos(hardPhase * 0.27) * 0.07);
+    let sunRadius = 0.125 + bass * 0.018;
+    let sun = disk(length(point - sunCenter), sunRadius, aa);
+    let sunRing = stroke(length(point - sunCenter) - sunRadius, 0.006, aa);
+    let barA = smoothstep(0.0, aa, point.y - (0.29 + sin(hardPhase * 0.5) * 0.04))
+      * (1.0 - smoothstep(0.0, aa, point.y - (0.32 + sin(hardPhase * 0.5) * 0.04)));
+    let barB = smoothstep(0.0, aa, point.x - (-0.46 + cos(hardPhase * 0.42) * 0.08))
+      * (1.0 - smoothstep(0.0, aa, point.x - (-0.42 + cos(hardPhase * 0.42) * 0.08)));
+    let contour = stroke(point.y + point.x * 0.42 - 0.34, 0.005, aa);
+    color = mix(params.palette2.xyz * 0.06, params.palette0.xyz * 0.08, plane);
+    color += params.palette1.xyz * sun * (0.42 + bass * 0.32);
+    color += params.palette3.xyz * sunRing * (0.40 + highs * 0.40);
+    color += params.palette0.xyz * barA * (0.28 + mids * 0.24);
+    color += params.palette1.xyz * barB * 0.22;
+    color += params.palette2.xyz * contour * (0.26 + highs * 0.30);
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.20);
+  }
+
+  if (motif > 13.5 && motif < 14.5) {
+    // Mountain river light: layered analytic ridges, hard snow edges, a
+    // winding clear-water channel, and one moving lantern. The visual is an
+    // original Himalayan-inspired abstraction; it is not a map, landscape
+    // photograph, religious symbol, or disaster reconstruction.
+    let aa = max((1.0 / resolution.y) * 1.35, 0.0010);
+    let mountainPhase = time * 0.12 + fract(seed * 0.000001);
+    let backRidge = -0.02
+      + 0.11 * sin(point.x * 2.20 + mountainPhase * 0.7)
+      + 0.045 * sin(point.x * 5.30 - mountainPhase * 0.4);
+    let midRidge = 0.11
+      + 0.15 * sin(point.x * 3.10 - mountainPhase * 0.35 + 0.8)
+      + 0.055 * sin(point.x * 8.20 + mountainPhase * 0.5);
+    let nearRidge = 0.25
+      + 0.12 * sin(point.x * 4.30 + mountainPhase * 0.22 - 1.3)
+      + 0.035 * sin(point.x * 11.0 - mountainPhase * 0.6);
+    let sky = mix(params.palette3.xyz * 0.30, params.palette2.xyz * 0.16,
+      smoothstep(-0.48, 0.34, point.y));
+    let backMask = smoothstep(backRidge - aa * 2.0, backRidge + aa * 2.0, point.y);
+    let midMask = smoothstep(midRidge - aa * 2.0, midRidge + aa * 2.0, point.y);
+    let nearMask = smoothstep(nearRidge - aa * 2.0, nearRidge + aa * 2.0, point.y);
+    color = sky;
+    color = mix(color, params.palette0.xyz * 0.34 + params.palette3.xyz * 0.06, backMask);
+    color = mix(color, params.palette1.xyz * 0.23 + params.palette0.xyz * 0.11, midMask);
+    color = mix(color, params.palette3.xyz * 0.05 + params.palette0.xyz * 0.16, nearMask);
+
+    let snowBack = stroke(point.y - backRidge, 0.0045, aa * 1.5);
+    let snowMid = stroke(point.y - midRidge, 0.0032, aa * 1.4);
+    color += params.palette3.xyz * snowBack * (0.20 + highs * 0.20);
+    color += params.palette2.xyz * snowMid * (0.17 + mids * 0.17);
+
+    let riverPhase = time * (0.42 + bass * 0.18) + mountainPhase;
+    let riverX = 0.04 + 0.10 * sin(point.y * 4.1 + riverPhase)
+      + 0.035 * sin(point.y * 10.0 - riverPhase * 0.6);
+    let riverWidth = 0.010 + smoothstep(-0.10, 0.54, point.y) * (0.030 + bass * 0.022);
+    let river = 1.0 - smoothstep(riverWidth, riverWidth + aa * 2.0, abs(point.x - riverX));
+    let riverEdge = stroke(abs(point.x - riverX) - riverWidth, 0.0035, aa);
+    color += params.palette1.xyz * river * (0.34 + bass * 0.42);
+    color += params.palette3.xyz * riverEdge * (0.35 + highs * 0.35);
+
+    let rippleA = stroke(point.y - (0.19 + sin(point.x * 4.0 + riverPhase) * 0.012), 0.0025, aa);
+    let rippleB = stroke(point.y - (0.38 + cos(point.x * 5.0 - riverPhase * 0.7) * 0.016), 0.0020, aa);
+    color += params.palette2.xyz * (rippleA + rippleB) * (0.08 + mids * 0.18);
+
+    let lanternY = -0.18 + fract(time * 0.035 + 0.13) * 0.72;
+    let lanternX = 0.04 + 0.10 * sin(lanternY * 4.1 + riverPhase)
+      + 0.035 * sin(lanternY * 10.0 - riverPhase * 0.6);
+    let lanternDistance = length(point - vec2f(lanternX, lanternY));
+    let lantern = disk(lanternDistance, 0.012 + bass * 0.006, aa);
+    let lanternHalo = exp(-lanternDistance * 25.0) * (0.20 + highs * 0.26);
+    color += params.palette2.xyz * lantern * (0.50 + highs * 0.55);
+    color += params.palette2.xyz * lanternHalo;
+
+    let starField = step(0.89, hash2(floor(point * 31.0 + mountainPhase * 0.2 + seed * 0.000001)));
+    let starMask = starField * smoothstep(0.30, -0.34, point.y);
+    color += params.palette3.xyz * starMask * (0.012 + highs * 0.032);
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.26);
   }
 
   let vignette = smoothstep(1.05, 0.18, radius);
@@ -315,6 +536,12 @@ function paramsFor(spec, controls, index, width, height) {
     "eclipse-shadow": 6,
     "paper-pond": 7,
     "tide-pool": 8,
+    "liquid-glass": 9,
+    "caustic-cipher": 10,
+    "prism-beams": 11,
+    "particle-trails": 12,
+    "hard-light": 13,
+    "mountain-river-light": 14,
   };
   return {
     resolution: [width, height, 1 / width, 1 / height],
