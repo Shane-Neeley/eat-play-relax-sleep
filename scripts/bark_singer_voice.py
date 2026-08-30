@@ -144,7 +144,7 @@ def generate(args: argparse.Namespace) -> Path:
             "text": cue_text,
             "prompt": prompt,
             "style_note": args.prompt_prefix,
-            "path": str(destination),
+            "path": display_path(destination),
             "sample_rate": sample_rate,
             "channels": 1,
         }
@@ -168,7 +168,7 @@ def generate(args: argparse.Namespace) -> Path:
                     f"performance cue in {args.autotune_key} {args.autotune_scale}."
                 ),
             )
-            output["raw"] = {"path": str(raw_destination), "sha256": sha256(raw_destination)}
+            output["raw"] = {"path": display_path(raw_destination), "sha256": sha256(raw_destination)}
             output["autotune_manifest"] = display_path(tuning_manifest)
         output["sha256"] = sha256(destination)
         outputs.append(output)

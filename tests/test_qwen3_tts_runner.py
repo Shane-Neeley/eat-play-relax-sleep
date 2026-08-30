@@ -23,6 +23,12 @@ def load_runner_module():
 
 
 class Qwen3TTSRunnerTests(unittest.TestCase):
+    def test_display_path_is_portable_for_paths_under_launch_directory(self):
+        runner = load_runner_module()
+        rendered = runner.display_path(ROOT / "songs" / "example" / "cue.wav")
+        self.assertEqual(rendered, "songs/example/cue.wav")
+        self.assertFalse(Path(rendered).is_absolute())
+
     def test_runner_has_safe_help_and_version_without_model_import(self):
         help_run = subprocess.run(
             [sys.executable, str(RUNNER), "--help"],

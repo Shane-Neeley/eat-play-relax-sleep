@@ -24,6 +24,10 @@ or claim that a clone is a performer identity. See [VOICE_POLICY.md](VOICE_POLIC
 for the release gate. Historical notes that mention Samantha are archival
 records and are not approved implementation examples.
 
+Voice-runner manifests keep generated and raw artifact paths portable relative
+to the launch directory when possible; provenance must not expose absolute
+operator filesystem paths.
+
 ## What the recent Strokes record suggests
 
 The relevant recent album is the Strokes' seventh album, *Reality Awaits*

@@ -261,7 +261,7 @@ def generate(args: argparse.Namespace) -> Path:
             "id": f"{args.prefix}-{index:02d}",
             "text": text,
             "seed": cue_seed,
-            "path": str(destination),
+            "path": display_path(destination),
             "voice_plan": result[1] if len(result) > 1 else None,
             **probe,
         }
@@ -287,7 +287,7 @@ def generate(args: argparse.Namespace) -> Path:
                 ),
             )
             output["raw"] = {
-                "path": str(raw_destination), "sha256": sha256(raw_destination),
+                "path": display_path(raw_destination), "sha256": sha256(raw_destination),
             }
             output["autotune_manifest"] = display_path(tuning_manifest)
         output["sha256"] = sha256(destination)
