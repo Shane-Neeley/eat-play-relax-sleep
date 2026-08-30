@@ -43,6 +43,52 @@ The system is designed to make it possible to ask:
 The short pages are entry points. They link to the longer contracts, research
 notes, and implementation documents only when that detail becomes useful.
 
+## Requirements and tested platform
+
+**Application integrations have been tested on macOS only.** The current
+working system uses an Apple Silicon Mac. Audacity, Sonic Pi, Shotcut, and
+SuperCollider workflows—including app discovery and handoffs—have not been
+validated on Windows or Linux. Some command-line components include Linux
+installation hints, but that is not a claim that the complete app workflow has
+been tested there.
+
+Install these before using the core checkout:
+
+| Software | Requirement | Used for |
+| --- | --- | --- |
+| [Git](https://git-scm.com/) | Needed for a source checkout and contribution workflow. | Clone, update, and inspect source history. |
+| [uv](https://docs.astral.sh/uv/) | Required by the documented setup, test, and quality commands. | Installs the locked Python environment and runs EPRS commands reproducibly. |
+| Python 3.11 or newer | Required; `uv` can install the project runtime. | EPRS command line, BeatScript rendering, manifests, planning, and release preparation. |
+| [FFmpeg and FFprobe](https://ffmpeg.org/) | Required. On macOS, `brew install ffmpeg` is the usual route. | Audio/video inspection, processing, interchange, mastering, and delivery checks. |
+
+The following software is optional. Install only the lanes you intend to use:
+
+| Software | Install when you need… | Mac test status |
+| --- | --- | --- |
+| [Audacity](https://www.audacityteam.org/) | Hands-on recording, waveform editing, audition, and lossless export. | Installed and exercised on macOS; scripting is not enabled by default. |
+| [Sonic Pi](https://sonic-pi.net/) | Live-coded synthesis, samples, MIDI/OSC, and bounded performance capture. | Installed and exercised on macOS. |
+| [Shotcut](https://www.shotcut.org/) | Editable video timelines, captions, keyframes, MLT projects, and manual picture review. | Installed and exercised on macOS. |
+| [SuperCollider](https://supercollider.github.io/) | Optional `scsynth` synthesis, granular processing, and algorithmic composition. | Installed and exercised on macOS. |
+| [Node.js](https://nodejs.org/) | Remotion visuals, the visual studio dependencies, and JavaScript tests. | Installed and tested on macOS. |
+| OpenCV | Optional bounded video, thumbnail, motion, and crop-quality analysis. Install with `make opencv-install`. | Installed and tested headlessly on macOS. |
+| [Graphviz](https://graphviz.org/) | Optional SVG production, lineage, and arrangement maps; DOT output works without it. | Optional; not required by the tested core workflow. |
+
+Local AI model environments are also optional and are deliberately excluded
+from the base `uv sync`. Qwen3-TTS and CuteTTS have been tested locally for
+consent-bound speech cloning; SoulX-Singer for score-conditioned singing;
+Raon-OpenTTS as a speech control; Seed-VC for singing conversion; and ACE-Step
+for a bounded music-generation experiment. These model lanes were tested on
+Apple Silicon/macOS only and should be installed in ignored, isolated
+`.eprs-local` environments. See [synthetic voices](docs/VOCALS.md),
+[SoulX-Singer](docs/SOULX_SINGER.md), [optional AI audio](docs/AI_GENERATION.md),
+and the versioned [toolchain registry](docs/TOOLCHAIN.md) before installing
+weights or using a private reference recording.
+
+After installation, use `./scripts/eprs doctor` to see which required and
+optional capabilities are available on the current machine. Doctor reports
+availability; it does not install software or imply that a render has passed
+human listening or release review.
+
 ## Try the local workflow
 
 From a checkout of this repository:

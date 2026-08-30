@@ -80,8 +80,9 @@ and [upload guidance](https://support.google.com/youtube/answer/57407).
 Add the reviewed bundle's song-relative `bundle.json` path as `youtube_assets`
 in `eprs.release/v1`. Release copies the bundle manifest, thumbnail, caption
 tracks, and chapters under `FINAL/<release>/youtube-assets/`. It also appends
-the exact chapter block and approved credits to the upload description and
-places normalized asset references in `youtube-metadata.json`.
+the exact chapter block and approved credits when the authored description does
+not already contain those standalone section headings, and places normalized
+asset references in `youtube-metadata.json`.
 
 `eprs publication prepare` rechecks all of those FINAL checksums and includes
 them in `recipe.upload_assets`. It still sets both authorization flags to

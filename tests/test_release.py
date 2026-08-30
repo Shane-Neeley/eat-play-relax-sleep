@@ -8,10 +8,41 @@ from eprs.clearance import create_recording_clearance
 from eprs.delivery import approve_youtube_video, render_youtube
 from eprs.master import approve_master
 from eprs.publication import prepare_publication_handoff
-from eprs.release import package_release
+from eprs.release import _assemble_youtube_description, package_release
 from eprs.session import create_recording_session
 from eprs.system import new_song, sha256, song_status
 from tests.test_delivery import _ffmpeg_has_filter, lossless_master
+
+
+class ReleaseDescriptionTests(unittest.TestCase):
+    def test_appends_only_missing_chapter_and_credit_sections(self):
+        chapters = "0:00 Opening\n0:10 Middle\n0:20 Closing"
+        credits = "EPRS — original production"
+
+        self.assertEqual(
+            _assemble_youtube_description("An original fixture.", chapters, credits),
+            (
+                "An original fixture.\n\n"
+                "Chapters\n0:00 Opening\n0:10 Middle\n0:20 Closing\n\n"
+                "Credits\nEPRS — original production"
+            ),
+        )
+
+        authored_chapters = "An original fixture.\n\n## CHAPTERS:\n00:00 Authored opening"
+        self.assertEqual(
+            _assemble_youtube_description(authored_chapters, chapters, credits),
+            f"{authored_chapters}\n\nCredits\n{credits}",
+        )
+
+        authored_sections = (
+            "An original fixture.\n\n"
+            "Chapters\n00:00 Authored opening\n\n"
+            "## Credits\nNamed source — CC0"
+        )
+        self.assertEqual(
+            _assemble_youtube_description(authored_sections, chapters, credits),
+            authored_sections,
+        )
 
 
 @unittest.skipUnless(

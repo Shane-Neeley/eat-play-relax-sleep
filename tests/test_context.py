@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from eprs.context import (
     build_agent_context,
@@ -13,6 +14,14 @@ from eprs.work import create_work_item, finish_work_item, promote_work_run, star
 
 
 class AgentContextTests(unittest.TestCase):
+    def test_context_skips_command_version_subprocesses(self):
+        with tempfile.TemporaryDirectory() as folder:
+            song = new_song(Path(folder), "Fast Context")
+            with patch("eprs.system._command_version") as version_probe:
+                packet = build_agent_context(song)
+            version_probe.assert_not_called()
+            self.assertTrue(packet["toolchain"]["capabilities"]["song_workspace"])
+
     def test_explicit_private_software_configuration_stays_path_free(self):
         with (
             tempfile.TemporaryDirectory() as folder,

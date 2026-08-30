@@ -2059,7 +2059,12 @@ def build_agent_context(
             entry["title"] = entry["title"][:512]
         if isinstance(entry.get("kind"), str):
             entry["kind"] = entry["kind"][:256]
-    tool_report = doctor(extensions=toolchain_extensions)
+    # Context needs capability and availability evidence, not subprocess-backed
+    # version strings. Keep full version probes for the explicit doctor command.
+    tool_report = doctor(
+        extensions=toolchain_extensions,
+        include_versions=False,
+    )
     adapter_report = adapter_catalog(
         additional_directories=adapter_profile_directories,
         toolchain_extensions=toolchain_extensions,

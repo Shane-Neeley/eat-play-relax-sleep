@@ -1,0 +1,49 @@
+{
+  "schema": "eprs.software-adapter/v1",
+  "id": "cutetts-local-voice",
+  "label": "CuteTTS compact local voice-clone adapter",
+  "summary": "Use CuteTTS as a compact, optional local speech-cloning instrument for a bounded cue batch from one explicitly authorized immutable reference.",
+  "provider": "cutetts",
+  "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+  "handoffs": [
+    {
+      "id": "consented-reference-to-clone-cues",
+      "label": "Generate consent-bound compact clone cues",
+      "intent": "Render a small local speech-cue batch while preserving the source reference, exact model/code revisions, checkpoint identity, timing evidence, and review boundary.",
+      "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "An owned or explicitly consented local reference recording",
+        "A consent note, cue list, exact CuteTTS code/model revisions, seed, and ignored output directory",
+        "The official CuteTTS base checkpoint in an isolated ignored environment"
+      ],
+      "outputs": [
+        "New lossless mono WAV cues outside tracked source and release directories",
+        "A private manifest containing redacted reference location, immutable checksums, exact revisions, settings, per-cue seeds, durations, generation time, and real-time factor",
+        "Raw technical candidates that remain subject to blind listening, disclosure, rights, musical-fit, and release gates"
+      ],
+      "steps": [
+        "Inspect the official CuteTTS source, model revision, Apache-2.0 license, and the reference consent boundary before rendering.",
+        "Run `scripts/cutetts_voice.py` from the isolated CuteTTS environment with explicit model/code revisions, reference, consent note, seed, cue text, and a new ignored output directory.",
+        "Keep the batch small, preserve every raw candidate, and compare it blind against Qwen Base and the existing speech control at matched loudness.",
+        "Promote nothing automatically: a technical clone trial is not a performer credit, musical approval, disclosure decision, or release clearance."
+      ],
+      "verification": [
+        "Confirm the reference path is withheld, the reference checksum is unchanged, checkpoints are hashed, and no destination was overwritten.",
+        "Confirm each WAV opens and matches its recorded sample rate, duration, seed, checksum, generation time, and real-time factor.",
+        "Review word accuracy, speaker identity, artifacts, dynamics, musical usefulness, consent, synthetic-media disclosure, and public-release authority as separate gates."
+      ]
+    }
+  ],
+  "safety": {
+    "preserve": [
+      "The immutable local reference, consent note, exact revisions, checkpoint and output hashes, settings, timing evidence, raw candidates, and listening decision",
+      "The distinction between an internal technical clone trial and an approved public vocal performance"
+    ],
+    "avoid": [
+      "Uploading or committing private references, cloning an unauthorized person, overwriting source audio, or presenting encoder similarity as a listening verdict",
+      "Treating an Apache-2.0 model license as blanket clearance for a voice, input, dataset, disclosure choice, or downstream release"
+    ]
+  }
+}

@@ -6,7 +6,7 @@ The project uses the official Soul-AILab checkpoint and inference code locally:
 
 - Code: `Soul-AILab/SoulX-Singer`, Apache-2.0, local commit `81aeb3ae772c70093c3de74dc23c92d983801ae4`.
 - SVS checkpoint SHA-256: `447eaf41f91a6b6659d55e9ec3c9b809221724fb8592aebaec35a23751a5b500`.
-- Config SHA-256: `d164c978dde6f57e1075bc21ef9f9b7b27895267f35b735cebe863418492be38`.
+- Config SHA-256: `d164c978dde6f57e1075bc21ef5f9b7b27895267f35b735cebe863418492be38`.
 - Official sources: <https://github.com/Soul-AILab/SoulX-Singer> and <https://huggingface.co/Soul-AILab/SoulX-Singer>.
 
 ## How the local route works

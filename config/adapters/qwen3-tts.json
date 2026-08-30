@@ -2,9 +2,9 @@
   "schema": "eprs.software-adapter/v1",
   "id": "qwen3-tts-local-voice",
   "label": "Qwen3-TTS local voice-generation adapter",
-  "summary": "Use Qwen3-TTS VoiceDesign or CustomVoice as an optional local instrument for original spoken or character cues, with no private voice uploaded and no child or living-artist imitation assumed.",
+  "summary": "Use Qwen3-TTS VoiceDesign, CustomVoice, or a consent-bound Base-model clone as an optional local instrument for spoken or character cues, with no private voice uploaded and no child or living-artist imitation assumed.",
   "provider": "qwen3_tts",
-  "capabilities": ["local_voice_generation"],
+  "capabilities": ["local_voice_generation", "reference_voice_cloning"],
   "handoffs": [
     {
       "id": "brief-to-voice-cues",
@@ -36,11 +36,40 @@
         "For tuning, confirm voiced-frame coverage and target notes, then compare raw and tuned cues at matched level in stereo and mono.",
         "Confirm the generated voice is synthetic or consent-cleared, the source prompt is preserved, and no model result is presented as a human performance or release approval."
       ]
+    },
+    {
+      "id": "consented-reference-to-clone-cues",
+      "label": "Generate consent-bound cloned speech cues",
+      "intent": "Create a small batch of high-fidelity local speech cues from one immutable, explicitly authorized voice reference and its exact transcript.",
+      "capabilities": ["local_voice_generation", "reference_voice_cloning"],
+      "automation": "cli",
+      "requires_user_operation": true,
+      "inputs": [
+        "A local-only owned or explicitly consented reference recording and its exact transcript",
+        "A consent note stating the permitted voice use, target cue list, Base checkpoint, seed, and language",
+        "An ignored output directory; neither the reference nor clone manifest belongs in the public repository"
+      ],
+      "outputs": [
+        "New song-local WAV cues plus a checksum-bearing private manifest",
+        "A redacted reference path, immutable reference checksum, transcript, consent note, model, mode, device, and output checksums",
+        "One reusable in-memory clone prompt per batch so reference conditioning is not recomputed for every cue"
+      ],
+      "steps": [
+        "Run the local reference-voice doctor and inspect the exact Qwen3-TTS Base model card and Apache-2.0 terms.",
+        "Use `scripts/qwen3_tts_voice.py --mode voice-clone` with `--reference-audio`, exact `--reference-text`, and `--consent-note`; use `--x-vector-only` only as a documented lower-fidelity fallback.",
+        "Generate the smallest useful batch, confirm the reference checksum did not change, and compare the cues blind against the existing voice lane.",
+        "Keep raw clone output and any separate autotune treatment; no generated cue is automatically a performer credit, master, or release clearance."
+      ],
+      "verification": [
+        "Confirm the private reference path is withheld from the manifest and the source bytes remain unchanged.",
+        "Confirm one clone prompt served the whole batch, each output matches its checksum, and words, identity, artifacts, and musical fit were reviewed.",
+        "Confirm consent, synthetic-media disclosure, model rights, and public-release authority remain explicit separate gates."
+      ]
     }
   ],
   "safety": {
     "preserve": [
-      "The editable cue list, model/version, seed, instruction, generated candidates, checksums, and exact rights/license context",
+      "The editable cue list, model/version, seed, instruction or exact reference transcript, generated candidates, checksums, consent note, and exact rights/license context",
       "The distinction between synthetic character voice, consented human voice, and external reference material"
     ],
     "avoid": [

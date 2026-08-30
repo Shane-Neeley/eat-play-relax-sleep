@@ -135,7 +135,7 @@ Every render refuses to overwrite its source or an existing output. It writes a
 controls, voiced-frame coverage, correction distances, target notes, engine,
 peak, and review warning. It does not normalize or limit.
 
-## Generate and tune Qwen TTS in one bounded call
+## Generate, clone, and tune Qwen TTS in one bounded call
 
 Qwen3-TTS supports natural-language control of timbre, emotion, and prosody;
 that makes it useful for authoring the input performance before tuning. The
@@ -157,6 +157,56 @@ The combined runner preserves both `*-raw-*.wav` and tuned `*.wav` cues. Its
 batch manifest points to each per-cue autotune sidecar. Advanced controls remain
 available through standalone `eprs autotune`, so an agent can make several
 treatments from one immutable synthetic performance without rerunning TTS.
+
+For high-fidelity cloning from Shane's explicitly authorized local reference,
+use the Qwen Base checkpoint. The runner requires the exact transcript and a
+consent note, withholds the private path from the manifest, verifies that the
+reference checksum remains unchanged, and computes the clone prompt once for
+the full bounded batch:
+
+```bash
+PATH=.eprs-local/qwen3-tts/bin:$PATH scripts/qwen3_tts_voice.py \
+  --model Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+  --mode voice-clone --device cpu \
+  --reference-audio .eprs-local/private-voice/reference-voice.wav \
+  --reference-text "Exact words spoken in the reference sample." \
+  --consent-note "Speaker owns this sample and authorizes this local EPRS voice test." \
+  --text "Knock on the green." --text "Let the whole tree know." \
+  --out-dir songs/the-listening-field/audio/qwen-clone-v1 --prefix green-voice
+```
+
+The default ICL route uses both the reference codes and speaker embedding for
+better likeness. `--x-vector-only` removes the transcript requirement but is a
+documented lower-fidelity fallback. Qwen cloning remains speech-first; use
+SoulX-Singer or a permitted singing conversion lane when the performance must
+carry authored notes and singer-like phrasing.
+
+## Use CuteTTS for compact high-similarity clone trials
+
+The official [CuteTTS repository](https://github.com/OPPO-Mente-Lab/CuteTTS)
+publishes a 230M-parameter Apache-2.0 speech model with explicit Apple Silicon
+support. It is a strong fast-control lane for Shane's consented local voice:
+the EPRS runner loads the model once per bounded batch, uses a new seed for
+each cue, hashes every model checkpoint and output, withholds the private
+reference path, and verifies that the reference remains unchanged.
+
+```bash
+.eprs-local/cutetts-env/bin/python scripts/cutetts_voice.py \
+  --model-dir .eprs-local/CuteTTS/model/CuteTTS \
+  --model-revision MODEL_REVISION --code-revision CODE_REVISION \
+  --reference-audio .eprs-local/private-voice/reference-voice.wav \
+  --consent-note "Speaker owns this sample and authorizes this local EPRS voice test." \
+  --text "Knock on the green." --text "Let the whole tree know." \
+  --out-dir songs/the-listening-field/audio/cutetts-clone-v1 \
+  --prefix green-voice --seed 20260830 --device mps
+```
+
+CuteTTS's current public API rebuilds reference conditioning for each cue, so
+the manifest records `reference_conditioning_reused: false`; EPRS does not
+claim an optimization the upstream interface cannot provide. Treat the raw
+output as speech, do a level-matched blind comparison with Qwen Base, and use
+the separate score-conditioned SoulX-Singer lane for authored singing. Keep
+the reference, clone renders, transcript, and private manifest outside Git.
 
 ## Use Raon-OpenTTS for a consented speech voice cue
 

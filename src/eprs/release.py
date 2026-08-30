@@ -26,6 +26,7 @@ VISIBILITY_INTENTS = {"private", "unlisted", "public"}
 YOUTUBE_TITLE_CHARACTERS = 100
 YOUTUBE_DESCRIPTION_BYTES = 5000
 YOUTUBE_TAG_CHARACTERS = 500
+DESCRIPTION_ASSEMBLY_POLICY = "append-missing-chapters-and-credits/v1"
 
 
 def _text(record: dict, key: str) -> str:
@@ -81,6 +82,32 @@ def _verify_youtube_text(title: str, description: str, tags: list[str]) -> None:
         raise ValueError("release YouTube tags exceed the 500-character API limit")
 
 
+def _has_description_section(description: str, heading: str) -> bool:
+    """Return whether a description contains a standalone plain or Markdown heading."""
+    expected = heading.casefold()
+    for line in description.splitlines():
+        candidate = line.strip()
+        while candidate.startswith("#"):
+            candidate = candidate[1:].lstrip()
+        if candidate.rstrip(":").strip().casefold() == expected:
+            return True
+    return False
+
+
+def _assemble_youtube_description(
+    description: str,
+    chapter_text: str,
+    credit_text: str,
+) -> str:
+    """Append reviewed chapter and credit blocks only when the author omitted them."""
+    blocks = [description.rstrip()]
+    if not _has_description_section(description, "Chapters"):
+        blocks.append(f"Chapters\n{chapter_text}")
+    if not _has_description_section(description, "Credits"):
+        blocks.append(f"Credits\n{credit_text}")
+    return "\n\n".join(blocks)
+
+
 def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     """Copy approved media and declared metadata into one immutable FINAL package."""
     song_path = Path(song).resolve()
@@ -112,6 +139,11 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
     video_master = video_metadata.get("master", {})
     if video_master.get("path") != str(master.resolve().relative_to(song_path)):
         raise ValueError("release master is not the approved master used by the YouTube video")
+    # Hash large immutable inputs once for this packaging operation. Copies are
+    # still hashed independently below, so provenance verification is not
+    # weakened and no digest survives beyond this call.
+    master_digest = sha256(master)
+    video_digest = sha256(video)
 
     asset_manifest = None
     asset_bundle = None
@@ -127,7 +159,7 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         asset_video = asset_bundle.get("recipe", {}).get("video", {})
         if (
             asset_video.get("path") != str(video.relative_to(song_path.resolve()))
-            or asset_video.get("sha256") != sha256(video)
+            or asset_video.get("sha256") != video_digest
         ):
             raise ValueError("release YouTube assets were not reviewed against the approved video")
 
@@ -255,19 +287,25 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                 "technical and automated quality checks cannot self-publish"
             )
 
+    # Sidecars are needed only after all semantic and public-release gates pass.
+    # Deferring these small hashes preserves actionable gate ordering for callers
+    # that provide mocked provenance records while still hashing each input once.
+    master_sidecar_digest = sha256(master_sidecar)
+    video_sidecar_digest = sha256(video_sidecar)
+
     sources = {
         "master": {
             "path": str(master.relative_to(song_path.resolve())),
-            "sha256": sha256(master),
+            "sha256": master_digest,
             "provenance_path": str(master_sidecar.relative_to(song_path.resolve())),
-            "provenance_sha256": sha256(master_sidecar),
+            "provenance_sha256": master_sidecar_digest,
             "recipe_id": master_metadata.get("recipe_id"),
         },
         "youtube_video": {
             "path": str(video.relative_to(song_path.resolve())),
-            "sha256": sha256(video),
+            "sha256": video_digest,
             "provenance_path": str(video_sidecar.relative_to(song_path.resolve())),
-            "provenance_sha256": sha256(video_sidecar),
+            "provenance_sha256": video_sidecar_digest,
             "recipe_id": video_metadata.get("recipe_id"),
         },
     }
@@ -305,6 +343,10 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
             "description": description,
             "tags": tags,
             "visibility_intent": visibility,
+            **(
+                {"description_assembly": DESCRIPTION_ASSEMBLY_POLICY}
+                if asset_bundle is not None else {}
+            ),
         },
         "audio_lineage": lineage,
         "recording_coverage": recording_coverage,
@@ -339,13 +381,20 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
         video_copy = temporary / f"{title_slug}-youtube{video.suffix.lower()}"
         shutil.copy2(master, master_copy)
         shutil.copy2(video, video_copy)
-        if sha256(master_copy) != sources["master"]["sha256"] or sha256(video_copy) != sources["youtube_video"]["sha256"]:
+        master_copy_digest = sha256(master_copy)
+        video_copy_digest = sha256(video_copy)
+        if (
+            master_copy_digest != sources["master"]["sha256"]
+            or video_copy_digest != sources["youtube_video"]["sha256"]
+        ):
             raise RuntimeError("FINAL release copy verification failed")
         copied_quality = None
+        copied_quality_digest = None
         if quality_report is not None:
             copied_quality = temporary / "creative-quality.json"
             shutil.copy2(quality_report, copied_quality)
-            if sha256(copied_quality) != sources["creative_quality"]["sha256"]:
+            copied_quality_digest = sha256(copied_quality)
+            if copied_quality_digest != sources["creative_quality"]["sha256"]:
                 raise RuntimeError("FINAL creative quality copy verification failed")
         copied_asset_artifacts = []
         if asset_manifest is not None and asset_bundle is not None:
@@ -353,19 +402,21 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
             asset_dir.mkdir()
             bundle_copy = asset_dir / "bundle.json"
             shutil.copy2(asset_manifest, bundle_copy)
-            if sha256(bundle_copy) != sources["youtube_assets"]["sha256"]:
+            bundle_copy_digest = sha256(bundle_copy)
+            if bundle_copy_digest != sources["youtube_assets"]["sha256"]:
                 raise RuntimeError("FINAL YouTube asset manifest copy verification failed")
             copied_asset_artifacts.append({
                 "source_role": "bundle",
                 "role": "YouTube asset bundle manifest",
                 "path": bundle_copy,
-                "sha256": sha256(bundle_copy),
+                "sha256": bundle_copy_digest,
             })
             for artifact in asset_bundle["artifacts"]:
                 source = asset_manifest.parent / artifact["path"]
                 copy = asset_dir / artifact["path"]
                 shutil.copy2(source, copy)
-                if sha256(copy) != artifact["sha256"]:
+                copy_digest = sha256(copy)
+                if copy_digest != artifact["sha256"]:
                     raise RuntimeError("FINAL YouTube asset copy verification failed")
                 role = {
                     "thumbnail": "approved YouTube thumbnail",
@@ -376,7 +427,7 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                     "source_role": artifact["role"],
                     "role": role,
                     "path": copy,
-                    "sha256": sha256(copy),
+                    "sha256": copy_digest,
                     **({"language": artifact["language"], "label": artifact["label"]}
                        if artifact["role"] == "captions" else {}),
                 })
@@ -407,8 +458,10 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
                     f"{natural_history_source['observation_url']}"
                 )
                 credit_text = f"{credit_text}\n{photo_credit}" if credit_text else photo_credit
-            upload_description = (
-                f"{description.rstrip()}\n\nChapters\n{chapter_text}\n\nCredits\n{credit_text}"
+            upload_description = _assemble_youtube_description(
+                description,
+                chapter_text,
+                credit_text,
             )
             asset_metadata = {
                 "asset_bundle": {
@@ -480,22 +533,22 @@ def package_release(spec: str | Path, song: str | Path) -> tuple[Path, Path]:
             "## Publication\n\nThis package was prepared locally. It has not been uploaded or published.\n"
         )
         artifacts = []
-        for path, role in (
-            (master_copy, "lossless master"),
-            (video_copy, "approved YouTube video"),
-            (metadata_file, "YouTube metadata"),
-            (notes_file, "human handoff notes"),
+        for path, role, digest in (
+            (master_copy, "lossless master", master_copy_digest),
+            (video_copy, "approved YouTube video", video_copy_digest),
+            (metadata_file, "YouTube metadata", None),
+            (notes_file, "human handoff notes", None),
         ):
             artifacts.append({
                 "role": role,
                 "path": str((destination / path.name).relative_to(song_path)),
-                "sha256": sha256(path),
+                "sha256": digest or sha256(path),
             })
         if copied_quality is not None:
             artifacts.append({
                 "role": "creative quality report",
                 "path": str((destination / copied_quality.name).relative_to(song_path)),
-                "sha256": sha256(copied_quality),
+                "sha256": copied_quality_digest,
             })
         for item in copied_asset_artifacts:
             artifacts.append({

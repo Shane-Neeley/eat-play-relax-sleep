@@ -106,6 +106,14 @@ class SystemTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsafe version probe"):
                 load_toolchain(registry_path)
 
+    def test_doctor_can_skip_versions_without_changing_availability(self):
+        with patch("eprs.system._command_version", return_value="fixture 1.0") as probe:
+            report = doctor(include_versions=False)
+        probe.assert_not_called()
+        self.assertTrue(report["commands"]["python3"])
+        self.assertTrue(report["capabilities"]["song_workspace"])
+        self.assertTrue(all(not tool["versions"] for tool in report["tools"]))
+
     def test_doctor_can_gate_an_optional_provider_on_python_modules(self):
         with tempfile.TemporaryDirectory() as folder:
             registry_path = Path(folder) / "toolchain.json"

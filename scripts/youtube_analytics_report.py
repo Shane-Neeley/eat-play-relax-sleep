@@ -31,6 +31,12 @@ VIDEO_METRICS = (
     "views,engagedViews,estimatedMinutesWatched,averageViewDuration,"
     "averageViewPercentage,subscribersGained"
 )
+RETENTION_DIMENSION = "elapsedVideoTimeRatio"
+RETENTION_METRICS = (
+    "audienceWatchRatio,relativeRetentionPerformance,startedWatching,"
+    "stoppedWatching,totalSegmentImpressions"
+)
+MAX_RETENTION_VIDEOS = 10
 
 
 def _iso_date(value: str) -> str:
@@ -66,6 +72,24 @@ def query_parameters(
     return payload
 
 
+def retention_query_parameters(
+    start_date: str,
+    end_date: str,
+    video_id: str,
+) -> dict[str, Any]:
+    """Build a single-video audience-retention query without contacting Google."""
+    if not video_id or any(character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for character in video_id):
+        raise ValueError("video_id must contain only YouTube ID characters")
+    payload = query_parameters(
+        start_date,
+        end_date,
+        RETENTION_METRICS,
+        dimensions=RETENTION_DIMENSION,
+    )
+    payload["filters"] = f"video=={video_id}"
+    return payload
+
+
 def _load_credentials(token_path: Path):
     """Load an existing token, refusing to silently re-authorize it."""
     try:
@@ -95,8 +119,14 @@ def _load_credentials(token_path: Path):
     return credentials
 
 
-def run_report(start_date: str, end_date: str, token_path: Path) -> dict[str, Any]:
-    """Fetch summary and per-video rows from the channel-owner API."""
+def run_report(
+    start_date: str,
+    end_date: str,
+    token_path: Path,
+    *,
+    retention_videos: list[str] | None = None,
+) -> dict[str, Any]:
+    """Fetch summary, per-video rows, and optional single-video retention rows."""
     try:
         from googleapiclient.discovery import build
         from googleapiclient.errors import HttpError
@@ -117,6 +147,12 @@ def run_report(start_date: str, end_date: str, token_path: Path) -> dict[str, An
     try:
         summary = service.reports().query(**summary_query).execute()
         videos = service.reports().query(**video_query).execute()
+        retention = {
+            video_id: service.reports()
+            .query(**retention_query_parameters(start_date, end_date, video_id))
+            .execute()
+            for video_id in (retention_videos or [])
+        }
     except HttpError as exc:
         detail = exc.content.decode("utf-8", errors="replace") if exc.content else str(exc)
         raise SystemExit(f"YouTube Analytics API error {exc.resp.status}: {detail}") from exc
@@ -127,6 +163,7 @@ def run_report(start_date: str, end_date: str, token_path: Path) -> dict[str, An
         "end_date": end_date,
         "summary": summary,
         "videos": videos,
+        "retention": retention,
     }
 
 
@@ -135,6 +172,13 @@ def parser() -> argparse.ArgumentParser:
     command.add_argument("--start-date", required=True, type=_iso_date)
     command.add_argument("--end-date", required=True, type=_iso_date)
     command.add_argument("--token", default=os.getenv("YOUTUBE_TOKEN", str(DEFAULT_TOKEN)))
+    command.add_argument(
+        "--retention-video",
+        action="append",
+        default=[],
+        metavar="VIDEO_ID",
+        help=f"include audience retention for one video; repeat up to {MAX_RETENTION_VIDEOS} times",
+    )
     return command
 
 
@@ -142,7 +186,17 @@ def main() -> None:
     args = parser().parse_args()
     if args.start_date > args.end_date:
         raise SystemExit("--start-date must be on or before --end-date")
-    report = run_report(args.start_date, args.end_date, Path(args.token).expanduser())
+    if len(args.retention_video) > MAX_RETENTION_VIDEOS:
+        raise SystemExit(f"--retention-video may be repeated at most {MAX_RETENTION_VIDEOS} times")
+    try:
+        report = run_report(
+            args.start_date,
+            args.end_date,
+            Path(args.token).expanduser(),
+            retention_videos=args.retention_video,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     print(json.dumps(report, indent=2, sort_keys=True))
 
 

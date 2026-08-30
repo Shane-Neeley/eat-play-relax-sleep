@@ -28,8 +28,9 @@ An optional song-relative `youtube_assets` path selects one separately reviewed
 thumbnail/caption/chapter bundle made against the same approved video. Both
 the generated title-card `eprs.youtube-render/v1` path and reviewed-picture
 `eprs.youtube-render/v2` path are accepted. When
-present, every asset is copied under FINAL, chapters and credits are assembled
-into the upload description, and normalized paths/checksums are added to
+present, every asset is copied under FINAL, missing chapter and credit sections
+are appended to the upload description without duplicating authored standalone
+headings, and normalized paths/checksums are added to
 `youtube-metadata.json`. See [YouTube publishing assets](YOUTUBE_ASSETS.md).
 The resulting
 `eprs.release-package/v1` manifest binds source provenance and every copied

@@ -14,6 +14,22 @@ uv run scripts/youtube_analytics_report.py \
   --start-date 2026-08-01 --end-date 2026-08-28
 ```
 
+For bounded single-video audience retention, repeat `--retention-video` (up
+to ten IDs). The helper requests the segmented retention report and remains
+read-only:
+
+```bash
+uv run scripts/youtube_analytics_report.py \
+  --start-date 2026-08-23 --end-date 2026-08-30 \
+  --retention-video rVODlMNRArU
+```
+
+Retention rows are keyed by `elapsedVideoTimeRatio` and include
+`audienceWatchRatio`, `relativeRetentionPerformance`, `startedWatching`,
+`stoppedWatching`, and `totalSegmentImpressions`. YouTube requires the
+retention report to target one video per query, so the CLI bounds repeated IDs
+to keep quota use predictable.
+
 It requires the existing YouTube token to contain
 `https://www.googleapis.com/auth/yt-analytics.readonly`. If it does not, the
 helper stops and asks for the approved one-time YouTube auth flow; it never

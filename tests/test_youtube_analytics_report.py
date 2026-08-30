@@ -1,3 +1,4 @@
+import argparse
 import importlib.util
 from pathlib import Path
 import unittest
@@ -37,8 +38,24 @@ class YouTubeAnalyticsReportTests(unittest.TestCase):
         self.assertEqual(query["maxResults"], 50)
         self.assertIn("averageViewPercentage", query["metrics"])
 
+    def test_retention_query_is_single_video_and_segmented(self):
+        query = REPORT.retention_query_parameters(
+            "2026-08-23",
+            "2026-08-30",
+            "rVODlMNRArU",
+        )
+        self.assertEqual(query["ids"], "channel==MINE")
+        self.assertEqual(query["dimensions"], "elapsedVideoTimeRatio")
+        self.assertEqual(query["filters"], "video==rVODlMNRArU")
+        self.assertIn("audienceWatchRatio", query["metrics"])
+        self.assertIn("stoppedWatching", query["metrics"])
+
+    def test_retention_query_rejects_unsafe_video_id(self):
+        with self.assertRaises(ValueError):
+            REPORT.retention_query_parameters("2026-08-23", "2026-08-30", "not safe")
+
     def test_invalid_date_is_rejected(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(argparse.ArgumentTypeError):
             REPORT._iso_date("2026-02-30")
 
 

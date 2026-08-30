@@ -291,8 +291,11 @@ def doctor(
     extensions: list[str | Path] | None = None,
     workflows: list[str] | None = None,
     required_capabilities: list[str] | None = None,
+    include_versions: bool = True,
 ) -> dict:
     """Inspect the versioned toolchain registry without installing anything."""
+    if not isinstance(include_versions, bool):
+        raise ValueError("doctor include_versions must be a boolean")
     registry_path = Path(toolchain)
     extension_paths = toolchain_extension_paths(registry_path, extensions)
     registry = load_toolchain(registry_path, extensions=extension_paths)
@@ -332,12 +335,15 @@ def doctor(
                 commands[name] = found
                 if found:
                     located.append(found)
-                    if tool_id == "python" and name == "python3" and found == sys.executable:
-                        version = f"Python {platform.python_version()}"
-                    else:
-                        version = _command_version(found, command_record.get("version_args", []))
-                    if version:
-                        versions[name] = version
+                    if include_versions:
+                        if tool_id == "python" and name == "python3" and found == sys.executable:
+                            version = f"Python {platform.python_version()}"
+                        else:
+                            version = _command_version(
+                                found, command_record.get("version_args", [])
+                            )
+                        if version:
+                            versions[name] = version
             available = len(located) == len(command_records)
         elif applicable:
             configured_paths = record.get("paths", [])
