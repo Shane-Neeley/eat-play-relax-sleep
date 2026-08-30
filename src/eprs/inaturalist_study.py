@@ -101,9 +101,44 @@ def _attacks(frames: list[tuple[float, float, float]]) -> list[float]:
     return attacks
 
 
-def _autocorrelation_pitch(samples: array) -> float | None:
+def _activity_window(frames: list[tuple[float, float, float]]) -> tuple[float, float, float] | None:
+    """Return the prominent activity envelope, not a claimed event boundary.
+
+    Wildlife recordings often contain long quiet beds before a call.  A fixed
+    peak-relative threshold gives the study a reproducible listening window
+    without treating every low-level noise floor sample as musical material.
+    The threshold is intentionally conservative and is reported with the
+    result so downstream authors can judge it.
+    """
+    if not frames:
+        return None
+    energies = [energy for _, energy, _ in frames]
+    peak = max(energies, default=0.0)
+    if peak <= 1e-7:
+        return None
+    threshold = max(1e-7, peak * 0.08)
+    active_indices = [index for index, energy in enumerate(energies) if energy >= threshold]
+    if not active_indices:
+        return None
+    first = active_indices[0]
+    last = active_indices[-1]
+    return (
+        frames[first][0],
+        frames[last][0] + FRAME_SECONDS,
+        threshold,
+    )
+
+
+def _autocorrelation_pitch(
+    samples: array,
+    *,
+    start_seconds: float = 0.0,
+    end_seconds: float | None = None,
+) -> float | None:
     """Return a rough F0 for tonal material, or None for noise/ambiguous audio."""
-    window = list(samples[:round(0.12 * ANALYSIS_RATE)])
+    start = max(0, round(start_seconds * ANALYSIS_RATE))
+    end = len(samples) if end_seconds is None else min(len(samples), round(end_seconds * ANALYSIS_RATE))
+    window = list(samples[start:end][:round(0.12 * ANALYSIS_RATE)])
     if len(window) < round(0.04 * ANALYSIS_RATE):
         return None
     mean = sum(window) / len(window)
@@ -224,6 +259,7 @@ def study_inaturalist_sound(
     samples = _decode(source_path, duration)
     frames = _frames(samples)
     attacks = _attacks(frames)
+    activity = _activity_window(frames)
     spacing = [right - left for left, right in zip(attacks, attacks[1:])]
     median_spacing = _median(spacing)
     spacing_cv = None
@@ -233,7 +269,14 @@ def study_inaturalist_sound(
         spacing_cv = round(deviation / max(mean, 1e-9), 4)
     energy_values = [energy for _, energy, _ in frames]
     active = [energy for energy in energy_values if energy > 1e-7]
-    f0 = _autocorrelation_pitch(samples)
+    f0 = _autocorrelation_pitch(
+        samples,
+        start_seconds=activity[0] if activity else 0.0,
+        end_seconds=activity[1] if activity else None,
+    )
+    activity_threshold_db = (
+        round(20 * math.log10(max(activity[2], 1e-7)), 3) if activity else None
+    )
     metrics = {
         "duration_seconds": round(duration, 4),
         "analysis_sample_rate": ANALYSIS_RATE,
@@ -245,6 +288,13 @@ def study_inaturalist_sound(
         "median_zero_crossing_rate": round(_median([item[2] for item in frames]) or 0.0, 4),
         "peak_energy": round(max(energy_values, default=0.0), 6),
         "active_energy_db": round(20 * math.log10(max(_median(active) or 1e-7, 1e-7)), 3),
+        "activity_window_seconds": (
+            [round(activity[0], 4), round(activity[1], 4)] if activity else None
+        ),
+        "activity_duration_seconds": (
+            round(activity[1] - activity[0], 4) if activity else 0.0
+        ),
+        "activity_threshold_db": activity_threshold_db,
         "f0_hz": round(f0, 3) if f0 is not None else None,
         "f0_midi": _midi(f0),
     }

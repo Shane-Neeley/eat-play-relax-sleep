@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from eprs.inaturalist_audio import download_inaturalist_sound
 from eprs.bioacoustic_models import MODEL_CATALOG_SCHEMA, bioacoustic_model_catalog
-from eprs.inaturalist_study import STUDY_SCHEMA, study_inaturalist_sound
+from eprs.inaturalist_study import STUDY_SCHEMA, _activity_window, study_inaturalist_sound
 from eprs.system import new_song
 
 
@@ -76,6 +76,21 @@ def observation_payload() -> bytes:
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg is required")
 class INaturalistStudyTests(unittest.TestCase):
+    def test_activity_window_ignores_quiet_lead_in_and_reports_threshold(self):
+        frames = [
+            (0.00, 0.0002, 0.1),
+            (0.01, 0.0004, 0.1),
+            (0.02, 0.0100, 0.2),
+            (0.03, 0.0080, 0.2),
+            (0.04, 0.0003, 0.1),
+        ]
+        activity = _activity_window(frames)
+        self.assertIsNotNone(activity)
+        assert activity is not None
+        self.assertEqual(activity[0], 0.02)
+        self.assertEqual(activity[1], 0.055)
+        self.assertAlmostEqual(activity[2], 0.0008)
+
     def test_model_catalog_marks_open_tools_and_frontier_boundaries(self):
         catalog = bioacoustic_model_catalog()
         self.assertEqual(catalog["schema"], MODEL_CATALOG_SCHEMA)
@@ -117,6 +132,9 @@ class INaturalistStudyTests(unittest.TestCase):
             self.assertTrue(manifest.is_file())
             self.assertEqual(record["schema"], STUDY_SCHEMA)
             self.assertEqual(record["source"]["iNaturalist"]["sound_id"], 2114662)
+            self.assertEqual(record["metrics"]["activity_window_seconds"], [0.0, 0.475])
+            self.assertGreater(record["metrics"]["activity_duration_seconds"], 0)
+            self.assertIsNotNone(record["metrics"]["activity_threshold_db"])
             self.assertEqual(record["creative_map"]["lyrics"]["subject"], "Budgerigar")
             self.assertEqual(record["bioacoustic_ai"]["schema"], MODEL_CATALOG_SCHEMA)
             self.assertEqual(
