@@ -450,6 +450,55 @@ fn disk(distanceValue: f32, radius: f32, aa: f32) -> f32 {
     color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.26);
   }
 
+  if (motif > 14.5 && motif < 15.5) {
+    // Floor pulse: four offset pucks and partial turn arcs make a body-first
+    // dance floor visible without drawing a waveform, equalizer, or UI. The
+    // pucks shift on different phase rates so the 2+2+2+3 tail can feel like a
+    // weight transfer rather than a uniform radial pulse.
+    let aa = max((1.0 / resolution.y) * 1.35, 0.0010);
+    let floorPhase = time * (0.78 + bass * 0.12) + fract(seed * 0.000001);
+    let drift = vec2f(cos(floorPhase * 0.48), sin(floorPhase * 0.63)) * 0.055;
+    let centerA = vec2f(-0.31, 0.12) + drift;
+    let centerB = vec2f(0.25, 0.17) + vec2f(sin(floorPhase * 0.54), cos(floorPhase * 0.42)) * 0.07;
+    let centerC = vec2f(-0.19, -0.22) + vec2f(cos(floorPhase * 0.37), sin(floorPhase * 0.52)) * 0.06;
+    let centerD = vec2f(0.31, -0.20) + vec2f(sin(floorPhase * 0.29), cos(floorPhase * 0.46)) * 0.05;
+    let distanceA = length(point - centerA);
+    let distanceB = length(point - centerB);
+    let distanceC = length(point - centerC);
+    let distanceD = length(point - centerD);
+    let puckA = disk(distanceA, 0.066 + bass * 0.018, aa);
+    let puckB = disk(distanceB, 0.052 + mids * 0.014, aa);
+    let puckC = disk(distanceC, 0.060 + highs * 0.012, aa);
+    let puckD = disk(distanceD, 0.045 + bass * 0.016, aa);
+    let ringA = stroke(distanceA - (0.102 + bass * 0.026), 0.006, aa)
+      * (0.42 + 0.58 * smoothstep(-0.30, 0.56, sin(atan2(point.y - centerA.y, point.x - centerA.x) - floorPhase * 1.11)));
+    let ringB = stroke(distanceB - (0.086 + mids * 0.018), 0.0045, aa)
+      * (0.36 + 0.64 * smoothstep(-0.22, 0.62, sin(atan2(point.y - centerB.y, point.x - centerB.x) + floorPhase * 0.83)));
+    let ringC = stroke(distanceC - (0.092 + highs * 0.014), 0.005, aa)
+      * (0.35 + 0.65 * smoothstep(-0.12, 0.72, cos(atan2(point.y - centerC.y, point.x - centerC.x) - floorPhase * 0.67)));
+    let ringD = stroke(distanceD - (0.072 + bass * 0.020), 0.004, aa)
+      * (0.30 + 0.70 * smoothstep(-0.18, 0.62, sin(atan2(point.y - centerD.y, point.x - centerD.x) + floorPhase * 1.42)));
+    let turnArc = stroke(point.y - (point.x * 0.54 + sin(floorPhase * 0.58) * 0.11), 0.004, aa)
+      * smoothstep(-0.36, 0.44, point.x);
+    let counterArc = stroke(point.y + (point.x * 0.32 - cos(floorPhase * 0.44) * 0.12), 0.0025, aa)
+      * smoothstep(0.48, -0.18, point.x);
+    let floorRail = stroke(point.y + 0.40 + sin(point.x * 4.0 + floorPhase) * 0.018, 0.002, aa)
+      * smoothstep(0.72, 0.04, abs(point.x));
+    color = params.palette0.xyz * (0.050 + 0.022 * bass) + params.palette3.xyz * 0.020;
+    color += params.palette1.xyz * puckA * (0.52 + bass * 0.62);
+    color += params.palette2.xyz * puckB * (0.36 + mids * 0.44);
+    color += params.palette3.xyz * puckC * (0.42 + highs * 0.56);
+    color += params.palette1.xyz * puckD * (0.34 + bass * 0.48);
+    color += params.palette1.xyz * ringA * (0.46 + bass * 0.58);
+    color += params.palette2.xyz * ringB * (0.38 + mids * 0.42);
+    color += params.palette3.xyz * ringC * (0.36 + highs * 0.50);
+    color += params.palette1.xyz * ringD * (0.34 + bass * 0.44);
+    color += params.palette2.xyz * turnArc * (0.16 + mids * 0.32);
+    color += params.palette3.xyz * counterArc * (0.12 + highs * 0.28);
+    color += params.palette2.xyz * floorRail * 0.24;
+    color = color / (vec3f(1.0, 1.0, 1.0) + color * 0.22);
+  }
+
   let vignette = smoothstep(1.05, 0.18, radius);
   color *= vignette * 2.0;
   color = max(color, vec3f(0.0, 0.0, 0.0));
@@ -542,6 +591,7 @@ function paramsFor(spec, controls, index, width, height) {
     "particle-trails": 12,
     "hard-light": 13,
     "mountain-river-light": 14,
+    "floor-pulse": 15,
   };
   return {
     resolution: [width, height, 1 / width, 1 / height],

@@ -46,9 +46,12 @@ class VisualPromptTests(unittest.TestCase):
         self.assertEqual(cloud["motif"], "cloud-braid")
         self.assertEqual(meadow["world"], "meadow")
         self.assertEqual(meadow["motif"], "cricket-pulse")
+        floor = compile_prompt("body-first dance floor with four floor pucks and a weight shift", "Floor", 19)
         self.assertEqual(meadow["palette"], PALETTES["meadow"])
         self.assertEqual(validate_spec(meadow)["world"], "meadow")
         self.assertEqual(validate_spec(paper)["motif"], "paper-score")
+        self.assertEqual(floor["motif"], "floor-pulse")
+        self.assertEqual(validate_spec(floor)["motif"], "floor-pulse")
 
     def test_score_round_trip(self):
         with tempfile.TemporaryDirectory() as folder:

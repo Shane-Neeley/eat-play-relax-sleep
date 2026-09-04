@@ -85,6 +85,8 @@ def compile_prompt(prompt: str, title: str, seed: int = 1) -> dict:
         score["motif"] = "screenprint-count"
     elif any(word in lowered for word in ("mountain", "himalaya", "nepal", "glacier", "river light", "lantern river")):
         score["motif"] = "mountain-river-light"
+    elif any(word in lowered for word in ("floor puck", "floor-puck", "dance floor", "body-first", "weight shift")):
+        score["motif"] = "floor-pulse"
     elif "pull me in" in lowered or "pull-in" in lowered or "invitation" in lowered:
         score["motif"] = "pull-me-in"
     elif any(word in lowered for word in ("jamaica", "jamaican", "reggae", "dancehall")):
@@ -104,7 +106,7 @@ def validate_spec(candidate: dict) -> dict:
         raise ValueError("visual score must use schema eprs.visual/v1")
     if candidate.get("world") not in {"portal", "ribbons", "constellation", "meadow"}:
         raise ValueError("visual world must be portal, ribbons, constellation, or meadow")
-    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid", "screenprint-count", "squirrel-pines", "cricket-pulse", "eclipse-shadow", "paper-pond", "tide-pool", "liquid-glass", "caustic-cipher", "prism-beams", "particle-trails", "hard-light", "mountain-river-light"}:
+    if candidate.get("motif") not in {None, "octopus-ink", "pillow-fight", "pull-me-in", "jamaica-reggae", "paper-score", "rare-signal-atlas", "five-pane-door", "magnetic-dust", "cloud-braid", "screenprint-count", "squirrel-pines", "cricket-pulse", "eclipse-shadow", "paper-pond", "tide-pool", "liquid-glass", "caustic-cipher", "prism-beams", "particle-trails", "hard-light", "mountain-river-light", "floor-pulse"}:
         raise ValueError("visual motif is not supported by the renderer")
     cards = candidate.get("cards")
     if cards is not None:
