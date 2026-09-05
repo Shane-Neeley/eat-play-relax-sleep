@@ -96,3 +96,20 @@ class AutotuneControlTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class AuthoredMelodyTests(unittest.TestCase):
+    def test_timed_targets_preserve_gaps_consonants_and_exact_boundaries(self):
+        from eprs.autotune import authored_targets
+        melody=[{'start_seconds':.1,'end_seconds':.3,'midi':62},
+                {'start_seconds':.3,'end_seconds':.5,'midi':65}]
+        self.assertEqual(authored_targets([60,None,61,62,63,64],[0,.1,.2,.3,.4,.5],melody,.6),
+                         [60,None,62,65,65,64])
+
+    def test_invalid_note_maps_fail_closed(self):
+        from eprs.autotune import authored_targets
+        for melody in [[],[{'start_seconds':0,'end_seconds':2,'midi':62}],
+                       [{'start_seconds':0,'end_seconds':.5,'midi':float('nan')}],
+                       [{'start_seconds':0,'end_seconds':.5,'midi':62},
+                        {'start_seconds':.4,'end_seconds':.8,'midi':65}]]:
+            with self.assertRaises(ValueError):
+                authored_targets([60],[0],melody,1)

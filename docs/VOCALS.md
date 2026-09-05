@@ -369,3 +369,19 @@ These are signal-integrity repairs, not demonstrated voice-likeness or singing
 improvements. The optional real-WORLD regression suite is
 `tests/test_autotune_render.py`. The upstream minimum-rate constraint is in
 https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder.
+
+For an exact melody rather than nearest-scale correction, pass `--melody notes.json`.
+The file is an ordered JSON array, for example:
+
+```json
+[{"start_seconds":0,"end_seconds":0.6,"midi":50},
+ {"start_seconds":0.68,"end_seconds":1.28,"midi":53}]
+```
+
+Use `--preset hard-step` for exact voiced-frame targets, or tune strength and
+retune time for a softer approach. These explicit pitches override key/scale
+quantization. Gaps keep their source pitch, and unvoiced frames keep their
+source audio. Notes cannot overlap or extend past the source. The complete
+map is preserved in the render sidecar. This controls pitch, not syllable timing,
+voice identity, intelligibility or aesthetic quality; author timing before this
+stage and review the result in context.

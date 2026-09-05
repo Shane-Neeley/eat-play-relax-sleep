@@ -955,6 +955,7 @@ def parser() -> argparse.ArgumentParser:
     autotune.add_argument("--minimum-note-ms", type=float)
     autotune.add_argument("--wet", type=float, help="Processed balance from 0 to 1")
     autotune.add_argument("--formant-shift-semitones", type=float)
+    autotune.add_argument("--melody", help="JSON array of start_seconds/end_seconds/midi notes; overrides scale targets")
     autotune.add_argument("--output-gain-db", type=float)
     autotune.add_argument("--f0-floor-hz", type=float)
     autotune.add_argument("--f0-ceil-hz", type=float)
@@ -1946,6 +1947,7 @@ def _run_main(argv: list[str] | None = None) -> int:
             )
             destination, sidecar, metadata = render_autotune(
                 args.source, args.out, settings, intent=args.intent,
+                melody=json.loads(Path(args.melody).read_text()) if args.melody else None,
             )
             print(json.dumps({
                 "audio": str(destination),

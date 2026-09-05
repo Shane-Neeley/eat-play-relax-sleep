@@ -7,6 +7,7 @@ only when a render is requested so ordinary EPRS commands remain portable.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
+from bisect import bisect_left
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -185,6 +186,37 @@ def corrected_midi_track(
     return corrected
 
 
+def authored_targets(midi_values: Sequence[float | None], times: Sequence[float],
+                     melody: list[dict], duration: float) -> list[float | None]:
+    """Bind voiced frames to explicit notes; leave gaps and consonants alone."""
+    if not isinstance(melody, list) or not melody or len(melody) > 4096:
+        raise ValueError("melody must contain 1–4096 timed notes")
+    if len(midi_values) != len(times):
+        raise ValueError("melody pitch frames and timestamps must align")
+    previous_end = 0.0
+    notes = []
+    for event in melody:
+        if not isinstance(event, dict):
+            raise ValueError("each melody note must be an object")
+        values = [event.get(k) for k in ("start_seconds", "end_seconds", "midi")]
+        if any(isinstance(v, bool) or not isinstance(v, (float, int))
+               or not math.isfinite(v) for v in values):
+            raise ValueError("melody times and MIDI pitches must be finite numbers")
+        start, end, note = values
+        if not previous_end <= start < end <= duration or not 0 <= note <= 127:
+            raise ValueError("melody notes must be ordered, non-overlapping and inside the audio")
+        notes.append((start, end, note))
+        previous_end = end
+    result = list(midi_values)
+    cursor = 0
+    for i, (midi, time) in enumerate(zip(midi_values, times)):
+        while cursor < len(notes) and time >= notes[cursor][1]:
+            cursor += 1
+        if cursor < len(notes) and notes[cursor][0] <= time < notes[cursor][1] and midi is not None:
+            result[i] = float(notes[cursor][2])
+    return result
+
+
 def settings_for(
     preset: str,
     *,
@@ -235,6 +267,7 @@ def render_autotune(
     settings: AutotuneSettings,
     *,
     intent: str,
+    melody: list[dict] | None = None,
 ) -> tuple[Path, Path, dict[str, Any]]:
     """Render a new tuned WAV and checksum-bearing sidecar."""
     if not intent.strip():
@@ -295,12 +328,26 @@ def render_autotune(
         switch_hysteresis_cents=settings.switch_hysteresis_cents,
         minimum_note_ms=settings.minimum_note_ms,
     )
+    if melody is not None:
+        targets = authored_targets(midi_values, temporal_positions, melody, len(audio) / sample_rate)
     corrected = corrected_midi_track(
         midi_values, targets,
         correction_strength=settings.correction_strength,
         retune_ms=settings.retune_ms,
         frame_period_ms=settings.frame_period_ms,
     )
+    if melody is not None:
+        # Restart retune state per authored note, so it cannot drag a pitch
+        # correction through an intentionally unscored gap.
+        corrected = list(midi_values)
+        for event in melody:
+            start = bisect_left(temporal_positions, event["start_seconds"])
+            end = bisect_left(temporal_positions, event["end_seconds"])
+            corrected[start:end] = corrected_midi_track(
+                midi_values[start:end], targets[start:end],
+                correction_strength=settings.correction_strength,
+                retune_ms=settings.retune_ms, frame_period_ms=settings.frame_period_ms,
+            )
     tuned_f0 = np.array([
         440 * (2 ** ((midi - 69) / 12)) if midi is not None else 0.0
         for midi in corrected
@@ -353,6 +400,7 @@ def render_autotune(
         "intent": intent.strip(),
         "source": {"path": str(source_requested), "sha256": sha256(source_path)},
         "settings": asdict(settings),
+        "authored_melody": melody,
         "analysis": {
             "sample_rate": sample_rate,
             "channels": audio.shape[1],
