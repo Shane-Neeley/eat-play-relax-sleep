@@ -8,6 +8,8 @@ to one useful next place.
 
 - [Daily and on-demand producer](PRODUCER.md) — varied music, shared run ownership,
   actual engine renders, vocal checks and honestly attributed release review.
+- [Complete-word singing](SINGING.md) — consented voice references, validated
+  SoulX scores, preserved phrase endings and intelligibility checks.
 - [Getting started](GETTING_STARTED.md) — install the project, open Beat Lab,
   make the first song workspace, and understand the next safe action.
 - [Ask an agent for a tune](AGENTIC_TUNE.md) — a copyable OpenClaw-style
