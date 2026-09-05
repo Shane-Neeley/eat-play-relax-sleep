@@ -55,7 +55,12 @@ class OptionalMusicLaneTests(unittest.TestCase):
         for profile_id in expected:
             profile = loaded[profile_id]
             self.assertTrue(set(profile["capabilities"]) <= set(providers[profile["provider"]]["capabilities"]))
-            self.assertTrue(all(handoff["requires_user_operation"] for handoff in profile["handoffs"]))
+            for handoff in profile["handoffs"]:
+                if profile_id == "supercollider-audio-server" and handoff["id"] == "render-native-nrt":
+                    self.assertFalse(handoff["requires_user_operation"])
+                    self.assertEqual(handoff["automation"], "cli")
+                else:
+                    self.assertTrue(handoff["requires_user_operation"])
 
     def test_raon_runner_exposes_consent_and_speech_boundaries(self):
         completed = subprocess.run(

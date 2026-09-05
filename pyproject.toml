@@ -15,6 +15,17 @@ dependencies = []
 # for deterministic frame QA and avoids pulling GUI/native OpenCV stacks into
 # every EPRS environment.
 opencv = ["opencv-python-headless>=4.11,<5"]
+# Short-event ranking for field recordings.  Heavy model runtimes remain
+# isolated lab installs; this extra provides only the deterministic fusion
+# layer and its audio/numerical primitives.
+bioacoustic = [
+    "numpy>=2,<3",
+    "scipy>=1.13,<2",
+    "soundfile>=0.12,<1",
+]
+# Pedalboard is kept optional because its GPL-3.0 runtime and native wheel are
+# useful for local effects work but should not be forced into every EPRS install.
+pedalboard = ["pedalboard==0.9.24"]
 
 [project.scripts]
 eprs = "eprs.cli:main"
@@ -23,7 +34,7 @@ eprs = "eprs.cli:main"
 where = ["src"]
 
 [tool.setuptools.data-files]
-"share/eprs" = ["config/toolchain.json"]
+"share/eprs" = ["config/toolchain.json", "config/producer.json"]
 "share/eprs/adapters" = ["config/adapters/*.json"]
 
 [tool.ruff]
@@ -45,16 +56,20 @@ include = [
     "src/eprs/__init__.py",
     "src/eprs/audio.py",
     "src/eprs/beat.py",
+    "src/eprs/bioacoustic_detector.py",
     "src/eprs/cli.py",
     "src/eprs/delivery.py",
     "src/eprs/frontier.py",
     "src/eprs/inaturalist_audio.py",
     "src/eprs/inaturalist_photo.py",
     "src/eprs/inaturalist_study.py",
+    "src/eprs/source_audit.py",
     "src/eprs/interchange.py",
     "src/eprs/lineage.py",
     "src/eprs/master.py",
+    "src/eprs/manifest.py",
     "src/eprs/production_map.py",
+    "src/eprs/pedalboard_fx.py",
     "src/eprs/quality.py",
     "src/eprs/runtime.py",
     "src/eprs/selection.py",

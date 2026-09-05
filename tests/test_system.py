@@ -140,6 +140,10 @@ class SystemTests(unittest.TestCase):
             report = doctor(registry_path)
             providers = {item["id"]: item for item in report["tools"]}
             self.assertTrue(providers["module-provider"]["available"])
+            # Optional module checks must describe the same interpreter as the
+            # running import probe, not an unrelated python3 found on PATH.
+            import sys
+            self.assertEqual(providers["module-provider"]["located"], [sys.executable])
             self.assertFalse(providers["missing-module-provider"]["available"])
             self.assertEqual(
                 providers["missing-module-provider"]["python_modules"],

@@ -357,3 +357,15 @@ paragraph. The better long-term singing candidates remain score-conditioned
 singing models such as [SoulX-Singer](https://huggingface.co/Soul-AILab/SoulX-Singer)
 and singing voice conversion such as [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc);
 they need a separate hardware, model-license, and reproducibility evaluation.
+
+## WORLD repair (2026-09-05)
+
+Rendering now validates settings even for direct Python callers, rejects
+non-finite samples and rates below 16 kHz, analyzes the highest-energy channel
+instead of a cancelling stereo average, and crossfades original unvoiced
+material around voiced-frame boundaries to preserve consonants and breath.
+The output receipt records the analysis channel and unvoiced preservation.
+These are signal-integrity repairs, not demonstrated voice-likeness or singing
+improvements. The optional real-WORLD regression suite is
+`tests/test_autotune_render.py`. The upstream minimum-rate constraint is in
+https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder.

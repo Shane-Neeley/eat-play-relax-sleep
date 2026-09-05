@@ -12,15 +12,21 @@ public video journal for the project. You can also visit
 
 ## The idea in one minute
 
-EPRS is the layer around creative tools—not a single music model and not a
-magic “make me a song” button. A brief becomes a bounded request, then a
-small experiment, a reviewed artifact, and only after explicit approval a
-release package.
+EPRS lets an agent produce music across different creative tools. A prompt
+becomes contrasting sketches, an authored arrangement, a reviewed master and
+video, and an authorized release. Daily and on-demand runs share a small
+production coordinator while native sessions and deeper tools stay available.
+
+Start with [the producer workflow](docs/PRODUCER.md): `eprs produce brief`
+suggests exploratory routes, `produce start` prevents competing runs, and
+`produce advance` preserves stage evidence. Favorites provide occasional
+context without defining the next song's style.
 
 The system is designed to make it possible to ask:
 
 - What did the agent actually change?
 - Which source, seed, settings, and tool produced this result?
+- Which methods were used, rejected, or never evidenced—and why?
 - What remains for a human to hear, play, decide, or approve?
 - Can another person or agent continue without guessing?
 
@@ -28,15 +34,17 @@ The system is designed to make it possible to ask:
 
 | If you want to… | Start here |
 | --- | --- |
+| Produce a song daily or whenever inspiration arrives | [Agentic producer](docs/PRODUCER.md) |
 | Make your first local study | [Getting started](docs/GETTING_STARTED.md) |
 | Ask OpenClaw or another agent for a bounded tune | [Agentic tune walkthrough](docs/AGENTIC_TUNE.md) |
 | See how the tools fit together | [Tool guide](docs/TOOLS.md) |
+| Audit or contrast song-making methods | [Song method manifests](docs/SONG_METHOD_MANIFESTS.md) · [Method-space audit](docs/METHOD_AUDIT.md) |
 | Browse every documentation route | [Documentation map](docs/README.md) |
 | Understand the architecture and boundaries | [Architecture](docs/ARCHITECTURE.md) |
 | Inspect requests, plans, and work queues | [Agent work](docs/AGENT_WORK.md) · [Production requests](docs/PRODUCTION_REQUESTS.md) |
 | Write or run BeatScript | [BeatScript](docs/BEATSCRIPT.md) |
 | Use Sonic Pi | [Sonic Pi](docs/SONIC_PI.md) · [agent reference](.agents/skills/produce-music-locally/references/sonic-pi.md) |
-| Record, mix, make visuals, or deliver video | [Recording](docs/RECORDING.md) · [Mixing](docs/MIXING.md) · [Visuals](docs/VISUALS.md) · [Video](docs/VIDEO.md) |
+| Record, mix, make visuals, or deliver video | [Recording](docs/RECORDING.md) · [Mixing](docs/MIXING.md) · [Pedalboard effects](docs/PEDALBOARD.md) · [Visuals](docs/VISUALS.md) · [Video](docs/VIDEO.md) |
 | Prepare a public release | [Releases](docs/RELEASES.md) · [Publication](docs/PUBLICATION.md) |
 | Contribute code, docs, or skills | [Contributing](CONTRIBUTING.md) · [AGENTS.md](AGENTS.md) · [.agents skills](.agents/skills/README.md) |
 
@@ -105,13 +113,13 @@ song workspace from the command line:
 ```bash
 ./scripts/eprs make-song "Porch Signal" \
   --prompt "Loose guitar invitation answered by a sparse, crooked groove" \
-  --tempo 92 \
-  --key D \
+  --preserve "The unquantized guitar attack and the room decay" \
+  --question "Should the groove answer every phrase or only the final one?" \
   --no-visual
 ```
 
 Run the [five-minute getting-started route](docs/GETTING_STARTED.md) for the
-next checks, or use `./scripts/eprs status --verify` to see what the workspace
+next checks, or use `./scripts/eprs status songs/porch-signal --verify` to see what the workspace
 knows and what still needs attention.
 
 ## A first agentic tune

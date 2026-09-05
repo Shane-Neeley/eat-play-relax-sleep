@@ -324,11 +324,11 @@ def doctor(
                 if not isinstance(command_record, dict) or not isinstance(command_record.get("name"), str):
                     raise ValueError(f"toolchain command for {tool_id} requires a name")
                 name = command_record["name"]
-                if tool_id == "python" and name == "python3" and sys.version_info >= (3, 11):
+                if name == "python3" and sys.version_info >= (3, 11):
                     # The shell launcher may select a versioned interpreter
                     # even when the first python3 on PATH is too old. Report
-                    # the interpreter actually running EPRS for this one
-                    # declared command without bypassing any other requirement.
+                    # the interpreter actually running EPRS, including optional
+                    # providers whose modules are probed in this process.
                     found = sys.executable
                 else:
                     found = shutil.which(name)
@@ -336,7 +336,7 @@ def doctor(
                 if found:
                     located.append(found)
                     if include_versions:
-                        if tool_id == "python" and name == "python3" and found == sys.executable:
+                        if name == "python3" and found == sys.executable:
                             version = f"Python {platform.python_version()}"
                         else:
                             version = _command_version(
@@ -1978,7 +1978,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         try:
             stem_metadata = json.loads(sidecar.read_text())
             stem_schema = stem_metadata.get("schema")
-            if stem_schema not in {"eprs.process-render/v1", "eprs.comp-render/v1"}:
+            if stem_schema not in {
+                "eprs.process-render/v1",
+                "eprs.comp-render/v1",
+                "eprs.pedalboard-render/v1",
+            }:
                 raise ValueError("unsupported schema")
         except (json.JSONDecodeError, ValueError) as exc:
             attention.append(f"Invalid stem provenance {sidecar.relative_to(song_path)}: {exc}")
@@ -1988,7 +1992,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         if not isinstance(output_record, dict) or output_record.get("path") != str(stem_path.relative_to(song_path)):
             attention.append(f"Stem has invalid output reference: {stem_path.relative_to(song_path)}")
         check_expected_checksum(stem_path, output_record, f"stem {stem_path.relative_to(song_path)}")
-        if stem_schema == "eprs.process-render/v1":
+        if stem_schema in {"eprs.process-render/v1", "eprs.pedalboard-render/v1"}:
             stem_kinds["processed"] += 1
             source_records = [stem_metadata.get("source")]
             recipe = stem_metadata.get("recipe")
@@ -2000,14 +2004,17 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
                 ).hexdigest()
                 if stem_metadata.get("recipe_id") != expected_recipe_id:
                     raise ValueError("recipe id does not match recipe")
-                bindings = recipe.get("evidence", [])
-                verify_evidence_bindings(
-                    song_path,
-                    bindings,
-                    f"processed stem {stem_path.relative_to(song_path)}",
-                    verify_checksums=verify,
-                )
-                render_evidence["bindings"] += len(bindings)
+                if stem_schema == "eprs.process-render/v1":
+                    bindings = recipe.get("evidence", [])
+                    verify_evidence_bindings(
+                        song_path,
+                        bindings,
+                        f"processed stem {stem_path.relative_to(song_path)}",
+                        verify_checksums=verify,
+                    )
+                    render_evidence["bindings"] += len(bindings)
+                elif recipe.get("schema") != "eprs.pedalboard/v1":
+                    raise ValueError("Pedalboard recipe schema is invalid")
             except (FileNotFoundError, ValueError) as exc:
                 render_evidence["invalid_renders"] += 1
                 attention.append(
@@ -2367,6 +2374,7 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
     final_root = song_path / "FINAL"
     final_files = _project_files(final_root, exclude={"README.md"})
     release_packages = 0
+    producer_packages = 0
     distribution_packages = 0
     invalid_releases = 0
     if final_root.is_dir():
@@ -2379,6 +2387,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
             try:
                 release_manifest = json.loads(manifest_path.read_text())
                 package_schema = release_manifest.get("schema")
+                if package_schema == "eprs.producer-package/v1":
+                    from .producer import verify_package
+                    verify_package(release_dir, verify=verify)
+                    producer_packages += 1
+                    continue
                 if package_schema not in {
                     "eprs.release-package/v1",
                     "eprs.distribution-package/v1",
@@ -2437,6 +2450,10 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
     for error in publication_report["errors"]:
         attention.append(f"Invalid publication history {error['path']}: {error['error']}")
     publication_counts = publication_report["counts"]
+    from .producer import publication_summary
+    producer_publication = publication_summary(song_path, verify=verify)
+    if producer_publication["error"]:
+        attention.append(f"Invalid producer publication: {producer_publication['error']}")
 
     from .mix import verify_mix_provenance
     from .source_sketch import verify_source_sketch
@@ -2483,6 +2500,48 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
                 "audio": current_record.get("pointers", {}).get("audio"),
                 "video": current_record.get("pointers", {}).get("video"),
             }
+
+    method_manifest = {
+        "available": False, "valid": None, "events": 0,
+        "manual_records": 0, "notes": 0, "recorded_methods": 0,
+    }
+    method_manifest_path = song_path / "song-manifest.json"
+    if method_manifest_path.is_file():
+        try:
+            method_record = json.loads(method_manifest_path.read_text(encoding="utf-8"))
+            if (
+                not isinstance(method_record, dict)
+                or method_record.get("schema") != "eprs.song-method-manifest/v1"
+            ):
+                raise ValueError("unsupported schema")
+            summary = method_record.get("summary", {})
+            recorded = summary.get("recorded_methods", {}) if isinstance(summary, dict) else {}
+            event_records = method_record.get("events")
+            manual_records = method_record.get("manual_records")
+            note_records = method_record.get("notes")
+            if not all(isinstance(records, list) for records in (
+                event_records, manual_records, note_records,
+            )):
+                raise ValueError("events, manual_records, and notes must be lists")
+            method_manifest.update({
+                "available": True,
+                "events": len(event_records),
+                "manual_records": len(manual_records),
+                "notes": len(note_records),
+                "recorded_methods": len(recorded) if isinstance(recorded, dict) else 0,
+            })
+            if verify:
+                from .manifest import verify_song_method_manifest
+                verification = verify_song_method_manifest(song_path)
+                method_manifest["valid"] = verification["valid"]
+                if not verification["valid"]:
+                    attention.append(
+                        f"Invalid song method manifest: {len(verification['invalid'])} "
+                        "missing or changed evidence item(s)"
+                    )
+        except (json.JSONDecodeError, ValueError) as exc:
+            method_manifest.update({"available": True, "valid": False})
+            attention.append(f"Invalid song method manifest: {exc}")
 
     inventory = {
         "briefs": len(briefs),
@@ -2534,8 +2593,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
         "youtube_asset_bundles": youtube_asset_counts,
         "visuals": len(_project_files(song_path / "visuals")),
         "current_media": current_media,
+        "method_manifest": method_manifest,
         "final_deliverables": len(final_files),
         "release_packages": release_packages,
+        "producer_packages": producer_packages,
+        "producer_publication": producer_publication,
         "distribution_packages": distribution_packages,
         "invalid_releases": invalid_releases,
         "publication_handoffs": publication_counts["handoffs"],
@@ -2547,6 +2609,11 @@ def song_status(song: str | Path, verify: bool = False) -> dict:
     next_actions: list[str] = []
     if missing_folders:
         next_actions.append("Restore the missing workspace folders before production continues.")
+    if not method_manifest["available"]:
+        next_actions.append(
+            "Build the song-level method ledger with `eprs manifest build <song>`; "
+            "absence means prior method use is not yet aggregated."
+        )
     if (inventory["mixes"] or inventory["masters"] or inventory["videos"]) and not current_media["available"]:
         next_actions.append("Expose the version needing attention at song root with `eprs expose`.")
     if not briefs:
@@ -2800,6 +2867,23 @@ def format_song_status(status: dict) -> str:
             f"{inventory['publication_receipts']} receipt(s) "
             f"({inventory['public_publication_receipts']} public), "
             f"{inventory['invalid_publications']} invalid"
+        ),
+        (
+            "Agent producer: "
+            f"{inventory['producer_packages']} attributed-review package(s), "
+            f"{inventory['producer_publication']['public']} verified public receipt(s)"
+            + (f" — {inventory['producer_publication']['url']}" if inventory['producer_publication']['url'] else "")
+        ),
+        (
+            "Method ledger: "
+            + (
+                f"{inventory['method_manifest']['recorded_methods']} method(s), "
+                f"{inventory['method_manifest']['events']} automatic event(s), "
+                f"{inventory['method_manifest']['manual_records']} manual record(s), "
+                f"{inventory['method_manifest']['notes']} loose note(s)"
+                if inventory["method_manifest"]["available"]
+                else "not built"
+            )
         ),
     ]
     if status["attention"]:

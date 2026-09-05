@@ -25,15 +25,26 @@ class SongHarnessTests(unittest.TestCase):
         voice = _starter_beat("Voice Room", "A spoken vocal room with a patient answer.", 103)
         dance = _starter_beat("Night Floor", "A bright house club groove for dancing.", 104)
 
-        self.assertEqual(animal.meter, (6, 8))
+        self.assertEqual(animal.meter, (4, 4))
         self.assertIn("pluck", {track.options.get("voice") for track in animal.tracks})
         self.assertIn("pluck", {track.options.get("voice") for track in guitar.tracks})
-        self.assertEqual(voice.meter, (3, 4))
+        self.assertEqual(voice.meter, (4, 4))
         self.assertEqual(dance.meter, (4, 4))
         self.assertGreaterEqual(dance.tempo, 116)
         self.assertLessEqual(dance.tempo, 132)
-        self.assertNotEqual(animal.meter, guitar.meter)
+        self.assertNotEqual({t.name for t in animal.tracks}, {t.name for t in guitar.tracks})
         self.assertNotIn("pluck", {track.options.get("voice") for track in dance.tracks})
+
+    def test_general_prompts_and_broken_grooves_default_to_four_four(self):
+        for prompt in ("broken beat", "crooked groove", "five birds", "anything original", "vocal melody",
+                       "4/4, not 5/4", "avoid 6/8", "no odd meter like 5/4"):
+            for seed in range(20):
+                self.assertEqual(_starter_beat("Test", prompt, seed).meter, (4, 4))
+
+    def test_explicit_meters_remain_available(self):
+        for meter in ("5/4", "6/8", "3/4"):
+            self.assertEqual(_starter_beat("Test", f"An animal groove in {meter}", 5).meter,
+                             tuple(map(int, meter.split("/"))))
 
     def test_relative_default_root_works_from_repository_style_cwd(self):
         with tempfile.TemporaryDirectory() as folder:

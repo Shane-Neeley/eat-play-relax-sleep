@@ -2,6 +2,14 @@
 
 Eat Play Relax Sleep separates intent, irreversible sources, reproducible experiments, and delivery artifacts.
 
+The agent-facing production entry point is now `eprs produce`: catalog and
+exploratory brief → exclusive run ownership → sketches → arrangement → mix →
+picture → reviewed package. `producer.py` coordinates state and evidence;
+`supercollider.py` adds a bounded native offline renderer. Existing request,
+plan, work, mix/master and human-review contracts remain available beneath it.
+See [PRODUCER.md](PRODUCER.md) for the daily/on-demand path and its explicit
+distinction between agent assessment, human listening and publication.
+
 ```text
 captured prompt + supplied files
       │
@@ -64,6 +72,12 @@ never become authority to operate a tool or call a result approved.
 - `eprs status`: read-only continuity layer for humans and agents; it inventories
   a song, validates referenced evidence, optionally verifies checksums, and
   exposes versioned `eprs.status/v1` JSON.
+- `eprs.song-method-manifest/v1`: a rebuildable song-level index over immutable
+  CLI event records, explicit external/human method records, loose creative
+  notes, current structured artifacts, binary asset inventory, and the complete
+  current CLI/tool/adapter method space. It distinguishes exact command use,
+  artifact-inferred legacy use, nonzero attempts, and `not-evidenced`; it never
+  treats absence as proof or aggregation as creative approval.
 - `eprs.performance/v1`: a read-only diagnostic over EPRS-owned visual render
   and isolated agent-runner processes plus optional recent song receipts. It
   distinguishes active work from stale orphaned Chromium roots and reports

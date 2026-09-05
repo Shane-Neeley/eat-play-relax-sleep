@@ -12,6 +12,33 @@
   ],
   "handoffs": [
     {
+      "id": "render-native-nrt",
+      "label": "Render a finite native score offline",
+      "intent": "Produce a real SuperCollider WAV without a GUI recording or a substitute engine.",
+      "capabilities": [
+        "audio_synthesis",
+        "algorithmic_composition"
+      ],
+      "automation": "cli",
+      "requires_user_operation": false,
+      "inputs": [
+        "Trusted song-relative .scd score using thisProcess.argv[0] as its output WAV",
+        "New lossless output path and finite timeout"
+      ],
+      "outputs": [
+        "Native WAV, checksum receipt and render log"
+      ],
+      "steps": [
+        "Run uv run python scripts/render_supercollider.py SCORE OUTPUT --timeout 180 from the checkout.",
+        "Use Score.recordNRT with explicit sample rate, duration and completion action that exits sclang.",
+        "Inspect the render and retain native source plus review evidence."
+      ],
+      "verification": [
+        "Wrapper refuses existing output, enforces a deadline and checks source stability.",
+        "Verify duration, levels and musical delivery separately; a render is not listening approval."
+      ]
+    },
+    {
       "id": "develop-scsynth-source",
       "label": "Develop a bounded scsynth study",
       "intent": "Test one player-facing synthesis or sample relationship with SuperCollider without turning the live server into the EPRS source of truth.",

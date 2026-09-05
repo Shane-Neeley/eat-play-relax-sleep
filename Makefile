@@ -1,4 +1,4 @@
-.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio vgpu-doctor opencv-install opencv-check
+.PHONY: check-uv lock-check lint typecheck-python quality doctor check test test-fast public-check demo studio visuals-install visuals-check visual-studio vgpu-doctor opencv-install opencv-check pedalboard-install pedalboard-check
 
 UV ?= uv
 UV_RUN = $(UV) run --locked
@@ -68,3 +68,9 @@ opencv-install: check-uv lock-check
 
 opencv-check: lock-check
 	PYTHONPATH=src $(UV_RUN_OPENCV) python -m unittest -v tests.test_video_quality
+
+pedalboard-install: check-uv lock-check
+	$(UV) sync --locked --inexact --extra pedalboard
+
+pedalboard-check: check-uv lock-check
+	PYTHONPATH=src $(UV) run --locked --extra pedalboard python -m unittest -v tests.test_pedalboard_fx

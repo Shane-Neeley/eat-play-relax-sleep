@@ -239,6 +239,10 @@ def render_autotune(
     """Render a new tuned WAV and checksum-bearing sidecar."""
     if not intent.strip():
         raise ValueError("autotune render requires player-facing intent")
+    # Callers can construct the dataclass directly, bypassing the CLI factory.
+    settings = settings_for(settings.preset, key=settings.key, scale=settings.scale,
+                            overrides={k: v for k, v in asdict(settings).items()
+                                       if k not in {"preset", "key", "scale"}})
     try:
         import numpy as np
         import pyworld as pw
@@ -265,9 +269,13 @@ def render_autotune(
         raise FileExistsError(destination_path if destination_path.exists() else sidecar_path)
 
     audio, sample_rate = sf.read(source_path, dtype="float64", always_2d=True)
-    if not 8_000 <= sample_rate <= 192_000 or audio.shape[1] not in {1, 2} or len(audio) == 0:
-        raise ValueError("autotune requires non-empty mono/stereo audio at 8–192 kHz")
-    analysis_signal = np.mean(audio, axis=1).astype(np.float64)
+    if not 16_000 <= sample_rate <= 192_000 or audio.shape[1] not in {1, 2} or len(audio) == 0:
+        raise ValueError("WORLD autotune requires non-empty mono/stereo audio at 16–192 kHz")
+    if not np.all(np.isfinite(audio)):
+        raise ValueError("autotune source contains non-finite samples")
+    # A stereo mean can erase a perfectly voiced, polarity-inverted recording.
+    analysis_channel = int(np.argmax(np.mean(audio ** 2, axis=0)))
+    analysis_signal = np.ascontiguousarray(audio[:, analysis_channel])
     source_f0, temporal_positions = pw.dio(
         analysis_signal,
         sample_rate,
@@ -312,9 +320,18 @@ def render_autotune(
             rendered = np.pad(rendered, (0, len(channel) - len(rendered)))
         synthesized_channels.append(rendered[:len(channel)])
     wet_audio = np.stack(synthesized_channels, axis=1)
+    # Keep breath and consonants from the original. Crossfade over pitch-frame
+    # boundaries rather than replacing all unvoiced material with vocoder noise.
+    voiced_weight = np.interp(
+        np.arange(len(audio)) / sample_rate, temporal_positions,
+        (source_f0 > 0).astype(np.float64),
+    )[:, None]
+    wet_audio = voiced_weight * wet_audio + (1 - voiced_weight) * audio
     mixed = ((1 - settings.wet) * audio + settings.wet * wet_audio)
     mixed *= 10 ** (settings.output_gain_db / 20)
     peak = float(np.max(np.abs(mixed)))
+    if not np.all(np.isfinite(mixed)):
+        raise ValueError("autotune synthesis contains non-finite samples")
     if peak >= 1:
         raise ValueError(
             f"autotune render would clip at {20 * math.log10(peak):.2f} dBFS; "
@@ -339,6 +356,7 @@ def render_autotune(
         "analysis": {
             "sample_rate": sample_rate,
             "channels": audio.shape[1],
+            "pitch_analysis_channel": analysis_channel,
             "duration_seconds": len(audio) / sample_rate,
             "total_pitch_frames": len(source_f0),
             "voiced_pitch_frames": len(voiced_pairs),
@@ -356,6 +374,7 @@ def render_autotune(
         "render": {
             "engine": "WORLD vocoder via PyWorld",
             "formant_aware": True,
+            "unvoiced_source_preserved": True,
             "time_stretch": False,
             "normalization": False,
             "limiting": False,

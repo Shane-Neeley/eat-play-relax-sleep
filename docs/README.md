@@ -6,6 +6,8 @@ to one useful next place.
 
 ## Start here
 
+- [Daily and on-demand producer](PRODUCER.md) — varied music, shared run ownership,
+  actual engine renders, vocal checks and honestly attributed release review.
 - [Getting started](GETTING_STARTED.md) — install the project, open Beat Lab,
   make the first song workspace, and understand the next safe action.
 - [Ask an agent for a tune](AGENTIC_TUNE.md) — a copyable OpenClaw-style
@@ -77,6 +79,10 @@ only when that route is relevant.
 - [Randomness](RANDOMNESS.md), [experiments](EXPERIMENTS.md), and
   [evidence bindings](EVIDENCE_BINDINGS.md) — replayability without turning
   creative work into a fixed vending machine.
+- [Song method manifests](SONG_METHOD_MANIFESTS.md) and the
+  [method-space audit](METHOD_AUDIT.md) — compare what a song used, considered,
+  rejected, and left unexplored, including prompts, settings, software, and
+  loose creative notes.
 - [Quality gaps](QUALITY_GAPS.md), [research](RESEARCH.md), and
   [visual methods](VISUAL_METHODS.md) — current evidence and unresolved work.
 - [Contributing](../CONTRIBUTING.md) and the root [agent contract](../AGENTS.md)
@@ -88,3 +94,5 @@ Start shallow, follow one route, and return to the song's `NOW.md` or
 `_LISTEN.*` handoff before opening another branch. A document can explain a
 capability; it does not grant permission to browse, process, upload, publish,
 or claim a creative decision.
+- [Regional wildlife scout and production workbench](WILDLIFE_SCOUT.md)
+- [Workbench visual system](../DESIGN.md)

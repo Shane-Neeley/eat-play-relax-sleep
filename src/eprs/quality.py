@@ -20,7 +20,10 @@ from .beat import Beat, expanded_steps, load, track_active
 QUALITY_SCHEMA = "eprs.creative-quality/v1"
 DECISIONS = {"pass", "hold"}
 HUMAN_APPROVAL = {"not-required", "required", "approved"}
-_NOTE_RE = re.compile(r"^([A-Ga-g])(?:#|b)?-?\d$")
+_NOTE_RE = re.compile(r"^([A-Ga-g])([#b]?)-?\d$")
+_PITCH_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+_NATURAL_PITCHES = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+_FAMILIAR_METERS = {(4, 4), (3, 4), (2, 4), (6, 8), (12, 8)}
 
 
 def _utc_now() -> str:
@@ -35,18 +38,22 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _pitch_classes(beat: Beat, start_bar: int, end_bar: int) -> set[str]:
+def _pitch_classes(beat: Beat, start_bar: int, end_bar: int, *, legacy: bool = False) -> set[str]:
     pitches: set[str] = set()
     start = (start_bar - 1) * beat.steps_per_bar
     end = end_bar * beat.steps_per_bar
     for track in beat.tracks:
         if track.kind != "notes":
             continue
-        for token in expanded_steps(track, beat.total_steps)[start:end]:
+        for index, token in enumerate(expanded_steps(track, beat.total_steps)[start:end], start):
+            if not legacy and not track_active(track, index, beat.steps_per_bar):
+                continue
             for note in token.split("+"):
                 match = _NOTE_RE.match(note)
                 if match:
-                    pitches.add(match.group(1).upper())
+                    letter = match.group(1).upper()
+                    accidental = {"": 0, "#": 1, "b": -1}[match.group(2)]
+                    pitches.add(letter if legacy else _PITCH_NAMES[(_NATURAL_PITCHES[letter] + accidental) % 12])
     return pitches
 
 
@@ -68,7 +75,7 @@ def _section_boundaries(beat: Beat) -> list[tuple[int, int]]:
     return [(start, end - 1) for start, end in zip(ordered, ordered[1:]) if start <= end - 1]
 
 
-def _section_record(beat: Beat, start_bar: int, end_bar: int) -> dict:
+def _section_record(beat: Beat, start_bar: int, end_bar: int, *, legacy: bool = False) -> dict:
     active = [
         track.name
         for track in beat.tracks
@@ -85,18 +92,21 @@ def _section_record(beat: Beat, start_bar: int, end_bar: int) -> dict:
         "active_tracks": active,
         "track_count": len(active),
         "events_per_bar": round(density, 3),
-        "pitch_classes": sorted(_pitch_classes(beat, start_bar, end_bar)),
+        "pitch_classes": sorted(_pitch_classes(beat, start_bar, end_bar, legacy=legacy)),
     }
 
 
-def analyze_beatscript(beat_path: str | Path) -> dict:
+def analyze_beatscript(beat_path: str | Path, *, analysis_version: int = 2) -> dict:
     """Return deterministic form/risk findings for one BeatScript arrangement."""
     source = Path(beat_path).resolve()
     beat = load(source)
-    sections = [_section_record(beat, start, end) for start, end in _section_boundaries(beat)]
+    if analysis_version not in {1, 2}:
+        raise ValueError("Unsupported quality analysis version")
+    legacy = analysis_version == 1
+    sections = [_section_record(beat, start, end, legacy=legacy) for start, end in _section_boundaries(beat)]
     signatures = [tuple(section["active_tracks"]) for section in sections]
     transitions = sum(left != right for left, right in zip(signatures, signatures[1:]))
-    early_pitches = _pitch_classes(beat, 1, min(8, beat.bars))
+    early_pitches = _pitch_classes(beat, 1, min(8, beat.bars), legacy=legacy)
     late_start = max(1, round(beat.bars * 0.65))
     late_sections = [section for section in sections if section["end_bar"] >= late_start]
     final_signature = signatures[-1] if signatures else ()
@@ -131,9 +141,10 @@ def analyze_beatscript(beat_path: str | Path) -> dict:
     }
     hard_failures = [name for name, passed in checks.items() if not passed]
     risk_flags: list[str] = []
-    if beat.meter != (4, 4):
+    unfamiliar_meter = beat.meter != (4, 4) if legacy else beat.meter not in _FAMILIAR_METERS
+    if unfamiliar_meter:
         risk_flags.append("odd_or_unfamiliar_meter_requires_human_approval")
-    if alignment_warnings and beat.meter != (4, 4):
+    if alignment_warnings and unfamiliar_meter:
         risk_flags.append("odd_meter_pattern_lengths_do_not_align_to_bar_grid")
     if beat.duration > 150:
         risk_flags.append("long_form_requires_evidence_of_sustained_attention")
@@ -146,6 +157,7 @@ def analyze_beatscript(beat_path: str | Path) -> dict:
     auto_publish_eligible = not hard_failures and not risk_flags and score >= 8
     return {
         "schema": QUALITY_SCHEMA,
+        "analysis_version": analysis_version,
         "source": {"path": str(source), "sha256": _sha256(source)},
         "arrangement": {
             "title": beat.title,
@@ -229,7 +241,9 @@ def verify_creative_quality(song: str | Path, report: str | Path) -> tuple[Path,
         raise ValueError("creative quality source escapes the song workspace") from exc
     if not source.is_file() or record["source"].get("sha256") != _sha256(source):
         raise ValueError("creative quality source is missing or changed")
-    expected = analyze_beatscript(source)
+    # Frozen v1 evidence retains its original interpretation; new reports use
+    # sounding pitches, active regions and familiar compound meters.
+    expected = analyze_beatscript(source, analysis_version=record.get("analysis_version", 1))
     for key in ("arrangement", "checks", "hard_failures", "risk_flags", "alignment_warnings", "sections", "metrics", "score", "auto_publish_eligible", "decision"):
         if record.get(key) != expected.get(key):
             raise ValueError(f"creative quality {key} does not match its BeatScript source")

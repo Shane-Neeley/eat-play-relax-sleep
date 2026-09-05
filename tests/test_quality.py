@@ -38,6 +38,35 @@ ODD_ARRANGEMENT = ARRANGEMENT.replace(
 
 
 class QualityTests(unittest.TestCase):
+    def test_accidentals_enharmonics_and_inactive_tracks(self):
+        from eprs.quality import _pitch_classes
+        from eprs.beat import load
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "pitches.beat"
+            path.write_text(ARRANGEMENT.replace("C4 . E4 . G4 . A4", "C4 . C#4 . Db4 . D4"))
+            beat = load(path)
+            self.assertEqual(_pitch_classes(beat, 1, 4), {"C", "C#", "D", "E", "G"})
+            self.assertNotIn("E", _pitch_classes(beat, 5, 8))
+
+    def test_compound_meter_is_not_automatically_unfamiliar(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "compound.beat"
+            path.write_text(ARRANGEMENT.replace("meter 4/4", "meter 6/8"))
+            report = analyze_beatscript(path)
+            self.assertNotIn("odd_or_unfamiliar_meter_requires_human_approval", report["risk_flags"])
+
+    def test_legacy_frozen_report_still_verifies(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "legacy.beat"
+            source.write_text(ARRANGEMENT)
+            report = analyze_beatscript(source, analysis_version=1)
+            report.pop("analysis_version")
+            report["source"]["path"] = "legacy.beat"
+            target = root / "quality.json"
+            target.write_text(json.dumps(report))
+            verify_creative_quality(root, target)
+
     def test_ordinary_form_can_be_auto_publish_eligible(self):
         with tempfile.TemporaryDirectory() as folder:
             beat = Path(folder) / "fixture.beat"

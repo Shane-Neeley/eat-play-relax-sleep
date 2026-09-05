@@ -13,6 +13,7 @@ import hashlib
 import json
 from pathlib import Path
 import random
+import re
 import secrets
 
 from .beat import Beat, dumps, load, mutate, parse
@@ -167,25 +168,60 @@ def _short_title(value: str) -> str:
     return value.replace('"', "'").replace("\n", " ").strip()
 
 
+_ACCESSIBLE_FIELD = """title "Field Pocket"
+tempo 102
+meter 4/4
+resolution 16
+bars 8
+swing 0.55
+seed 1
+track kick | X... .... ..x. .... | X... .... ..x. ...g | ; gain=0.58
+track stick | .... X... .... X... | .... X... ..g. X... | ; gain=0.16 pan=0.2
+notes call | D4 . . F4 . . A4 . . . G4 . F4 . . . | ; voice=pluck gain=0.14 length=1.1 pan=0.16
+notes answer | . . . . A3 . . . . . G3 . . . D3 . | ; voice=lead gain=0.10 length=1.4 pan=-0.18
+"""
+
+_ACCESSIBLE_VOICE = """title "Voice Pocket"
+tempo 88
+meter 4/4
+resolution 16
+bars 8
+swing 0.54
+seed 1
+track kick | X... .... .... ..g. | X... .... ..x. .... | ; gain=0.55
+track stick | .... x... .... x... | .... x... .... x... | ; gain=0.12 pan=0.2
+notes bed | C3+E3+G3 . . . . . . . A2+C3+E3 . . . . . . . | ; voice=lead gain=0.10 length=3.4 pan=-0.08
+notes answer | . . . G4 . . . . . . A4 . . . E4 . | ; voice=pluck gain=0.12 length=1.2 pan=0.18
+"""
+
+
 def _starter_beat(title: str, prompt: str, seed: int):
     """Choose and gently mutate a study so the first sketch has a pocket."""
     lowered = prompt.casefold()
-    if any(word in lowered for word in ("sleep", "ambient", "drift", "quiet", "slow")):
+    requested_meter = re.search(r"(?<!\d)([2356])\s*/\s*([48])(?!\d)", lowered)
+    special = {"5/4": 1, "6/8": 3, "3/4": 6}
+    meter = "/".join(requested_meter.groups()) if requested_meter else None
+    if requested_meter and re.search(
+        r"\b(?:no|not|never|avoid|without|don't|do not)\b[^.;\n]{0,45}$",
+        lowered[:requested_meter.start()],
+    ):
+        meter = None
+    if meter in special:
+        study_index = special[meter]
+    elif any(word in lowered for word in ("sleep", "ambient", "drift", "quiet", "slow")):
         study_index = 2
     elif any(word in lowered for word in ("animal", "bird", "frog", "cricket", "cicada", "wildlife", "field recording", "organism")):
-        study_index = 3
+        study_index = 7
     elif any(word in lowered for word in ("voice", "vocal", "singer", "singing", "spoken", "speech", "choir")):
-        study_index = 6
+        study_index = 8
     elif any(word in lowered for word in ("guitar", "string", "pluck", "ukulele", "marimba", "instrument")):
         study_index = 4
     elif any(word in lowered for word in ("dance", "club", "house", "techno", "four on the floor")):
         study_index = 5
-    elif any(word in lowered for word in ("odd", "five", "uneven", "crooked", "broken")):
-        study_index = 1
     else:
-        study_index = random.Random(seed).randrange(len(_BEAT_STUDIES))
+        study_index = random.Random(seed).choice((0, 2, 4, 5, 7, 8))
 
-    beat = parse(_BEAT_STUDIES[study_index])
+    beat = parse((*_BEAT_STUDIES, _ACCESSIBLE_FIELD, _ACCESSIBLE_VOICE)[study_index])
     variation = mutate(beat, seed ^ 0xA5A5_5A5A, amount=0.14)
     rng = random.Random(seed ^ 0x51_7E_11)
     if any(word in lowered for word in ("fast", "dance", "club", "push", "bright")):
@@ -266,6 +302,22 @@ def _choose_starter(
 ) -> tuple[int, Beat, str, dict]:
     if seed is not None:
         chosen_seed = int(seed)
+        # Replaying saved source survives changes to future starter defaults.
+        for prior_path in sorted((song / "notes" / "runs").glob("*/run.json")):
+            prior_record = json.loads(prior_path.read_text())
+            if (prior_record.get("schema") == HARNESS_SCHEMA
+                    and prior_record.get("randomness", {}).get("seed") == chosen_seed
+                    and prior_record.get("prompt") == prompt):
+                source = (song / prior_record["paths"]["beat"]).resolve()
+                if not source.is_relative_to(song.resolve()) or not source.is_file():
+                    raise ValueError("Saved replay source is missing or escapes the song")
+                if sha256(source) != prior_record["outputs"]["beat"]["sha256"]:
+                    raise ValueError("Saved replay source changed; refuse a false exact replay")
+                beat = load(source)
+                return chosen_seed, beat, _beat_creative_fingerprint(beat), {
+                    "enforced": False, "scope": "checksum-verified saved source replay",
+                    "collision_rejections": 0,
+                }
         beat = _starter_beat(title, prompt, chosen_seed)
         return chosen_seed, beat, _beat_creative_fingerprint(beat), {
             "enforced": False,

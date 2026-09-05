@@ -14,6 +14,17 @@ MODEL_CATALOG_SCHEMA = "eprs.bioacoustic-model-catalog/v1"
 
 _MODELS = (
     {
+        "id": "birdcode-sed",
+        "label": "BirdCODE SED",
+        "status": "optional-open-tool",
+        "tasks": ["frame-level-sound-event-detection", "bird-classification"],
+        "taxa": "birds",
+        "evidence_mode": "descriptive-soft-prior",
+        "interaction_risk": "none",
+        "license_note": "Inspect the selected checkpoint and dataset terms before redistribution or commercial use.",
+        "source": "https://huggingface.co/EarthSpeciesProject/sed-birdcode",
+    },
+    {
         "id": "naturelm-audio",
         "label": "NatureLM-audio",
         "status": "optional-open-model",
@@ -141,7 +152,7 @@ def bioacoustic_model_catalog() -> dict:
     """Return a copy so callers cannot mutate the shared registry."""
     return {
         "schema": MODEL_CATALOG_SCHEMA,
-        "reviewed_at": "2026-08-21",
+        "reviewed_at": "2026-08-31",
         "models": deepcopy(_MODELS),
         "research_tracks": deepcopy(_RESEARCH_TRACKS),
         "2027_plan": {

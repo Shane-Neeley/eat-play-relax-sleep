@@ -104,7 +104,7 @@ class INaturalistStudyTests(unittest.TestCase):
             "biome",
             "rare-call-transfer-detector",
         } <= ids)
-        self.assertEqual(catalog["reviewed_at"], "2026-08-21")
+        self.assertEqual(catalog["reviewed_at"], "2026-08-31")
         self.assertIn("contextual-communication", {
             track["id"] for track in catalog["research_tracks"]
         })

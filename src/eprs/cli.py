@@ -12,6 +12,17 @@ from .adapters import adapter_catalog, adapter_guide
 from .audio import render
 from .autotune import PRESETS as AUTOTUNE_PRESETS, render_autotune, settings_for
 from .beat import dumps, load, mutate
+from .bioacoustic_detector import (
+    BEHAVIORS,
+    DEFAULT_PULSE_MAX_GAP_SECONDS,
+    DEFAULT_PULSE_MIN_COUNT,
+    DEFAULT_PULSE_MIN_FLUX_Z,
+    DEFAULT_PULSE_MIN_GAP_SECONDS,
+    DEFAULT_SUSTAINED_MIN_SNR_DB,
+    DEFAULT_MAX_DURATION_SECONDS,
+    detect_audio,
+    write_detection_report,
+)
 from .bioacoustic_models import bioacoustic_model_catalog
 from .context import build_agent_context, render_agent_context_markdown, write_agent_context
 from .clearance import create_recording_clearance, load_recording_clearance
@@ -34,12 +45,30 @@ from .interchange import prepare_daw_interchange, verify_daw_interchange
 from .inaturalist_audio import download_inaturalist_sound
 from .inaturalist_photo import download_inaturalist_photo
 from .inaturalist_study import study_inaturalist_sound
+from .source_audit import (
+    audit_inaturalist_sound,
+    record_source_verification,
+    write_source_audit_report,
+)
 from .master import approve_master, render_master
+from .manifest import (
+    add_manifest_note,
+    add_method_record,
+    build_song_method_manifest,
+    command_path as manifest_command_path,
+    compare_song_method_manifests,
+    record_cli_event,
+    resolve_song_from_args,
+    should_record_command,
+    snapshot_song,
+    verify_song_method_manifest,
+)
 from .mix import render_mix, review_mix
 from .musical_observation import observe_musical_performance
 from .lyrics import create_lyric_development, load_lyric_development, review_lyric_variant
 from .performance import compare_performances, review_comparison
 from .phase import observe_phase_relationship
+from .pedalboard_fx import render_pedalboard, review_pedalboard
 from .picture import capture_picture, review_picture, verify_picture
 from .plan import create_production_plan, load_production_plan
 from .plan_progress import production_plan_progress, queue_next_plan_step
@@ -126,6 +155,8 @@ def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="eprs", description="Local-first code + music production system")
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
+    from .producer import add_parser
+    add_parser(commands)
     doctor_cmd = commands.add_parser("doctor", help="Inspect required and optional creative tools")
     doctor_cmd.add_argument(
         "--strict",
@@ -537,10 +568,88 @@ def parser() -> argparse.ArgumentParser:
     inaturalist_study.add_argument("--scale", default="minor-pentatonic")
     inaturalist_study.add_argument("--tempo-bpm", type=float)
     inaturalist_study.add_argument("--note", default="")
+    inaturalist_audit = inaturalist_commands.add_parser(
+        "audit",
+        help="Rank bounded raw-audio windows before a human verifies the named call",
+    )
+    inaturalist_audit.add_argument(
+        "source",
+        help="Frozen sound path, usually under references/inaturalist-audio",
+    )
+    inaturalist_audit.add_argument("--song", required=True)
+    inaturalist_audit.add_argument(
+        "--out",
+        help="Optional JSON report destination; existing files are never overwritten",
+    )
+    inaturalist_audit.add_argument("--max-candidates", type=int, default=6)
+    inaturalist_verify = inaturalist_commands.add_parser(
+        "verify-window",
+        help="Record a human listening attestation for one ranked raw-audio window",
+    )
+    inaturalist_verify.add_argument("audit_report")
+    inaturalist_verify.add_argument("--out", required=True)
+    inaturalist_verify.add_argument("--start", type=float, required=True)
+    inaturalist_verify.add_argument("--end", type=float, required=True)
+    inaturalist_verify.add_argument("--what-was-heard", required=True)
+    inaturalist_verify.add_argument("--reviewer", required=True)
     inaturalist_commands.add_parser(
         "models",
         help="List current optional bioacoustic AI models and their boundaries",
     )
+
+    bioacoustic = commands.add_parser(
+        "bioacoustic",
+        help="Rank reviewable animal-sound regions in a field recording",
+    )
+    bioacoustic_commands = bioacoustic.add_subparsers(
+        dest="bioacoustic_command", required=True
+    )
+    bioacoustic_detect = bioacoustic_commands.add_parser(
+        "detect",
+        help="Fuse acoustic shape with optional species/reference evidence",
+    )
+    bioacoustic_detect.add_argument("source", help="Audio file to analyze; source is never modified")
+    bioacoustic_detect.add_argument("--out", help="Optional JSON report destination")
+    bioacoustic_detect.add_argument(
+        "--species-table",
+        help="Time-aligned species table used as a required target interval",
+    )
+    bioacoustic_detect.add_argument(
+        "--reference",
+        help="Optional same-taxon recording for nearest-event similarity",
+    )
+    bioacoustic_detect.add_argument("--species", default="Dryocopus pileatus")
+    bioacoustic_detect.add_argument("--species-model", default="selection-table")
+    bioacoustic_detect.add_argument(
+        "--behavior",
+        choices=BEHAVIORS,
+        default="transient",
+        help="Target an isolated sound, repeated pulses, or a sustained call",
+    )
+    bioacoustic_detect.add_argument(
+        "--pulse-min-count", type=int, default=DEFAULT_PULSE_MIN_COUNT
+    )
+    bioacoustic_detect.add_argument(
+        "--pulse-min-gap", type=float, default=DEFAULT_PULSE_MIN_GAP_SECONDS,
+        help="Minimum seconds between pulse peaks",
+    )
+    bioacoustic_detect.add_argument(
+        "--pulse-max-gap", type=float, default=DEFAULT_PULSE_MAX_GAP_SECONDS,
+        help="Maximum seconds between pulse peaks",
+    )
+    bioacoustic_detect.add_argument(
+        "--pulse-min-flux-z", type=float, default=DEFAULT_PULSE_MIN_FLUX_Z,
+        help="Minimum robust spectral-flux score for each pulse",
+    )
+    bioacoustic_detect.add_argument(
+        "--sustained-min-snr-db", type=float, default=DEFAULT_SUSTAINED_MIN_SNR_DB,
+        help="Minimum call energy above the recording's noise floor",
+    )
+    bioacoustic_detect.add_argument(
+        "--max-duration-seconds", type=float, default=DEFAULT_MAX_DURATION_SECONDS,
+        help="Hard analysis bound; trim a lossless region before analyzing longer files",
+    )
+    bioacoustic_detect.add_argument("--max-events", type=int, default=100)
 
     request = commands.add_parser(
         "request",
@@ -812,6 +921,22 @@ def parser() -> argparse.ArgumentParser:
     process_review.add_argument("--song", required=True)
     process_review.add_argument("--listening-note", required=True)
     process_review.add_argument("--decision", choices=("keep", "change", "stop"), required=True)
+
+    pedalboard = commands.add_parser(
+        "pedalboard",
+        help="Render a pinned, checksum-bound Pedalboard effects recipe to a float working stem",
+    )
+    pedalboard.add_argument("spec", help="eprs.pedalboard/v1 JSON recipe")
+    pedalboard.add_argument("--song", required=True)
+
+    pedalboard_review = commands.add_parser(
+        "pedalboard-review",
+        help="Record a listening decision for a Pedalboard stem without changing its audio",
+    )
+    pedalboard_review.add_argument("stem")
+    pedalboard_review.add_argument("--song", required=True)
+    pedalboard_review.add_argument("--listening-note", required=True)
+    pedalboard_review.add_argument("--decision", choices=("keep", "change", "stop"), required=True)
 
     autotune = commands.add_parser(
         "autotune",
@@ -1167,6 +1292,58 @@ def parser() -> argparse.ArgumentParser:
         help="Additional experiment evidence; repeat as needed",
     )
 
+    manifest = commands.add_parser(
+        "manifest",
+        help="Build and extend a song-level ledger of methods, reasons, prompts, settings, and evidence",
+    )
+    manifest_commands = manifest.add_subparsers(dest="manifest_command", required=True)
+    manifest_build = manifest_commands.add_parser(
+        "build", help="Rebuild song-manifest.json from append-only records and song-local evidence",
+    )
+    manifest_build.add_argument("song")
+    manifest_build.add_argument(
+        "--probe-tools", action="store_true",
+        help="Record current tool availability and versions in this catalog snapshot",
+    )
+    manifest_show = manifest_commands.add_parser("show", help="Print the current generated manifest")
+    manifest_show.add_argument("song")
+    manifest_compare = manifest_commands.add_parser(
+        "compare", help="Compare evidenced method sets for two or more songs without making a taste judgment",
+    )
+    manifest_compare.add_argument("songs", nargs="+")
+    manifest_verify = manifest_commands.add_parser(
+        "verify", help="Verify checksums of evidence indexed by the current generated manifest",
+    )
+    manifest_verify.add_argument("song")
+    manifest_record = manifest_commands.add_parser(
+        "record", help="Append a method use, consideration, rejection, failure, or supersession",
+    )
+    manifest_record.add_argument("--song", required=True)
+    manifest_record.add_argument("--method", required=True, help="Tool, technique, workflow, or method name")
+    manifest_record.add_argument("--kind", default="creative", help="Open category such as composition, performance, mix, visual, research, or delivery")
+    manifest_record.add_argument(
+        "--status", choices=("used", "considered", "rejected", "failed", "superseded"), default="used",
+    )
+    manifest_record.add_argument("--reason", required=True, help="Why this method or status belonged in the song")
+    manifest_record.add_argument("--software-version", help="Exact version or revision when known")
+    manifest_record.add_argument("--prompt", help="Exact prompt or player-facing direction")
+    manifest_record.add_argument(
+        "--setting", action="append", type=json_object, default=[],
+        help='Repeatable JSON settings object, e.g. \'{"swing":0.54,"seed":23}\'',
+    )
+    manifest_record.add_argument("--input", action="append", type=source_spec, default=[], metavar="ROLE=PATH")
+    manifest_record.add_argument("--output", action="append", type=source_spec, default=[], metavar="ROLE=PATH")
+    manifest_record.add_argument("--note", action="append", default=[])
+    manifest_record.add_argument("--alternative", action="append", default=[])
+    manifest_record.add_argument("--tag", action="append", default=[])
+    manifest_note = manifest_commands.add_parser(
+        "note", help="Append free-form context under any section name without constraining future schemas",
+    )
+    manifest_note.add_argument("--song", required=True)
+    manifest_note.add_argument("--section", required=True, help="Any useful heading, such as prompts, ideas, thoughts, or notes")
+    manifest_note.add_argument("--text", required=True)
+    manifest_note.add_argument("--tag", action="append", default=[])
+
     visual_prompt = commands.add_parser("visual-prompt", help="Compile a natural-language idea into a versioned visual score")
     visual_prompt.add_argument("prompt")
     visual_prompt.add_argument("--title", required=True)
@@ -1197,10 +1374,13 @@ def parser() -> argparse.ArgumentParser:
     return root
 
 
-def main(argv: list[str] | None = None) -> int:
+def _run_main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
-        if args.command == "doctor":
+        if args.command == "produce":
+            from .producer import run
+            print(json.dumps(run(args), indent=2))
+        elif args.command == "doctor":
             report = doctor(
                 extensions=args.extension,
                 workflows=args.workflow,
@@ -1472,8 +1652,59 @@ def main(argv: list[str] | None = None) -> int:
                     "sound_id": record["source"]["iNaturalist"].get("sound_id"),
                     "creative_domains": sorted(record["creative_map"]),
                 }, indent=2))
+            elif args.inaturalist_command == "audit":
+                report = audit_inaturalist_sound(
+                    args.source,
+                    args.song,
+                    max_candidates=args.max_candidates,
+                )
+                if args.out:
+                    report_path = write_source_audit_report(
+                        report,
+                        args.out,
+                        protected_paths=[args.source],
+                    )
+                    report["report_path"] = str(report_path)
+                print(json.dumps(report, indent=2))
+            elif args.inaturalist_command == "verify-window":
+                verification_path = record_source_verification(
+                    args.audit_report,
+                    args.out,
+                    start_seconds=args.start,
+                    end_seconds=args.end,
+                    what_was_heard=args.what_was_heard,
+                    reviewer=args.reviewer,
+                )
+                print(json.dumps({
+                    "verification": str(verification_path),
+                    "source_use_eligible": True,
+                    "verified_by_human": True,
+                }, indent=2))
             elif args.inaturalist_command == "models":
                 print(json.dumps(bioacoustic_model_catalog(), indent=2))
+        elif args.command == "bioacoustic":
+            if args.bioacoustic_command == "detect":
+                report = detect_audio(
+                    args.source,
+                    species_selection_table=args.species_table,
+                    reference=args.reference,
+                    species=args.species,
+                    species_model=args.species_model,
+                    behavior=args.behavior,
+                    pulse_minimum_count=args.pulse_min_count,
+                    pulse_minimum_gap_seconds=args.pulse_min_gap,
+                    pulse_maximum_gap_seconds=args.pulse_max_gap,
+                    pulse_minimum_flux_z=args.pulse_min_flux_z,
+                    sustained_minimum_snr_db=args.sustained_min_snr_db,
+                    max_duration_seconds=args.max_duration_seconds,
+                    max_events=args.max_events,
+                )
+                if args.out:
+                    write_detection_report(
+                        report, args.out,
+                        protected_paths=[args.source, args.reference, args.species_table],
+                    )
+                print(json.dumps(report, indent=2))
         elif args.command == "request":
             if args.request_command == "add":
                 print(create_production_request(args.spec, args.song))
@@ -1672,6 +1903,25 @@ def main(argv: list[str] | None = None) -> int:
             }, indent=2))
         elif args.command == "process-review":
             print(review_processed_stem(
+                args.song,
+                args.stem,
+                args.listening_note,
+                args.decision,
+            ))
+        elif args.command == "pedalboard":
+            destination, metadata_path = render_pedalboard(args.spec, args.song)
+            metadata = json.loads(metadata_path.read_text())
+            print(json.dumps({
+                "stem": str(destination),
+                "metadata": str(metadata_path),
+                "pedalboard": metadata["pedalboard"],
+                "plugins": metadata["recipe"]["plugins"],
+                "analysis": metadata["output"]["analysis"],
+                "warnings": metadata["warnings"],
+                "review": metadata["review"],
+            }, indent=2))
+        elif args.command == "pedalboard-review":
+            print(review_pedalboard(
                 args.song,
                 args.stem,
                 args.listening_note,
@@ -1943,6 +2193,36 @@ def main(argv: list[str] | None = None) -> int:
                     brief=args.brief,
                     sources=args.source,
                 ))
+        elif args.command == "manifest":
+            if args.manifest_command == "build":
+                tool_report = doctor(extensions=[]) if args.probe_tools else None
+                print(build_song_method_manifest(args.song, parser(), tool_report=tool_report))
+            elif args.manifest_command == "show":
+                path = Path(args.song) / "song-manifest.json"
+                if not path.is_file():
+                    raise FileNotFoundError(f"song method manifest not found: {path}")
+                print(path.read_text(encoding="utf-8"), end="")
+            elif args.manifest_command == "compare":
+                print(json.dumps(compare_song_method_manifests(args.songs), indent=2))
+            elif args.manifest_command == "verify":
+                report = verify_song_method_manifest(args.song)
+                print(json.dumps(report, indent=2))
+                if not report["valid"]:
+                    return 2
+            elif args.manifest_command == "record":
+                path = add_method_record(
+                    args.song, args.method, args.reason, kind=args.kind,
+                    status=args.status, software_version=args.software_version,
+                    prompt=args.prompt, settings=args.setting, inputs=args.input,
+                    outputs=args.output, notes=args.note,
+                    alternatives=args.alternative, tags=args.tag,
+                )
+                build_song_method_manifest(args.song, parser())
+                print(path)
+            elif args.manifest_command == "note":
+                path = add_manifest_note(args.song, args.section, args.text, args.tag)
+                build_song_method_manifest(args.song, parser())
+                print(path)
         elif args.command == "visual-prompt":
             print(write_prompt_score(args.prompt, args.title, args.seed, args.out))
         elif args.command == "visual-render":
@@ -1963,6 +2243,30 @@ def main(argv: list[str] | None = None) -> int:
     except (FileNotFoundError, FileExistsError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run one command and ledger song-mutating attempts and outcomes."""
+    argv_list = list(sys.argv[1:] if argv is None else argv)
+    parsed = parser().parse_args(argv_list)
+    method = manifest_command_path(parsed)
+    record_attempt = should_record_command(method)
+    song_before = resolve_song_from_args(parsed) if record_attempt else None
+    before = snapshot_song(song_before) if song_before is not None else {}
+    result = _run_main(argv_list)
+    if record_attempt:
+        song_after = resolve_song_from_args(parsed)
+        if song_after is not None:
+            try:
+                record_cli_event(
+                    song_after, parsed, argv_list, before,
+                    outcome="completed" if result == 0 else "nonzero",
+                )
+                build_song_method_manifest(song_after, parser())
+            except (FileNotFoundError, FileExistsError, RuntimeError, ValueError, OSError) as exc:
+                print(f"error: command completed but manifest recording failed: {exc}", file=sys.stderr)
+                return 2
+    return result
 
 
 if __name__ == "__main__":

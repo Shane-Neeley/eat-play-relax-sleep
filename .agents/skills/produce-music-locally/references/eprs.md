@@ -68,7 +68,14 @@ For an existing project:
 ```bash
 sed -n '1,220p' SONG/NOW.md
 ./scripts/eprs status SONG --verify
+./scripts/eprs manifest show SONG
 ```
+
+The generated method manifest aggregates song-local evidence and snapshots the
+complete current CLI/software/adapter method space. Mutating EPRS commands are
+recorded automatically. Use `manifest record` for human-operated or external
+methods and for considered/rejected routes; use `manifest note` for open-ended
+context. `not-evidenced` means unknown or unrecorded, not proven absent.
 
 ## Continue as an agent
 

@@ -63,6 +63,34 @@
       }
     },
     {
+      "id": "bioacoustic_python",
+      "label": "Python bioacoustic analysis lane",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "python3", "version_args": ["--version"]}
+      ],
+      "python_modules": ["numpy", "scipy", "soundfile"],
+      "capabilities": ["bioacoustic_event_detection", "species_interval_gating", "reference_event_comparison"],
+      "install_hints": {
+        "default": "Install the bounded optional analysis lane with `uv sync --extra bioacoustic`; FFmpeg is also used for compressed inputs."
+      }
+    },
+    {
+      "id": "pedalboard",
+      "label": "Spotify Pedalboard native audio effects",
+      "kind": "command-set",
+      "required": false,
+      "commands": [
+        {"name": "python3", "version_args": ["--version"]}
+      ],
+      "python_modules": ["pedalboard"],
+      "capabilities": ["pedalboard_effects", "pedalboard_audio_io"],
+      "install_hints": {
+        "default": "Install the pinned optional lane with `make pedalboard-install`; use only the song-local effects recipe and retain the GPL-3.0 notice."
+      }
+    },
+    {
       "id": "supercollider",
       "label": "SuperCollider scsynth audio engine",
       "kind": "application",

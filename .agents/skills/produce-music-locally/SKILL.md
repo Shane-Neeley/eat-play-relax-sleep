@@ -49,17 +49,22 @@ DAW sessions, or other sources when they fit the idea.
 1. Locate the repository with `scripts/find_eprs.sh`, then read its `AGENTS.md`.
 2. For an existing song, open `NOW.md` first when present and run
    `scripts/eprs status SONG --verify` before consequential work.
-3. For a new mixed-input project, use `scripts/eprs make-song` with explicit
+3. Read `SONG/song-manifest.json` when present. Use its evidenced and
+   not-evidenced method space to distinguish a small tweak from a materially
+   different production route. Record external software, performance methods,
+   rejected alternatives, and reasons with `eprs manifest record`; use
+   `eprs manifest note` for loose prompts, ideas, or thoughts.
+4. For a new mixed-input project, use `scripts/eprs make-song` with explicit
    `--recording`, `--evidence`, and `--reference` classifications. Never infer
    rights, consent, or permission from possession of a file.
-4. Treat the generated starter as a diagnostic audition. If the user asked for
+5. Treat the generated starter as a diagnostic audition. If the user asked for
    a song, arrangement, mix, master, or video, continue through the relevant
    agent work and production gates; do not hand back the smoke test as the work.
-5. When `make-song` captured recordings, use `eprs source-sketch` for an
+6. When `make-song` captured recordings, use `eprs source-sketch` for an
    explicit first source-aware audition before proposing replacement parts.
    Listen and review it as a mix; never imply that intake itself processed or
    approved the recordings.
-6. Read [references/eprs.md](references/eprs.md) for input routing, the agent
+7. Read [references/eprs.md](references/eprs.md) for input routing, the agent
    continuation loop, randomness, and delivery commands.
 
 ## Let prompts open the toolchain without locking the song

@@ -14,6 +14,7 @@ SOURCE_FIELDS = {
     "eprs.audio-transform/v1": ("source",),
     "eprs.autotune-render/v1": ("source",),
     "eprs.process-render/v1": ("source",),
+    "eprs.pedalboard-render/v1": ("source",),
     "eprs.comp-render/v1": ("sources",),
     "eprs.mix-render/v1": ("sources",),
     "eprs.daw-return-mix/v1": ("sources",),
