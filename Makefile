@@ -14,7 +14,8 @@ lint: lock-check
 	$(UV_RUN) ruff check src tests scripts
 
 typecheck-python: lock-check
-	$(UV_RUN) ty check
+	# The checked module set includes these optional audio adapters.
+	$(UV_RUN) --extra bioacoustic --extra pedalboard ty check
 
 quality: lint typecheck-python
 
