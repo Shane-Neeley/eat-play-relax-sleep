@@ -6,7 +6,15 @@ on-demand production; use deeper modules when they serve the actual song.
 
 ## Orient and coordinate
 
-- Read the current request, song brief and NOW.md/status when present.
+- Read SOUL.md before every musical generation, revision, or delegated handoff,
+  then the current request, song brief and NOW.md/status. SOUL supplies producer
+  headspace; this contract supplies operating rules. Never infer genre or copy
+  lyrics from its inspirations. Pass the actual SOUL text to music agents.
+- Use `eprs context` for song-scoped musical memory and current evidence. After
+  comparison/review, distill supported lessons into `notes/musical-memory.md`
+  inside the song; include evidence paths, review method, uncertainty, and
+  counterexamples. Keep detailed history in existing experiments/run notes.
+  See docs/SOUL_AND_MEMORY.md for generation coverage and memory practice.
 - Inspect `eprs produce status` before production. Claim a unique run through
   `produce start`; both schedulers and on-demand work share that coordinator.
 - Use the existing Graphify map to locate code relationships, verify against

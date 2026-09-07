@@ -5,6 +5,10 @@ creative decisions; software renders them; evidence describes what happened.
 Daily and on-demand work use the same front door. Production is an opportunity
 to make a good song, not a quota to publish anything that renders.
 
+Read [SOUL and musical memory](SOUL_AND_MEMORY.md) before authoring. Every
+generation carries SOUL as headspace and uses relevant song lessons; keep the
+current request authoritative and record what the comparison actually taught.
+
 ## Start or resume
 
 ```sh
@@ -144,3 +148,39 @@ Read exported `eprs.workbench-brief/v1` files as authored production requests;
 map their tunable musical, voice, album and picture directions into the concept.
 For albums, declare the shared motif and each track's different groove,
 instrumentation and form before rendering individual songs.
+
+## Musical review for new runs
+
+Method comparisons are advisory. Reusing a great groove or refining a familiar
+engine is legitimate; string differences are not musical novelty. Lanes are an
+open menu, and any available tool may serve the idea. If a desired capability
+is missing, inspect `config/toolchain.json`, `eprs doctor`, adapter profiles and
+`docs/OPTIONAL_MUSIC_LANES.md`; describe the actual limitation and choose a
+musically credible alternative. Do not silently substitute a weaker imitation.
+
+New claims carry `review_contract: eprs.musical-review/v1`. Packaging requires
+`musical_review` inside the producer review, with that `schema` and authored
+strings `intent`, `identity`, `development`, `source_role`, `delivery`,
+`weakest_moment`, `revision_result`, and `assessment_basis`. These are decisions
+about this song, not mandatory harmony, instruments, length, or section counts.
+Include `candidates` with at least two distinct rendered audio records and
+`revision: {before: AUDIO, after: AUDIO}`; each AUDIO contains song-relative
+`path`, `sha256`, and a specific `note`. The revision's `after` must bind the
+final reviewed master. `unresolved_release_blockers` must be an empty list to
+package; otherwise revise or hold. Earlier runs/packages retain their contract.
+
+Explain why the selected sketch serves the premise, where its musical identity
+returns or changes, and what the final revision improved. Animal audio can be a
+lead, environment, percussion, duet partner or narrative event; identify its
+actual role and verified raw window. A list of taxa alone is not integration.
+For lyrics, follow a character, place, desire or turn in the story; scientific
+facts can enrich the scene without turning it into an inventory. Singing and
+cloning are available lanes when rights and consent are established.
+
+State whether evidence comes from human listening, an audio-capable model,
+score analysis, ASR, or signal checks. ASR tests intelligibility, not phrasing,
+voice likeness or enjoyment. If no perceptual reviewer is available, say so;
+never write imagined listening observations. A reviewer must judge whether
+that limitation leaves a release blocker for this particular request. The
+contract checks evidence continuity and a real revision; it cannot guarantee
+that every future song is good. Keep publication casual, truthful and selective.

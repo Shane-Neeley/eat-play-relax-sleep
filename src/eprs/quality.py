@@ -180,6 +180,9 @@ def analyze_beatscript(beat_path: str | Path, *, analysis_version: int = 2) -> d
             "contrast_ratio": round(contrast_ratio, 3),
         },
         "score": score,
+        "assessment_scope": "Deterministic BeatScript form heuristics, not listening or a taste score",
+        "publication_authorized": False,
+        "interpretation": "A perfect score only passes these heuristics. auto_publish_eligible is a legacy gate field, not permission or proof of musical quality. Review the rendered music through the producer workflow.",
         "auto_publish_eligible": auto_publish_eligible,
         "decision": "pass" if auto_publish_eligible else "hold",
         "human_approval": {

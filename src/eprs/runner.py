@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .soul import validate_producer_context
+
 import hashlib
 import json
 import os
@@ -507,6 +509,8 @@ def run_agent_profile(
     packet_path, packet_record, packet_digest = _load_json(packet, "agent dispatch packet")
     if packet_record.get("schema") != DISPATCH_SCHEMA or packet_record.get("status") != "ready":
         raise ValueError("agent runner requires a ready dispatch packet")
+    context = packet_record.get("context")
+    validate_producer_context(context.get("producer_context") if isinstance(context, dict) else None)
     contract = packet_record.get("response_contract")
     if not isinstance(contract, dict):
         raise ValueError("agent runner packet has no response contract")

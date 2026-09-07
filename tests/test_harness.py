@@ -79,6 +79,10 @@ class SongHarnessTests(unittest.TestCase):
             song = root / "songs" / "family-signal"
 
             self.assertEqual(manifest["schema"], "eprs.song-run/v1")
+            soul = manifest["producer_context"]["soul"]
+            self.assertIn("# EPRS SOUL", soul["text"])
+            self.assertEqual(json.loads(run_path.read_text())["producer_context"]["soul"], soul)
+            self.assertTrue(any(soul["sha256"] in path.read_text() for path in (song / "code").glob("*.md")))
             self.assertEqual(manifest["randomness"]["mode"], "explicit-replay")
             self.assertFalse(manifest["randomness"]["novelty"]["enforced"])
             self.assertEqual(manifest["randomness"]["seed"], 12345)

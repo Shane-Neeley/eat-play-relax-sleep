@@ -15,6 +15,25 @@ song bumps, moves someone, or deserves release.
 | 6 | **Research-to-original-experiment loop for favorite songs and videos** | Requests route YouTube and other references into attributed research; dispatch requires explicit read-only network permission and research records enforce attribution/copying boundaries. | Complete one authorized reference study, normalize observations versus inference, then prove that its smallest original experiment uses only project-owned material and does not copy melody, lyrics, arrangement, stems, or samples. |
 | 7 | **Release rehearsal with real rights and metadata** | Mix, mastering, picture, YouTube assets, FINAL packaging, distribution, and offline publication handoffs are individually verified and never upload. The private proof correctly stops before rights and listening gates. | With a genuinely approved song and artwork, complete clearance, master/video reviews, distributor metadata, and a local release package; then rehearse the offline handoff without submitting it. Platform submission remains separately authorized external work. |
 
+## September 6 follow-through
+
+New producer claims now preserve rendered alternatives, a before/after revision,
+a final-master-bound musical assessment and explicit unresolved blockers. Familiar
+methods are advisory comparisons rather than a veto. Legacy BeatScript scores
+now label their heuristic scope and lack of publication authority. These changes
+reduce silent promotion of generic keep notes; they do not close the perceptual
+listening gap or guarantee listener enjoyment. The Luna Oregon fall production
+is the next live test; retain rejected drafts and the actual review method.
+
+Historical lessons worth carrying forward: `heatwave-hotline-wild-pocket-mix`
+records a listener's correction of continuous bass and undifferentiated animal
+beds; `make-no-mistakes-part-two` ties lyric events to arrangement changes;
+`lanterns-forget-the-clock` explores authored phrase-time; `still-got-my-crow`
+proves score-conditioned voice rendering and full-mix ASR, with perceptual
+likeness and enjoyment explicitly unproven. Sources saying GPT-5.6 do not by
+themselves establish which GPT-5.6 variant ran. Preserve that uncertainty when
+summarizing the older catalog.
+
 ## Performance budget for the next iterations
 
 - Keep `make test-fast` under roughly 30 seconds on the current development

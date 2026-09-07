@@ -102,3 +102,30 @@ Status counts sources, findings, experiment ideas, completed-work origins, and
 invalid records. Context includes bounded source attribution, observation versus
 interpretation, confidence, musical consequence, copying boundaries, and small
 experiment ideas. It never embeds frozen source evidence or external media.
+
+## Questions for original musical experiments
+
+Use research to choose comparisons, not to prescribe a house sound. Three
+starting points checked September 6, 2026:
+
+- [Witek et al. (2014)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0094446)
+  found an intermediate-syncopation preference in their groove stimuli and
+  ratings. Try a simpler and a more displaced pocket under the same hook;
+  preserve the one that serves this song. Their result does not define a
+  universal optimal rhythm or predict this channel's audience.
+- [Cheung et al. (2019)](https://www.marcus-pearce.com/assets/papers/CheungEtAl2019.pdf)
+  studied the interaction of harmonic uncertainty and surprise with pleasure.
+  Try an expected refrain return against one changed approach or resolution.
+  More surprise is not automatically better, and a chord probability model
+  does not evaluate your whole arrangement.
+- [Music synchronizes brainwaves across listeners (2019)](https://www.nature.com/articles/s41598-019-40254-w)
+  investigates repetition, familiarity and training. Keep repeated identity
+  while testing whether a changed response sustains interest. Neural
+  synchrony is not equivalent to YouTube retention or a listener's verdict.
+
+For audience work, save the actual question, time window, source, format,
+sample size and confounds. Comments may suggest a repair; view counts may
+suggest a question; neither proves causality. Compare relevant releases and
+retain failures as well as wins. Broader research can explore unfamiliar
+scenes, listener motivations, vocal delivery and animal acoustics without
+making each daily song perform a literature review.

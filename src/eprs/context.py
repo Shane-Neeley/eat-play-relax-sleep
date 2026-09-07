@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .soul import producer_context, render_producer_context
+
 import json
 from pathlib import Path
 import re
@@ -2538,6 +2540,7 @@ def build_agent_context(
                 "sha256": sha256(contract) if contract.is_file() else None,
             },
         },
+        "producer_context": producer_context(song_path),
         "model_guidance": MODEL_GUIDANCE,
         "status": status,
         "due_work": due_work,
@@ -2640,9 +2643,10 @@ def render_agent_context_markdown(packet: dict) -> str:
         "",
         guidance["purpose"],
         "",
-        "Read in this order:",
-        "",
     ]
+    if "producer_context" in packet:
+        lines.extend([render_producer_context(packet["producer_context"]), ""])
+    lines.extend(["Read in this order:", ""])
     lines.extend(f"{index}. {item}" for index, item in enumerate(guidance["read_order"], 1))
     lines.extend([
         "",

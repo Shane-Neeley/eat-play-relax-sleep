@@ -77,7 +77,7 @@ finding a Pileated Woodpecker knock inside a noisy recording:
    for isolating individual knocks.
 3. **Perch 2 ONNX** — useful general bird classifier/embedding model. [ONNX
    checkpoint](https://huggingface.co/justinchuby/Perch-onnx) was exercised with
-   10-second windows. It can support reference search, but its temporal and
+   five-second windows at 32 kHz. It can support reference search, but its temporal and
    class output is not a knock segmenter.
 4. **BioME Edge** — promising compact encoder. [Model](https://huggingface.co/Hguimaraes/biome_edge_bio)
    was loaded locally and produced embeddings, but it has no ready-made
@@ -115,3 +115,31 @@ humpback whale, coyote, and field cricket. Those files remain reference-only;
 an observation taxon is not proof that every detected region contains that
 animal, so external classifier intervals and listening review are still
 required before clipping.
+
+## Check the actual selected bird phrase
+
+When an existing Perch v2 ONNX installation is available, run the optional
+helper from its NumPy/ONNX Runtime environment:
+
+```sh
+python scripts/classify_bird_windows.py path/to/frozen-call.wav \
+  --model path/to/perch_v2_no_dft.onnx --labels path/to/assets/labels.csv \
+  --window 0:5 --window 1.6:2.5 --out path/to/notes/phrase-review.json
+```
+
+The helper installs nothing. It validates the selected model's five-second,
+32 kHz input, resamples only in memory, preserves source/model/label hashes,
+and records both context and exact-window predictions. Short cuts are
+zero-padded; the report exposes that padding. Compare them with surrounding
+context because chopping a phrase can change the ranking. Logits are
+uncalibrated and are not species probabilities. See the
+[Perch model card](https://huggingface.co/cgeorgiaw/Perch) and
+[ONNX conversion](https://huggingface.co/justinchuby/Perch-onnx).
+
+The report always leaves `source_use_eligible: false`. Classification and
+spectral shape can corroborate an audible-window review, but do not manufacture
+human listening or certify identity. The September 6 fall-song draft illustrates
+why this matters: full recordings supported goldfinch/woodpecker while initial
+subsecond detector picks did not. Inspect complete calls rather than increasing
+gain on the highest-scoring transient. Keep a target unsupported cut out of the
+arrangement until it is reviewed or replaced.

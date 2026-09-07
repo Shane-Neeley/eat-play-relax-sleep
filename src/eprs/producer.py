@@ -9,6 +9,8 @@ from __future__ import annotations
 from collections import Counter
 from array import array
 from contextlib import contextmanager
+
+from .soul import producer_context
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -123,7 +125,15 @@ def brief(root: str | Path, key: str) -> dict:
     lanes = sorted(policy["lanes"], key=lambda lane: (
         counts[lane["engine"]], hashlib.sha256(f'{key}:{lane["id"]}'.encode()).hexdigest()))
     return {"schema": "eprs.producer-brief/v1", "key": key,
+            "producer_context": producer_context(root=root),
             "catalog": catalog(root), "candidate_lanes": lanes[:3],
+            "available_lanes": policy["lanes"],
+            "capability_routes": {"inventory": "config/toolchain.json", "health": "eprs doctor",
+                                  "alternatives": "docs/OPTIONAL_MUSIC_LANES.md",
+                                  "research": "docs/RESEARCH_RECORDS.md",
+                                  "animals": "docs/ANIMAL_SOUND_AI_2026.md",
+                                  "vocals": "docs/VOCALS.md",
+                                  "review": "docs/PRODUCER.md"},
             "recent_runs": prior[-7:], "quality": policy["quality"],
             "instruction": "Author and render two contrasting short sketches. Choose by musical effect, not the lane ranking. Preserve the losing sketch. Missing legacy method history is unknown, so inspect recent song manifests too."}
 
@@ -151,6 +161,7 @@ def start(root: str | Path, key: str, owner: str, song: str, concept: dict) -> d
     destination = _inside(root, song)
     if not (destination / "song.json").is_file():
         raise ValueError("Create the EPRS song workspace before claiming production")
+    headspace = producer_context(destination, root=root)
     with _lock(root) as directory:
         runs = directory / "runs"
         runs.mkdir(exist_ok=True)
@@ -161,11 +172,11 @@ def start(root: str | Path, key: str, owner: str, song: str, concept: dict) -> d
         if active:
             raise ValueError(f'Production already owned by {active[0]["owner"]}: {active[0]["key"]}. Resume or explicitly hold it; leases never expire silently.')
         novelty = compare(concept, prior)
-        if novelty["decision"] == "rework" and not concept.get("repair_of"):
-            raise ValueError("Concept repeats recent production methods; change it or declare repair_of")
         record = {"schema": "eprs.producer-run/v1", "key": key, "owner": owner,
                   "token": uuid.uuid4().hex, "song": str(destination.relative_to(root)),
                   "created_at": _now(), "stage": "sketch", "concept": concept,
+                  "producer_context": headspace,
+                  "review_contract": "eprs.musical-review/v1",
                   "diversity": novelty, "events": []}
         _write(runs / f"{key}.json", record)
         return record
@@ -252,6 +263,50 @@ def validate_vocals(song: Path, vocals: dict) -> None:
             raise ValueError("Review must cover the processed vocal, not the raw TTS")
 
 
+def validate_musical_review(song: Path, assessment: dict) -> None:
+    """Require inspectable creative decisions, never a numerical taste score.
+
+    Method, genre and tools stay open. Checks bind alternatives and a revision
+    to bytes; they cannot establish that an assessment is perceptually correct.
+    """
+    review = assessment.get("musical_review")
+    if not isinstance(review, dict) or review.get("schema") != "eprs.musical-review/v1":
+        raise ValueError("New production requires eprs.musical-review/v1")
+    for field in ("intent", "identity", "development", "source_role", "delivery",
+                  "weakest_moment", "revision_result", "assessment_basis"):
+        if not isinstance(review.get(field), str) or not review[field].strip():
+            raise ValueError(f"Musical review requires {field}")
+    if review.get("unresolved_release_blockers") != []:
+        raise ValueError("Resolve musical release blockers before packaging")
+    candidates = review.get("candidates")
+    if not isinstance(candidates, list) or len(candidates) < 2:
+        raise ValueError("Musical review requires at least two rendered candidates")
+    revisions = review.get("revision")
+    if not isinstance(revisions, dict) or not all(k in revisions for k in ("before", "after")):
+        raise ValueError("Musical review requires before/after revision evidence")
+    hashes = []
+    for item in [*candidates, revisions["before"], revisions["after"]]:
+        if not isinstance(item, dict) or not isinstance(item.get("note"), str) or not item["note"].strip():
+            raise ValueError("Musical evidence requires a specific comparison note")
+        file = _inside(song, item.get("path", ""))
+        if not file.is_file() or item.get("sha256") != sha256(file):
+            raise ValueError("Musical review evidence is missing or changed")
+        if file.suffix.lower() not in {".wav", ".flac", ".aiff", ".aif", ".mp3", ".m4a", ".ogg"}:
+            raise ValueError("Musical comparison evidence must be rendered audio")
+        result = json.loads(subprocess.check_output([
+            "ffprobe", "-v", "error", "-show_streams", "-of", "json", str(file)
+        ], timeout=20))
+        if not any(stream.get("codec_type") == "audio" for stream in result.get("streams", [])):
+            raise ValueError("Musical comparison evidence has no audio stream")
+        hashes.append(item["sha256"])
+    if len(set(hashes[:len(candidates)])) < 2:
+        raise ValueError("Musical candidates must contain distinct audio bytes")
+    if hashes[-2] == hashes[-1]:
+        raise ValueError("Musical revision must preserve changed audio bytes")
+    if hashes[-1] != assessment.get("master", {}).get("sha256"):
+        raise ValueError("Musical revision after must be the reviewed final master")
+
+
 def package(root: str | Path, key: str, token: str, review: str) -> Path:
     """Freeze honestly attributed agent/human review without fabricating old approvals.
 
@@ -281,6 +336,13 @@ def package(root: str | Path, key: str, token: str, review: str) -> Path:
         if assessment.get("decision") != "keep":
             raise ValueError("Review has not kept this production")
         validate_vocals(song, record["concept"].get("vocals", {"mode": "instrumental"}))
+        if record.get("review_contract") == "eprs.musical-review/v1":
+            validate_musical_review(song, assessment)
+            vocals = record["concept"].get("vocals", {"mode": "instrumental"})
+            if vocals.get("mode") != "instrumental":
+                vocal_review = _read(_inside(song, vocals["review"]))
+                if vocal_review["context"]["sha256"] != assessment.get("master", {}).get("sha256"):
+                    raise ValueError("Vocal context review must cover the final master")
         media = {}
         for role in ("master", "video"):
             item = assessment.get(role, {})

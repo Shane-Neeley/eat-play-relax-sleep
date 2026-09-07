@@ -34,7 +34,7 @@ eprs = "eprs.cli:main"
 where = ["src"]
 
 [tool.setuptools.data-files]
-"share/eprs" = ["config/toolchain.json", "config/producer.json"]
+"share/eprs" = ["config/toolchain.json", "config/producer.json", "SOUL.md", "AGENTS.md"]
 "share/eprs/adapters" = ["config/adapters/*.json"]
 
 [tool.ruff]

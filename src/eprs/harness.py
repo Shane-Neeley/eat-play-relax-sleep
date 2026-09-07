@@ -16,6 +16,7 @@ import random
 import re
 import secrets
 
+from .soul import producer_context, render_producer_context
 from .beat import Beat, dumps, load, mutate, parse
 from .frontdoor import expose_current_media
 from .production_map import write_production_map
@@ -351,6 +352,7 @@ def _agent_brief(
     avoid: list[str],
     has_supplied_recordings: bool,
     prompt_routes: list[dict] | None = None,
+    headspace: dict | None = None,
 ) -> str:
     lines = [
         "---",
@@ -361,6 +363,8 @@ def _agent_brief(
         "---",
         "",
         "# Agent handoff",
+        "",
+        render_producer_context(headspace if headspace is not None else producer_context()),
         "",
         f"{prompt}",
         "",
@@ -522,6 +526,7 @@ def create_song_run(
         run_title = (title or song_manifest.get("title") or song_path.name).strip()
         if not run_title:
             raise ValueError("existing song has no usable title")
+    headspace = producer_context(song_path)
     seed_was_supplied = seed is not None
     run_seed, beat, creative_fingerprint, novelty = _choose_starter(
         song_path, run_title, prompt, seed
@@ -562,6 +567,7 @@ def create_song_run(
         _agent_brief(
             run_title, prompt, run_seed, references, preserve, avoid,
             has_supplied_recordings=bool(recording_count),
+            headspace=headspace,
             prompt_routes=request_record.get("input_routes", {}).get("prompt", []),
         ),
         encoding="utf-8",
@@ -623,6 +629,7 @@ def create_song_run(
         "created_at": utc_now(),
         "title": run_title,
         "prompt": prompt,
+        "producer_context": headspace,
         "request_id": request_record["id"],
         "randomness": {
             "mode": "explicit-replay" if seed_was_supplied else "fresh-entropy",

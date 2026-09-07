@@ -74,6 +74,8 @@ class QualityTests(unittest.TestCase):
             report = analyze_beatscript(beat)
 
             self.assertTrue(report["auto_publish_eligible"])
+            self.assertFalse(report["publication_authorized"])
+            self.assertIn("not listening", report["assessment_scope"])
             self.assertEqual(report["decision"], "pass")
             self.assertEqual(report["human_approval"]["status"], "required")
             self.assertEqual(report["risk_flags"], [])
