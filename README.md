@@ -30,6 +30,16 @@ The system is designed to make it possible to ask:
 - What remains for a human to hear, play, decide, or approve?
 - Can another person or agent continue without guessing?
 
+## Make it yours
+
+If you fork or use EPRS, change [`SOUL.md`](SOUL.md) for yourself. It is the
+project's creative headspace: replace the references, values, and language
+with the identity you want your producer or agent to carry. Keep the current
+request authoritative, and keep [`AGENTS.md`](AGENTS.md) as the separate
+operating and safety contract unless you intentionally want to change the
+workflow too. Song-specific lessons belong in each song's ignored
+`notes/musical-memory.md`, not in a shared identity file.
+
 ## Choose your path
 
 | If you want to… | Start here |
