@@ -63,15 +63,18 @@ def snapshot(root: Path, album: str, libraries: list[Path]) -> dict:
         workspaces.append(path)
     sounds = {}
     for workspace in sorted(set(workspaces)):
-        for sidecar in sorted((workspace / "references" / "inaturalist-audio").glob("**/*.json")):
+        sidecars = [p for folder in ("inaturalist-audio", "external-audio")
+                    for p in (workspace / "references" / folder).glob("**/*.json")]
+        for sidecar in sorted(sidecars):
             if not sidecar.resolve().is_relative_to(root):
                 warnings.append(f"Skipped external sidecar: {sidecar.name}")
                 continue
             data = read_object(sidecar)
-            if data.get("schema") != INATURALIST_SOUND_SCHEMA:
+            if data.get("schema") not in {INATURALIST_SOUND_SCHEMA, "eprs.external-audio/v1"}:
                 continue
             sound, source, output = data["sound"], data["source"], data["output"]
-            key = f"inaturalist:{sound['id']}"
+            provider = "inaturalist" if data["schema"] == INATURALIST_SOUND_SCHEMA else source["provider"].lower()
+            key = f"{provider}:{sound['id']}"
             media = (workspace / output["path"]).resolve()
             if not media.is_relative_to(workspace.resolve()):
                 warnings.append(f"Skipped escaping media path: {sidecar.relative_to(root)}")
@@ -88,7 +91,8 @@ def snapshot(root: Path, album: str, libraries: list[Path]) -> dict:
             entry = sounds.setdefault(key, {
                 "id": key, "observation_url": source.get("url"), "taxon": source.get("taxon"),
                 "sound": sound, "rights_status": publication_status_for_license(sound.get("license_code")),
-                "copies": [], "provenance_conflict": False,
+                "copies": [], "provenance_conflict": False, "provider": provider,
+                "source_kind": source.get("kind", "community field recording"),
                 "window_review": "consult song audits; not inferred by inventory",
                 "source_use_eligible": False,
             })
@@ -120,7 +124,7 @@ def write_snapshot(data: dict, out: Path) -> None:
         lines.append("| " + " | ".join(cell(song[k]) for k in
                      ("id", "title", "album_candidate", "manifest_status", "workspace")) + " |")
     (out / "SONG_POOL.md").write_text("\n".join(lines) + "\n")
-    lines = ["# Sound inventory", "", "One row per iNaturalist sound ID; all copies and hashes are in catalog.json.",
+    lines = ["# Sound inventory", "", "One row per provider/sound ID; all copies and hashes are in catalog.json.",
              "No row is an audible-window approval. Preserve source credits when making derivatives.", "",
              "| Sound ID | Taxon label | License | Copies | Integrity | Observation |",
              "| --- | --- | --- | --- | --- | --- |"]

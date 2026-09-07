@@ -65,6 +65,29 @@ class AlbumLibraryTests(unittest.TestCase):
             media.unlink()
             self.assertIsNone(snapshot(root, "test-album", [])["sounds"][0]["copies"][1]["actual_sha256"])
 
+    def test_inventories_external_audio_with_provider_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.setup_root(root)
+            workspace = root / "songs/one"
+            folder = workspace / "references/external-audio/field-recording"
+            folder.mkdir(parents=True)
+            media = folder / "recording.wav"
+            media.write_bytes(b"external-test-source")
+            (folder / "recording.wav.json").write_text(json.dumps({
+                "schema": "eprs.external-audio/v1",
+                "source": {"provider": "FieldArchive", "url": "https://example.test/recording",
+                           "kind": "licensed field recording"},
+                "sound": {"id": "abc", "license_code": "cc-by", "attribution": "Recorder"},
+                "output": {"path": str(media.relative_to(workspace)),
+                           "sha256": hashlib.sha256(media.read_bytes()).hexdigest()},
+            }))
+            data = snapshot(root, "test-album", [])
+            external = next(sound for sound in data["sounds"] if sound["id"] == "fieldarchive:abc")
+            self.assertEqual(external["provider"], "fieldarchive")
+            self.assertEqual(external["source_kind"], "licensed field recording")
+            self.assertEqual(external["copies"][0]["integrity"], "verified")
+
     def test_escape_and_missing_album_fail_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
